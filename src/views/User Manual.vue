@@ -1,7 +1,5 @@
 <template>
-  <div class="about">
-    <h1>This is an about page</h1>
-  </div>
+  <h1>User Manual</h1>
   <nav class="nav">
     <router-link class="nav__link" :to="{ name: 'Home' }">Home</router-link> |
     <router-link class="nav__link" :to="{ name: 'User Manual' }"
@@ -12,3 +10,14 @@
     >
   </nav>
 </template>
+
+<script>
+import { defineComponent } from "vue";
+
+export default defineComponent({
+  name: "User Manual",
+  components: {},
+});
+</script>
+
+<style scoped></style>
