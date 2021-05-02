@@ -1,0 +1,71 @@
+@import "config";
+
+@include font-face("Poppins", "Medium");
+@include font-face("Poppins", "Regular");
+@include font-face("JetBrainsMono", "Regular");
+.user-manual{
+  padding: 75px 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  background-color: $CREAM ;
+
+  // Document styling:
+  h1, h2, h3 {
+    // Default font:
+    @include font-sans("Poppins", $weight:"Medium");
+    // Default font-colour:
+    color: $BLACK_DDD;
+  }
+  p {
+    // Default font:
+    @include font-sans("Poppins", 1rem, $weight: "Regular");
+    // Default font-colour:
+    color: $BLACK_L;
+    padding: 0 1rem;
+    text-align: justify;
+  }
+  code {
+    // Default font:
+    @include font-sans("JetBrainsMono", 0.9rem, $weight: "Regular");
+    // Default font-colour:
+    color: $BLACK_DDD;
+    background-color: $WHITE_D;
+    display: block;
+    padding: 1rem;
+
+  }
+
+  // Diagonal stacked paper effect
+  &__content {
+    position: relative;
+    width: 100%;
+    max-width: 900px;
+    background-color: $WHITE;
+    box-shadow: 3px 3px 2px rgba($BLACK_DDD,0.15);
+    // To move the pseudo-elements behind the parent.
+    transform-style: preserve-3d;
+    padding: 2rem;
+  }
+
+  // Second sheet.
+  &__content::before {
+    @include pseudo($width: 100%, $height: 100%);
+    background-color: darken($WHITE, 5%);
+    left: 10px;
+    top: 10px;
+    transform: translateZ(-1px) rotateZ(1deg);
+    box-shadow: 3px 3px 2px rgba($BLACK_DDD,0.15);
+  }
+
+  // Third Sheet.
+  &__content::after {
+    @include pseudo($width: 100%, $height: 100%);
+    background-color: darken($WHITE, 10%);
+    left: 20px;
+    top: 10px;
+    transform: translateZ(-2px) rotateZ(-1deg);
+    box-shadow: 3px 3px 2px rgba($BLACK_DDD,0.15);
+  }
+}

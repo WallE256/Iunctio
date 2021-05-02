@@ -1,29 +1,27 @@
 <template>
   <main class="home">
-    <div class="home__container">
+    <background-blobs />
+    <div class="home_container">
       <div class="brand">
-        <h1 class="brand__title">Iunctio</h1>
+        <h1 class="brand__title">iunctio</h1>
         <h3 class="brand__subtitle">NETWORK VISUALISER</h3>
       </div>
-      <div class="separator"></div>
-      <nav class="nav">
-        <router-link class="nav__link" :to="{ name: 'Home' }">Home</router-link>
-        <router-link class="nav__link" :to="{ name: 'User Manual' }"
-          >User Manual</router-link
-        >
-        <router-link class="nav__link" :to="{ name: 'About' }"
-          >About Us</router-link
-        >
-      </nav>
+      <router-link class="cta-visualise" :to="{ name: 'Visualise' }"
+        >VISUALISE</router-link
+      >
+      <a href="" class="cta-tour">...or take a tour?</a>
     </div>
   </main>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
+import BackgroundBlobs from "@/components/BackgroundBlobs.vue";
 
 export default defineComponent({
   name: "Home",
-  components: {},
+  components: { BackgroundBlobs },
 });
 </script>
+
+<style lang="scss" src="@/assets/styles/home.scss"></style>
