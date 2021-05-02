@@ -1,0 +1,95 @@
+@import "config";
+
+@include font-face("Prata", "Regular");
+@include font-face("JetBrainsMono", "Regular");
+@include font-face("Poppins", "Medium");
+@include font-face("Poppins", "Regular");
+
+.home {
+  // Occupy entire viewport height.
+  height: 100%;
+  // Place all contents in center.
+  display: grid;
+  place-items: center;
+  text-align: center;
+
+  background-color: $CREAM;
+
+  .home_container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .brand {
+    position: relative;
+    margin-bottom: 60px;
+
+    &__title {
+      @include font-serif("Prata", 6rem, "Regular", $BLACK_DDD, $lh: 100%);
+      z-index: ind("home", "title");
+    }
+
+    &__subtitle {
+      @include font-sans("JetBrainsMono", 1.1rem, "Regular", $BLACK_DDD);
+      z-index: ind("home", "subtitle");
+    }
+  }
+
+  .cta-visualise{
+    @include center_item();
+    @include font-sans("Poppins", 1.1rem, "Medium", $BLACK_DDD);
+    position: relative;
+    margin-bottom: 25px;
+    @include transition(background, 0.35s, $ease1);
+    @include setSize(200px, 50px);
+
+    &:focus, &:hover{
+      // Remove default outline on focus.
+      outline: none;
+      background-color: $WHITE;
+    }
+
+    // Give a button like effect.
+    &::before{
+      @include pseudo($width: 100%, $height: 100%);
+      border-radius: 5px;
+      border: 2px solid $WHITE;
+
+    }
+  }
+
+  .cta-tour{
+    @include font-sans("Poppins", 0.95rem, "Regular", $WHITE);
+    // Position the underlines relative to the parent.
+    position: relative;
+    @include transition(color, 0.3s, $ease1);
+    &:focus{
+      // Remove default outline on focus which is compensated by
+      // an underline animation.
+      outline: none;
+    }
+
+    cursor: pointer;
+
+    &::after {
+      @include pseudo($width: 100%, $height: 2px);
+      background-color: $BLACK_DDD;
+
+      // Initially underline must be hidden.
+      transform: scaleX(0);
+      // Animate the transform from center.
+      transform-origin: center;
+      @include transition(transform, 0.35s, $ease1);
+    }
+
+    &:hover::after, &:focus::after {
+      // On hover/focus underline the link.
+      transform: scale(1);
+    }
+  }
+}
+
+
+
+

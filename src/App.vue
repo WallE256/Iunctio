@@ -1,5 +1,15 @@
 <template>
-  <router-view />
+  <navigation-bar></navigation-bar>
+  <router-view/>
+  <deny-access/>
 </template>
 
+<script lang="ts">
+import { defineComponent } from "vue";
+import NavigationBar from "@/components/NavigationBar.vue";
+export default defineComponent({
+  name: "App",
+  components: { NavigationBar },
+});
+</script>
 <style lang="scss" src="@/assets/styles/global.scss"></style>

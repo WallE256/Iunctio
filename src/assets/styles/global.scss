@@ -1,5 +1,4 @@
-@import "home";
-
+@import "config";
 * {
   box-sizing: border-box;
   padding: 0;
@@ -7,9 +6,8 @@
 }
 
 html, body, #app {
-  background: #181818;
+  background: $CREAM;
   height: 100%;
-  color: #f8f8f8;
 }
 
 a {
