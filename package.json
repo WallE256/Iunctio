@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "core-js": "^3.6.5",
+    "graphology": "^0.19.3",
+    "pixi.js": "^6.0.2",
     "rfs": "^9.0.3",
     "vue": "^3.0.0",
     "vue-router": "^4.0.0-0"
