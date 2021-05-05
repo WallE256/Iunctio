@@ -3,10 +3,45 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { DefineComponent, defineComponent } from "vue";
 import * as PIXI from "pixi.js";
 import DirectedGraph from "graphology";
 import Node from "graphology";
+import { Graphics } from "pixi.js";
+
+
+//custom type for each node's circle so it can be redrawn
+// type Attr = {
+//   obj: PIXI.Graphics,
+//   x: number,
+//   y: number,
+//   radius: number,
+//   style: number,
+//   startAngle?: number|undefined,
+//   endAngle?: number|undefined,
+//   value?: number|string,
+//   clicked?: boolean
+// }
+
+//event listener
+//I didn't figure out how to add this function inside the methods property
+// const onButtonOver = (obj: PIXI.Graphics, objAttributes: Attr, hover: boolean, app: PIXI.Application) => {
+//       //clear existing circle
+//       obj.clear();
+//       app.stage.removeChild(obj);
+
+//       //redraw the circle
+//       let color = hover? 0x282BDC:0xDE3249; 
+//       console.log(objAttributes.x);
+//       console.log(color)
+//       const circle = new Graphics();
+//       circle.lineStyle(0);
+//       circle.beginFill(color, 1);
+//       circle.drawCircle(objAttributes.x, objAttributes.y, objAttributes.radius);
+//       circle.endFill();
+//       app.stage.addChild(circle);
+//     }
+
 
 export default defineComponent({
   mounted() {
@@ -41,7 +76,7 @@ export default defineComponent({
       { source: 5, target: 18, attr: {} },
     ];
     const input = {
-      shape: "circle", // or line
+      shape: "line", // or line
     };
 
     const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
@@ -115,7 +150,113 @@ export default defineComponent({
           }); 
         });
       } else {
-        // TODO
+        type Attr = {
+          obj: PIXI.Graphics,
+          x: number,
+          y: number,
+          radius: number,
+          style: number,
+          startAngle?: number|undefined,
+          endAngle?: number|undefined,
+          value?: number|string,
+          clicked?: boolean
+        }
+
+        const nodeLineY = canvas.height * 3/4;
+        const nodeRadius = Math.floor(200/graph.order); //hopefully no graph will have 0 nodes
+        let nodeLineX = canvas.width * 1/8;
+        let gap = Math.floor(canvas.width/(1.2*graph.order));
+        const style = new PIXI.TextStyle({
+                fill: "#000000",
+                fontSize: nodeRadius+4
+              });
+
+       // console.log(graph.order, canvas.width, canvas.height)
+        graph.forEachNode((source, sourceAttr) => {
+            const circle = new Graphics();
+            circle.lineStyle(0);
+            circle.beginFill(0xDE3249, 1);
+            circle.drawCircle(0, 0, nodeRadius);
+            circle.endFill();
+            circle.x = nodeLineX + gap * sourceAttr.index;
+            circle.y = nodeLineY;
+            
+            
+            // node's value
+            const text = new PIXI.Text(
+              source.toString(),
+              style
+            );
+            text.anchor.set(0.5, 0.5);
+            text.x = circle.x;
+            text.y = circle.y + nodeRadius + text.height;
+           
+            const circleAttr:Attr = {
+              obj: circle,
+              x: circle.x,
+              y: circle.y,
+              radius: nodeRadius,
+              style: 0xDE3249,
+              value: source,
+              clicked: false
+            }
+
+
+            //adding interactivity to button
+            circle.interactive = true;
+            circle.buttonMode = true;
+            
+            circle.on('click', (event)=> {
+              const color = circleAttr.clicked ? 0xffffff : 0x666666;
+              circleAttr.clicked = !circleAttr.clicked;
+              circle.tint = color;
+    
+              graph.forEachOutboundEdge(source, 
+              (edge, attributes, source, target, sourceAttributes, targetAttributes) => {
+                //console.log(`Edge from ${source} to ${target}`);
+                targetAttributes.circle.obj.tint = color;
+                attributes.arc.obj.tint = color;
+              });
+            });
+          
+            graph.setNodeAttribute(source, 'circle', circleAttr);
+            app.stage.addChild(circle, text);
+          
+        });
+
+        
+
+        //add edges as arcs
+        graph.forEachEdge(
+        (edge, attributes, source, target, sourceAttributes, targetAttributes) => {
+          const arcEdge = new PIXI.Graphics();
+        
+          //debugging stuff you can ignore it
+          // console.log(`${source} ${sourceAttributes.circle.y}`);
+          // console.log(`${target} ${targetAttributes.circle.y}`);
+          // console.log('--------------------------------')
+          const distanceBetweenNodes = Math.abs(sourceAttributes.circle.x - targetAttributes.circle.x)
+          
+          const arcAttr:Attr = {
+            obj: arcEdge,
+            x: sourceAttributes.circle.x + distanceBetweenNodes/2,
+            y: sourceAttributes.circle.y,
+            radius: distanceBetweenNodes/2,
+            startAngle:Math.PI,
+            endAngle: 2 * Math.PI,
+            style: 0x0
+          }
+          graph.setEdgeAttribute(edge, 'arc', arcAttr);
+          arcEdge.lineStyle(2, 0xFFFFFF);
+          arcEdge.arc(arcAttr.x, arcAttr.y, arcAttr.radius, arcAttr.startAngle as number, arcAttr.endAngle as number)
+
+          
+          app.stage.addChild(arcEdge);
+         
+        });
+
+
+
       }
     }
   },
