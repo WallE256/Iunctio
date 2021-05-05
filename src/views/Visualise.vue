@@ -1,5 +1,5 @@
 <template>
-  <ArcDiagram></ArcDiagram>
+  <arc-diagram></arc-diagram>
 </template>
 
 <!--<style>

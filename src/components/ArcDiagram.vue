@@ -5,45 +5,63 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import * as PIXI from "pixi.js";
-import Graph from "graphology";
+import DirectedGraph from "graphology";
+import Node from "graphology";
 
 export default defineComponent({
   mounted() {
-    const graph = new Graph<number, number, number>();
-    //graph.addNode(2);
+    const nodes = [
+      { key: 25, attr: { name: "#1", index: 0 } },
+      { key: 2, attr: { name: "#2", index: 0 } },
+      { key: 3, attr: { name: "#three", index: 0 } },
+      { key: 4, attr: { name: "for", index: 0 } },
+      { key: 5, attr: { name: "5", index: 0 } },
+      { key: 6, attr: { name: "#8", index: 0 } },
+      { key: 7, attr: { name: "7", index: 0 } },
+      { key: 8, attr: { name: "8", index: 0 } },
+      { key: 9, attr: { name: "9", index: 0 } },
+      { key: 10, attr: { name: "ten", index: 0 } },
+      { key: 11, attr: { name: "XI", index: 0 } },
+      { key: 12, attr: { name: "twelve", index: 0 } },
+      { key: 13, attr: { name: "#thirteen", index: 0 } },
+      { key: 14, attr: { name: "XIV", index: 0 } },
+      { key: 15, attr: { name: "is", index: 0 } },
+      { key: 16, attr: { name: "16", index: 0 } },
+      { key: 17, attr: { name: "71", index: 0 } },
+      { key: 18, attr: { name: "19-1", index: 0 } },
+      { key: 19, attr: { name: "19-2", index: 0 } },
+      { key: 20, attr: { name: "#20", index: 0 } },
+    ];
+    const edges = [
+      { source: 25, target: 2, attr: {} },
+      { source: 25, target: 3, attr: {} },
+      { source: 6, target: 9, attr: {} },
+      { source: 14, target: 16, attr: {} },
+      { source: 2, target: 13, attr: {} },
+      { source: 5, target: 18, attr: {} },
+    ];
+    const input = {
+      shape: "circle", // or line
+    };
+
     const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
 
-    const vertices = new Map([
-      [25, { name: "#1", index: 0 }],
-      [2, { name: "#2", index: 0 }],
-      [3, { name: "#three", index: 0 }],
-      [4, { name: "for", index: 0 }],
-      [5, { name: "5", index: 0 }],
-      [6, { name: "#8", index: 0 }],
-      [7, { name: "7", index: 0 }],
-      [8, { name: "8", index: 0 }],
-      [9, { name: "9", index: 0 }],
-      [10, { name: "ten", index: 0 }],
-      [11, { name: "XI", index: 0 }],
-      [12, { name: "twelve", index: 0 }],
-      [13, { name: "#thirteen", index: 0 }],
-      [14, { name: "XIV", index: 0 }],
-      [15, { name: "is", index: 0 }],
-      [16, { name: "16", index: 0 }],
-      [17, { name: "71", index: 0 }],
-      [18, { name: "19-1", index: 0 }],
-      [19, { name: "19-2", index: 0 }],
-      [20, { name: "#20", index: 0 }],
-    ]);
-    const edges = new Map([
-      [25, [2, 3]],
-      [6, [9]],
-      [14, [16]],
-      [2, [13]],
-      [5, [18]],
-    ]);
-    const vertexRadius = 240;
-    const angle = (2 * Math.PI) / vertices.size;
+    const graph = new DirectedGraph({
+      //options
+    });
+    for (const { key, attr } of nodes) {
+      graph.addNode(key, attr);
+    }
+    for (const { source, target, attr } of edges) {
+      graph.addDirectedEdge(source, target, attr);
+    }
+
+    // give each node an index
+    let i = 0;
+    graph.forEachNode((source, sourceAttr) => {
+      sourceAttr.index = i;
+      i++;
+    });
 
     const app = new PIXI.Application({
       view: canvas,
@@ -53,54 +71,53 @@ export default defineComponent({
       transparent: true,
     });
 
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+    this.draw(graph, app, input.shape === "circle");
+  },
 
-    const graphics = new PIXI.Graphics();
-    app.stage.addChild(graphics);
+  methods: {
+    draw(graph: DirectedGraph, app: PIXI.Application, circle: boolean) {
+      const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
+      const vertexRadius = 240;
+      const edgeRadius = vertexRadius - 20;
+      const angle = (2 * Math.PI) / graph.order;
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
 
-    let i = 0;
-    for (const [key, value] of vertices) {
-      value.index = i;
-      const text = new PIXI.Text(
-        key.toString(),
-        new PIXI.TextStyle({
-          fill: "#00FF00",
-        })
-      );
-      text.anchor.set(0.5, 0.5);
-      text.x = centerX + vertexRadius * Math.cos(i * angle);
-      text.y = centerY + vertexRadius * Math.sin(i * angle);
-      app.stage.addChild(text);
-      i++;
-    }
+      app.stage.removeChildren();
 
-    //app.ticker.add(function() {
-    // https://pixijs.download/release/docs/PIXI.Graphics.html
-    graphics.clear();
+      // https://pixijs.download/release/docs/PIXI.Graphics.html
+      const graphics = new PIXI.Graphics();
+      app.stage.addChild(graphics);
 
-    const edgeRadius = vertexRadius - 20;
-    for (const [from, targets] of edges) {
-      const fromVertex = vertices.get(from);
-      if (typeof fromVertex === "undefined") {
-        continue;
+      if (circle) {
+        graph.forEachNode((source, sourceAttr) => {
+          const text = new PIXI.Text(
+            source.toString(),
+            new PIXI.TextStyle({
+              fill: "#00FF00",
+            })
+          );
+          text.anchor.set(0.5, 0.5);
+          text.x = centerX + vertexRadius * Math.cos(sourceAttr.index * angle);
+          text.y = centerY + vertexRadius * Math.sin(sourceAttr.index * angle);
+          app.stage.addChild(text);
+
+          // draw outgoing edges
+          graph.forEachOutboundNeighbor(source, (target, targetAttr) => {
+            const fromX = centerX + edgeRadius * Math.cos(sourceAttr.index * angle);
+            const fromY = centerY + edgeRadius * Math.sin(sourceAttr.index * angle);
+            const toX = centerX + edgeRadius * Math.cos(targetAttr.index * angle);
+            const toY = centerY + edgeRadius * Math.sin(targetAttr.index * angle);
+            graphics
+              .lineStyle(2, 0xff0000)
+              .moveTo(fromX, fromY)
+              .quadraticCurveTo(centerX, centerY, toX, toY);
+          }); 
+        });
+      } else {
+        // TODO
       }
-      const fromX = centerX + edgeRadius * Math.cos(fromVertex.index * angle);
-      const fromY = centerY + edgeRadius * Math.sin(fromVertex.index * angle);
-      for (const to of targets) {
-        const toVertex = vertices.get(to);
-        if (typeof toVertex === "undefined") {
-          continue;
-        }
-        const toX = centerX + edgeRadius * Math.cos(toVertex.index * angle);
-        const toY = centerY + edgeRadius * Math.sin(toVertex.index * angle);
-        graphics
-          .lineStyle(2, 0xff0000)
-          .moveTo(fromX, fromY)
-          .quadraticCurveTo(centerX, centerY, toX, toY);
-      }
     }
-    //});
   },
 });
 </script>
