@@ -74,6 +74,7 @@ export default defineComponent({
       { source: 14, target: 16, attr: {} },
       { source: 2, target: 13, attr: {} },
       { source: 5, target: 18, attr: {} },
+      { source: 20, target: 18, attr: {} }
     ];
     const input = {
       shape: "line", // or line
@@ -236,10 +237,16 @@ export default defineComponent({
           // console.log(`${target} ${targetAttributes.circle.y}`);
           // console.log('--------------------------------')
           const distanceBetweenNodes = Math.abs(sourceAttributes.circle.x - targetAttributes.circle.x)
+          let xArcCenter: number;
+          if(sourceAttributes.index > targetAttributes.index) {
+            xArcCenter = targetAttributes.circle.x + distanceBetweenNodes/2;
+          } else {
+            xArcCenter = sourceAttributes.circle.x + distanceBetweenNodes/2;
+          }
           
           const arcAttr:Attr = {
             obj: arcEdge,
-            x: sourceAttributes.circle.x + distanceBetweenNodes/2,
+            x: xArcCenter,
             y: sourceAttributes.circle.y,
             radius: distanceBetweenNodes/2,
             startAngle:Math.PI,
