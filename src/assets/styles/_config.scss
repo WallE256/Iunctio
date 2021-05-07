@@ -12,15 +12,11 @@
 //Set z-indices:
 $z-indices: (
   "home": (
-    "title": 2,
-    "subtitle": 2
+    "title": 1,
+    "subtitle": 1,
+    "blobs": 0
   ),
   "user-manual": 3,
-  "blobs": (
-    "green": 0,
-    "red": 0,
-    "blue": 1,
-  ),
   "nav-bar": 10,
 );
 
