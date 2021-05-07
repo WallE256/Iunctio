@@ -198,6 +198,7 @@ export default defineComponent({
 
        // console.log(graph.order, canvas.width, canvas.height)
         graph.forEachNode((source, sourceAttr) => {
+            const sourceString = source.toString();
             const circle = new Graphics();
             circle.lineStyle(0);
             circle.beginFill(0xDE3249, 1);
@@ -209,7 +210,7 @@ export default defineComponent({
             
             // node's value
             const text = new PIXI.Text(
-              source.toString(),
+              sourceString,
               style
             );
             text.anchor.set(0.5, 0.5);
@@ -242,6 +243,26 @@ export default defineComponent({
                 targetAttributes.circle.obj.tint = color;
                 attributes.arc.obj.tint = color;
               });
+            });
+
+            // tooltip display
+            text.interactive = true;
+            circle.on("mousemove", (event) => {
+              if (event.target !== circle) {
+                return;
+              }
+              event.stopPropagation();
+              tooltip.style.display = "inline";
+              tooltip.innerText = "Node: " + source.toString();
+              tooltip.style.left = (event.data.global.x + 20) + "px";
+              tooltip.style.top = (event.data.global.y + 20) + "px";
+            });
+            circle.on("mouseout", (event) => {
+              if (event.currentTarget !== circle) {
+                return;
+              }
+              event.stopPropagation();
+              tooltip.style.display = "none";
             });
           
             graph.setNodeAttribute(source, 'circle', circleAttr);
