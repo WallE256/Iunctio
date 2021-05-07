@@ -1,7 +1,6 @@
 <template>
   <navigation-bar></navigation-bar>
-  <router-view/>
-  <deny-access/>
+  <router-view />
 </template>
 
 <script lang="ts">
