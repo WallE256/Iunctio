@@ -50,9 +50,9 @@ export default defineComponent({
   background: linear-gradient(
     to bottom right,
     rgba($CREAM, 0.7),
-    rgba($CREAM, 0.3)
+    rgba($CREAM, 0.35)
   );
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(10px);
 
   &__title {
     position: absolute;
