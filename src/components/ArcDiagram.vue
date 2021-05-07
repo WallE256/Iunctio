@@ -43,7 +43,6 @@ import { Graphics } from "pixi.js";
 //       app.stage.addChild(circle);
 //     }
 
-
 export default defineComponent({
   mounted() {
     const nodes = [
@@ -326,9 +325,6 @@ export default defineComponent({
           app.stage.addChild(arcEdge);
          
         });
-
-
-
       }
     }
   },
