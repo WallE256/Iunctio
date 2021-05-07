@@ -1,12 +1,12 @@
 <template>
   <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
+  <p id="graph-tooltip" ref="graph-tooltip" style="position: absolute;"></p>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
 import * as PIXI from "pixi.js";
 import DirectedGraph from "graphology";
-import Node from "graphology";
 
 export default defineComponent({
   mounted() {
@@ -77,6 +77,7 @@ export default defineComponent({
   methods: {
     draw(graph: DirectedGraph, app: PIXI.Application, circle: boolean) {
       const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
+      const tooltip = this.$refs["graph-tooltip"] as HTMLElement;
       const vertexRadius = 240;
       const edgeRadius = vertexRadius - 20;
       const angle = (2 * Math.PI) / graph.order;
@@ -91,15 +92,37 @@ export default defineComponent({
 
       if (circle) {
         graph.forEachNode((source, sourceAttr) => {
+          const sourceString = source.toString();
           const text = new PIXI.Text(
-            source.toString(),
+            sourceString,
             new PIXI.TextStyle({
-              fill: "#00FF00",
+              fill: "#000000",
             })
           );
           text.anchor.set(0.5, 0.5);
           text.x = centerX + vertexRadius * Math.cos(sourceAttr.index * angle);
           text.y = centerY + vertexRadius * Math.sin(sourceAttr.index * angle);
+
+          // tooltip display
+          text.interactive = true;
+          text.on("mousemove", (event) => {
+            if (event.target !== text) {
+              return;
+            }
+            event.stopPropagation();
+            tooltip.style.display = "inline";
+            tooltip.innerText = "Node: " + sourceString;
+            tooltip.style.left = (event.data.global.x + 20) + "px";
+            tooltip.style.top = (event.data.global.y + 20) + "px";
+          });
+          text.on("mouseout", (event) => {
+            if (event.currentTarget !== text) {
+              return;
+            }
+            event.stopPropagation();
+            tooltip.style.display = "none";
+          });
+
           app.stage.addChild(text);
 
           // draw outgoing edges
