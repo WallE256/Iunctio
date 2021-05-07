@@ -232,18 +232,18 @@ export default defineComponent({
             circle.interactive = true;
             circle.buttonMode = true;
             
-            circle.on('click', (event)=> {
-              const color = circleAttr.clicked ? 0xffffff : 0x666666;
-              circleAttr.clicked = !circleAttr.clicked;
-              circle.tint = color;
+            // circle.on('click', (event)=> {
+            //   const color = circleAttr.clicked ? 0xffffff : 0x666666;
+            //   circleAttr.clicked = !circleAttr.clicked;
+            //   circle.tint = color;
     
-              graph.forEachOutboundEdge(source, 
-              (edge, attributes, source, target, sourceAttributes, targetAttributes) => {
-                //console.log(`Edge from ${source} to ${target}`);
-                targetAttributes.circle.obj.tint = color;
-                attributes.arc.obj.tint = color;
-              });
-            });
+            //   graph.forEachOutboundEdge(source, 
+            //   (edge, attributes, source, target, sourceAttributes, targetAttributes) => {
+            //     //console.log(`Edge from ${source} to ${target}`);
+            //     targetAttributes.circle.obj.tint = color;
+            //     attributes.arc.obj.tint = color;
+            //   });
+            // });
 
             // tooltip display
             text.interactive = true;
@@ -255,14 +255,34 @@ export default defineComponent({
               tooltip.style.display = "inline";
               tooltip.innerText = "Node: " + source.toString();
               tooltip.style.left = (event.data.global.x + 20) + "px";
-              tooltip.style.top = (event.data.global.y + 20) + "px";
+              tooltip.style.top = (event.data.global.y + 50) + "px";
+
+              const color = 0x666666;
+              circle.tint = color;
+              graph.forEachOutboundEdge(source, 
+              (edge, attributes, source, target, sourceAttributes, targetAttributes) => {
+                //console.log(`Edge from ${source} to ${target}`);
+                targetAttributes.circle.obj.tint = color;
+                attributes.arc.obj.tint = color;
+              });
+
             });
+
             circle.on("mouseout", (event) => {
               if (event.currentTarget !== circle) {
                 return;
               }
               event.stopPropagation();
               tooltip.style.display = "none";
+
+              const color = 0xffffff;
+              circle.tint = color;
+              graph.forEachOutboundEdge(source, 
+              (edge, attributes, source, target, sourceAttributes, targetAttributes) => {
+                //console.log(`Edge from ${source} to ${target}`);
+                targetAttributes.circle.obj.tint = color;
+                attributes.arc.obj.tint = color;
+              });
             });
           
             graph.setNodeAttribute(source, 'circle', circleAttr);
