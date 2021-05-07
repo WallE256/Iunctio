@@ -46,26 +46,26 @@ import { Graphics } from "pixi.js";
 export default defineComponent({
   mounted() {
     const nodes = [
-      { key: 25, attr: { name: "#1", index: 0 } },
-      { key: 2, attr: { name: "#2", index: 0 } },
-      { key: 3, attr: { name: "#three", index: 0 } },
-      { key: 4, attr: { name: "for", index: 0 } },
-      { key: 5, attr: { name: "5", index: 0 } },
-      { key: 6, attr: { name: "#8", index: 0 } },
-      { key: 7, attr: { name: "7", index: 0 } },
-      { key: 8, attr: { name: "8", index: 0 } },
-      { key: 9, attr: { name: "9", index: 0 } },
-      { key: 10, attr: { name: "ten", index: 0 } },
-      { key: 11, attr: { name: "XI", index: 0 } },
-      { key: 12, attr: { name: "twelve", index: 0 } },
-      { key: 13, attr: { name: "#thirteen", index: 0 } },
-      { key: 14, attr: { name: "XIV", index: 0 } },
-      { key: 15, attr: { name: "is", index: 0 } },
-      { key: 16, attr: { name: "16", index: 0 } },
-      { key: 17, attr: { name: "71", index: 0 } },
-      { key: 18, attr: { name: "19-1", index: 0 } },
-      { key: 19, attr: { name: "19-2", index: 0 } },
-      { key: 20, attr: { name: "#20", index: 0 } },
+      { key: 25, attr: { name: "#1" } },
+      { key: 2, attr: { name: "#2" } },
+      { key: 3, attr: { name: "#three" } },
+      { key: 4, attr: { name: "for" } },
+      { key: 5, attr: { name: "5" } },
+      { key: 6, attr: { name: "#8" } },
+      { key: 7, attr: { name: "7" } },
+      { key: 8, attr: { name: "8" } },
+      { key: 9, attr: { name: "9" } },
+      { key: 10, attr: { name: "ten" } },
+      { key: 11, attr: { name: "XI" } },
+      { key: 12, attr: { name: "twelve" } },
+      { key: 13, attr: { name: "#thirteen" } },
+      { key: 14, attr: { name: "XIV" } },
+      { key: 15, attr: { name: "is" } },
+      { key: 16, attr: { name: "16" } },
+      { key: 17, attr: { name: "71" } },
+      { key: 18, attr: { name: "19-1" } },
+      { key: 19, attr: { name: "19-2" } },
+      { key: 20, attr: { name: "#20" } },
     ];
     const edges = [
       { source: 25, target: 2, attr: {} },
@@ -92,13 +92,6 @@ export default defineComponent({
       graph.addDirectedEdge(source, target, attr);
     }
 
-    // give each node an index
-    let i = 0;
-    graph.forEachNode((source, sourceAttr) => {
-      sourceAttr.index = i;
-      i++;
-    });
-
     const app = new PIXI.Application({
       view: canvas,
       width: window.innerWidth,
@@ -107,7 +100,41 @@ export default defineComponent({
       transparent: true,
     });
 
+    const defaultStyle = new PIXI.TextStyle({
+      fill: "#000000",
+    });
+    
+    // give each node a corresponding index and corresponding text element
+    let i = 0;
+    graph.forEachNode((source: any, sourceAttr) => {
+      const sourceString = source.toString();
+      const text = new PIXI.Text(
+        sourceString,
+        defaultStyle,
+      );
+      text.anchor.set(0.5, 0.5);
+      app.stage.addChild(text);
+      this.nodeMap.set(source, {
+        text: text,
+        index: i,
+      });
+      i++;
+    });
+
     this.draw(graph, app, input.shape === "circle");
+  },
+
+  data() {
+    return {
+      // node map
+      nodeMap: new Map<number, {
+        text: PIXI.Text,
+        index: number,
+      }>(),
+      
+      // the node that you're currently hovering over
+      selectedIndex: null as number | null,
+    };
   },
 
   methods: {
@@ -120,24 +147,22 @@ export default defineComponent({
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
 
-      app.stage.removeChildren();
-
       // https://pixijs.download/release/docs/PIXI.Graphics.html
       const graphics = new PIXI.Graphics();
       app.stage.addChild(graphics);
 
+      // NOTE: some forEach* callbacks have ": any", because graphology lies
+      // about its types :(
       if (circle) {
-        graph.forEachNode((source, sourceAttr) => {
+        graph.forEachNode((source: any, sourceAttr) => {
           const sourceString = source.toString();
-          const text = new PIXI.Text(
-            sourceString,
-            new PIXI.TextStyle({
-              fill: "#000000",
-            })
-          );
-          text.anchor.set(0.5, 0.5);
-          text.x = centerX + vertexRadius * Math.cos(sourceAttr.index * angle);
-          text.y = centerY + vertexRadius * Math.sin(sourceAttr.index * angle);
+
+          const sourceData = this.nodeMap.get(source);
+          if (typeof sourceData === "undefined") return; // not supposed to happen
+
+          const text = sourceData.text;
+          text.x = centerX + vertexRadius * Math.cos(sourceData.index * angle);
+          text.y = centerY + vertexRadius * Math.sin(sourceData.index * angle);
 
           // tooltip display
           text.interactive = true;
@@ -159,14 +184,15 @@ export default defineComponent({
             tooltip.style.display = "none";
           });
 
-          app.stage.addChild(text);
-
           // draw outgoing edges
-          graph.forEachOutboundNeighbor(source, (target, targetAttr) => {
-            const fromX = centerX + edgeRadius * Math.cos(sourceAttr.index * angle);
-            const fromY = centerY + edgeRadius * Math.sin(sourceAttr.index * angle);
-            const toX = centerX + edgeRadius * Math.cos(targetAttr.index * angle);
-            const toY = centerY + edgeRadius * Math.sin(targetAttr.index * angle);
+          graph.forEachOutboundNeighbor(source, (target: any, targetAttr) => {
+            const targetData = this.nodeMap.get(target);
+            if (typeof targetData === "undefined") return;
+
+            const fromX = centerX + edgeRadius * Math.cos(sourceData.index * angle);
+            const fromY = centerY + edgeRadius * Math.sin(sourceData.index * angle);
+            const toX = centerX + edgeRadius * Math.cos(targetData.index * angle);
+            const toY = centerY + edgeRadius * Math.sin(targetData.index * angle);
             graphics
               .lineStyle(2, 0xff0000)
               .moveTo(fromX, fromY)
@@ -174,6 +200,8 @@ export default defineComponent({
           }); 
         });
       } else {
+        app.stage.removeChildren();
+
         type Attr = {
           obj: PIXI.Graphics,
           x: number,
@@ -187,32 +215,29 @@ export default defineComponent({
         }
 
         const nodeLineY = canvas.height * 3/4;
-        const nodeRadius = Math.floor(200/graph.order); //hopefully no graph will have 0 nodes
+        const nodeRadius = Math.floor(200 / graph.order); //hopefully no graph will have 0 nodes
         let nodeLineX = canvas.width * 1/8;
-        let gap = Math.floor(canvas.width/(1.2*graph.order));
         const style = new PIXI.TextStyle({
                 fill: "#000000",
                 fontSize: nodeRadius+4
               });
+        let gap = Math.floor(canvas.width/(1.2 * graph.order));
 
-       // console.log(graph.order, canvas.width, canvas.height)
-        graph.forEachNode((source, sourceAttr) => {
-            const sourceString = source.toString();
+        graph.forEachNode((source: any, sourceAttr) => {
+            const sourceData = this.nodeMap.get(source);
+            if (typeof sourceData === "undefined") return; // not supposed to happen
+            const text = sourceData.text;
+
             const circle = new Graphics();
             circle.lineStyle(0);
             circle.beginFill(0xDE3249, 1);
             circle.drawCircle(0, 0, nodeRadius);
             circle.endFill();
-            circle.x = nodeLineX + gap * sourceAttr.index;
+            circle.x = nodeLineX + gap * sourceData.index;
             circle.y = nodeLineY;
-            
-            
+
             // node's value
-            const text = new PIXI.Text(
-              sourceString,
-              style
-            );
-            text.anchor.set(0.5, 0.5);
+            text.style = style;
             text.x = circle.x;
             text.y = circle.y + nodeRadius + text.height;
            
@@ -245,7 +270,6 @@ export default defineComponent({
             // });
 
             // tooltip display
-            text.interactive = true;
             circle.on("mousemove", (event) => {
               if (event.target !== circle) {
                 return;
@@ -286,15 +310,18 @@ export default defineComponent({
           
             graph.setNodeAttribute(source, 'circle', circleAttr);
             app.stage.addChild(circle, text);
-          
         });
 
         
 
         //add edges as arcs
         graph.forEachEdge(
-        (edge, attributes, source, target, sourceAttributes, targetAttributes) => {
+        (edge, attributes, source: any, target: any, sourceAttributes, targetAttributes) => {
           const arcEdge = new PIXI.Graphics();
+
+          const sourceData = this.nodeMap.get(source);
+          const targetData = this.nodeMap.get(target);
+          if (typeof sourceData === "undefined" || typeof targetData === "undefined") return; // shouldn't happen
         
           //debugging stuff you can ignore it
           // console.log(`${source} ${sourceAttributes.circle.y}`);
@@ -302,7 +329,7 @@ export default defineComponent({
           // console.log('--------------------------------')
           const distanceBetweenNodes = Math.abs(sourceAttributes.circle.x - targetAttributes.circle.x)
           let xArcCenter: number;
-          if(sourceAttributes.index > targetAttributes.index) {
+          if (sourceData.index > targetData.index) {
             xArcCenter = targetAttributes.circle.x + distanceBetweenNodes/2;
           } else {
             xArcCenter = sourceAttributes.circle.x + distanceBetweenNodes/2;
