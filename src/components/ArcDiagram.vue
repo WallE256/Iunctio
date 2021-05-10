@@ -100,6 +100,8 @@ export default defineComponent({
       transparent: true,
     });
 
+    const tooltip = this.$refs["graph-tooltip"] as HTMLElement;
+
     const defaultStyle = new PIXI.TextStyle({
       fill: "#000000",
     });
@@ -113,9 +115,55 @@ export default defineComponent({
         defaultStyle,
       );
       text.anchor.set(0.5, 0.5);
-      app.stage.addChild(text);
+
+      const circle = new PIXI.Graphics();
+
+      // tooltip display
+      circle.interactive = true;
+      circle.buttonMode = true;
+      circle.on("mouseover", (event) => {
+        event.stopPropagation();
+
+        tooltip.style.display = "inline";
+        tooltip.innerText = "Node: " + sourceString;
+        tooltip.style.left = (circle.x + 20) + "px";
+        tooltip.style.top = (circle.y + 20) + "px";
+
+        const color = 0x666666;
+        circle.tint = color;
+
+        graph.forEachOutboundEdge(source,
+        (edge, attributes, source, target: any, sourceAttributes, targetAttributes) => {
+          //console.log(`Edge from ${source} to ${target}`);
+          const targetData = this.nodeMap.get(target);
+          if (typeof targetData === "undefined") return;
+          targetData.circle.tint = color;
+
+          attributes.arc.obj.tint = color;
+        });
+      });
+      circle.on("mouseout", (event) => {
+        event.stopPropagation();
+
+        tooltip.style.display = "none";
+
+        const color = 0xffffff;
+        circle.tint = color;
+
+        graph.forEachOutboundEdge(source, 
+        (edge, attributes, source, target: any, sourceAttributes, targetAttributes) => {
+          //console.log(`Edge from ${source} to ${target}`);
+          const targetData = this.nodeMap.get(target);
+          if (typeof targetData === "undefined") return;
+          targetData.circle.tint = color;
+
+          attributes.arc.obj.tint = color;
+        });
+      });
+
       this.nodeMap.set(source, {
         text: text,
+        circle: circle,
         index: i,
       });
       i++;
@@ -129,6 +177,7 @@ export default defineComponent({
       // node map
       nodeMap: new Map<number, {
         text: PIXI.Text,
+        circle: PIXI.Graphics,
         index: number,
       }>(),
       
@@ -140,16 +189,11 @@ export default defineComponent({
   methods: {
     draw(graph: MultiDirectedGraph, app: PIXI.Application, circle: boolean) {
       const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
-      const tooltip = this.$refs["graph-tooltip"] as HTMLElement;
       const vertexRadius = 240;
       const edgeRadius = vertexRadius - 20;
       const angle = (2 * Math.PI) / graph.order;
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
-
-      // https://pixijs.download/release/docs/PIXI.Graphics.html
-      const graphics = new PIXI.Graphics();
-      app.stage.addChild(graphics);
 
       const nodeRadius = Math.floor(200 / graph.order); //hopefully no graph will have 0 nodes
       const textDistance = 40;
@@ -158,6 +202,20 @@ export default defineComponent({
         fontSize: nodeRadius + 4,
       });
 
+      app.stage.removeChildren();
+
+      type Attr = {
+        obj: PIXI.Graphics,
+        x: number,
+        y: number,
+        radius: number,
+        style: number,
+        startAngle?: number|undefined,
+        endAngle?: number|undefined,
+        value?: number|string,
+        clicked?: boolean
+      }
+      
       // NOTE: some forEach* callbacks have ": any", because graphology lies
       // about its types :(
       if (circle) {
@@ -171,39 +229,21 @@ export default defineComponent({
           text.style = textStyle;
           text.x = centerX + (vertexRadius + textDistance) * Math.cos(sourceData.index * angle);
           text.y = centerY + (vertexRadius + textDistance) * Math.sin(sourceData.index * angle);
+          app.stage.addChild(text);
 
-          const circle = new Graphics();
+          const circle = sourceData.circle;
+          circle.clear();
           circle.lineStyle(0);
           circle.beginFill(0xDE3249, 1);
           circle.drawCircle(0, 0, nodeRadius);
           circle.endFill();
           circle.x = centerX + vertexRadius * Math.cos(sourceData.index * angle);
           circle.y = centerY + vertexRadius * Math.sin(sourceData.index * angle);
-
-          // tooltip display
-          circle.interactive = true;
-          circle.buttonMode = true;
-          circle.on("mousemove", (event) => {
-            if (event.target !== circle) {
-              return;
-            }
-            event.stopPropagation();
-            tooltip.style.display = "inline";
-            tooltip.innerText = "Node: " + sourceString;
-            tooltip.style.left = (event.data.global.x + 20) + "px";
-            tooltip.style.top = (event.data.global.y + 20) + "px";
-          });
-          circle.on("mouseout", (event) => {
-            if (event.currentTarget !== circle) {
-              return;
-            }
-            event.stopPropagation();
-            tooltip.style.display = "none";
-          });
           app.stage.addChild(circle);
 
           // draw outgoing edges
-          graph.forEachOutboundNeighbor(source, (target: any, targetAttr) => {
+          graph.forEachOutboundEdge(source,
+          (edge: any, edgeAttr, source, target: any, sourceAttr, targetAttr, undirected, generatedKey) => {
             const targetData = this.nodeMap.get(target);
             if (typeof targetData === "undefined") return;
 
@@ -211,27 +251,25 @@ export default defineComponent({
             const fromY = centerY + edgeRadius * Math.sin(sourceData.index * angle);
             const toX = centerX + edgeRadius * Math.cos(targetData.index * angle);
             const toY = centerY + edgeRadius * Math.sin(targetData.index * angle);
-            graphics
+            const edgeGraphics = new PIXI.Graphics()
               .lineStyle(2, 0xff0000)
               .moveTo(fromX, fromY)
               .quadraticCurveTo(centerX, centerY, toX, toY);
-          }); 
+            app.stage.addChild(edgeGraphics);
+
+            const arcAttr:Attr = {
+              obj: edgeGraphics,
+              x: centerX,
+              y: centerY,
+              radius: 1, //?
+              startAngle: Math.PI,
+              endAngle: 2 * Math.PI,
+              style: 0x0,
+            }
+            graph.setEdgeAttribute(edge, 'arc', arcAttr);
+          });
         });
       } else {
-        app.stage.removeChildren();
-
-        type Attr = {
-          obj: PIXI.Graphics,
-          x: number,
-          y: number,
-          radius: number,
-          style: number,
-          startAngle?: number|undefined,
-          endAngle?: number|undefined,
-          value?: number|string,
-          clicked?: boolean
-        }
-
         const nodeLineY = canvas.height * 3/4;
         let nodeLineX = canvas.width * 1/8;
         let gap = Math.floor(canvas.width/(1.2 * graph.order));
@@ -241,7 +279,8 @@ export default defineComponent({
             if (typeof sourceData === "undefined") return; // not supposed to happen
             const text = sourceData.text;
 
-            const circle = new Graphics();
+            const circle = sourceData.circle;
+            circle.clear();
             circle.lineStyle(0);
             circle.beginFill(0xDE3249, 1);
             circle.drawCircle(0, 0, nodeRadius);
@@ -281,46 +320,8 @@ export default defineComponent({
             //     attributes.arc.obj.tint = color;
             //   });
             // });
-
-            // tooltip display
-            circle.on("mousemove", (event) => {
-              if (event.target !== circle) {
-                return;
-              }
-              event.stopPropagation();
-              tooltip.style.display = "inline";
-              tooltip.innerText = "Node: " + source.toString();
-              tooltip.style.left = (event.data.global.x + 20) + "px";
-              tooltip.style.top = (event.data.global.y + 50) + "px";
-
-              const color = 0x666666;
-              circle.tint = color;
-              graph.forEachOutboundEdge(source, 
-              (edge, attributes, source, target, sourceAttributes, targetAttributes) => {
-                //console.log(`Edge from ${source} to ${target}`);
-                targetAttributes.circle.obj.tint = color;
-                attributes.arc.obj.tint = color;
-              });
-
-            });
-
-            circle.on("mouseout", (event) => {
-              if (event.currentTarget !== circle) {
-                return;
-              }
-              event.stopPropagation();
-              tooltip.style.display = "none";
-
-              const color = 0xffffff;
-              circle.tint = color;
-              graph.forEachOutboundEdge(source, 
-              (edge, attributes, source, target, sourceAttributes, targetAttributes) => {
-                //console.log(`Edge from ${source} to ${target}`);
-                targetAttributes.circle.obj.tint = color;
-                attributes.arc.obj.tint = color;
-              });
-            });
           
+            // TODO: should we also store the edges in a separate map???
             graph.setNodeAttribute(source, 'circle', circleAttr);
             app.stage.addChild(circle, text);
         });
@@ -351,7 +352,7 @@ export default defineComponent({
           const arcAttr:Attr = {
             obj: arcEdge,
             x: xArcCenter,
-            y: sourceAttributes.circle.y,
+            y: sourceData.circle.y,
             radius: distanceBetweenNodes/2,
             startAngle:Math.PI,
             endAngle: 2 * Math.PI,
