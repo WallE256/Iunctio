@@ -1,14 +1,33 @@
 <template>
-  <navigation-bar></navigation-bar>
-  <router-view />
+  <navigation-bar v-show="show_item"></navigation-bar>
+  <router-view v-show="show_item" />
+  <deny-access v-if="!show_item" />
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
+import { debounce } from "lodash";
 import NavigationBar from "@/components/NavigationBar.vue";
+import DenyAccess from "@/components/DenyAccess.vue";
 export default defineComponent({
   name: "App",
-  components: { NavigationBar },
+  components: { DenyAccess, NavigationBar },
+  data() {
+    return {
+      show_item: this.handleResize(),
+    };
+  },
+  created() {
+    window.addEventListener(
+      "resize",
+      debounce(() => this.handleResize(), 250)
+    );
+  },
+  methods: {
+    handleResize() {
+      this.show_item = window.innerHeight > 576 && window.innerWidth > 576;
+    },
+  },
 });
 </script>
 <style lang="scss" src="@/assets/styles/global.scss"></style>
