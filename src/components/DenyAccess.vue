@@ -1,8 +1,10 @@
 <template>
-  <background-blobs/>
+  <background-blobs />
   <main class="deny-access">
-    <img class="deny-access__img" src="public/img/deny-access.svg" >
-    <h4 class="deny-access__hint">This website is currently <br> not optimised for mobile <br> displays.</h4>
+    <img src="img/deny-access.svg" alt="Unsupported aspect ratio" class="deny-access__img">
+    <h4 class="deny-access__hint">
+      This website is currently not optimised for this aspect ratio.
+    </h4>
   </main>
 </template>
 
@@ -21,23 +23,24 @@ export default defineComponent({
 @include font-face("Poppins", "Medium");
 
 .deny-access {
-  @include media($until: "sm") {
-    .nav-bar {
-      display: none;
-    }
+  // Center child elements.
+  @include center_item();
+  flex-direction: column;
+  padding: 50px;
 
-    .deny-access_img {
-      display: block;
-      padding: 90px 0 0 0;
-      margin-left: auto;
-      margin-right: auto;
-    }
+  @include rel();
 
-    .deny-access__hint {
-      margin-top: 60px;
-      color: white;
-      text-align: center;
-    }
+  // Occupy entire viewport height.
+  height: 100%;
+  &__img {
+    height: 60%;
+    margin-bottom: 15px;
+  }
+
+  &__hint {
+    width: 75%;
+    text-align: center;
+    @include font-sans("Poppins", 1.1rem, "Medium", $WHITE_D)
   }
 }
 </style>
