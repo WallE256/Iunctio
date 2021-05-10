@@ -5,44 +5,12 @@
 
 <script lang="ts">
 import { DefineComponent, defineComponent } from "vue";
-import * as PIXI from "pixi.js";
 import DirectedGraph from "graphology";
 import Node from "graphology";
+import * as d3 from "d3";
+import * as PIXI from "pixi.js";
 import { Graphics } from "pixi.js";
 import '@pixi/graphics-extras';
-
-
-//custom type for each node's circle so it can be redrawn
-// type Attr = {
-//   obj: PIXI.Graphics,
-//   x: number,
-//   y: number,
-//   radius: number,
-//   style: number,
-//   startAngle?: number|undefined,
-//   endAngle?: number|undefined,
-//   value?: number|string,
-//   clicked?: boolean
-// }
-
-//event listener
-//I didn't figure out how to add this function inside the methods property
-// const onButtonOver = (obj: PIXI.Graphics, objAttributes: Attr, hover: boolean, app: PIXI.Application) => {
-//       //clear existing circle
-//       obj.clear();
-//       app.stage.removeChild(obj);
-
-//       //redraw the circle
-//       let color = hover? 0x282BDC:0xDE3249;
-//       console.log(objAttributes.x);
-//       console.log(color)
-//       const circle = new Graphics();
-//       circle.lineStyle(0);
-//       circle.beginFill(color, 1);
-//       circle.drawCircle(objAttributes.x, objAttributes.y, objAttributes.radius);
-//       circle.endFill();
-//       app.stage.addChild(circle);
-//     }
 
 export default defineComponent({
   mounted() {
@@ -124,9 +92,9 @@ export default defineComponent({
 
     var root = false;
 
-    var totalRadius = 250;
+    var totalRadius = 400;
 
-    var height = 3;
+    var height = 5;
 
     this.draw(graph, app, root, height, totalRadius);
   },
@@ -160,31 +128,43 @@ export default defineComponent({
 
       if (root) {
         console.log("Root");
-        this.drawnode(graph, app, root, height, 0, levelRadius, 0, 1, centerX, centerY);
+        this.drawnode(graph, app, root, height, 0, levelRadius, 0, 1, centerX, centerY, 0x00BB00);
       } else {
         console.log("No root");
 
         var totalDegree = 0;
+        var nodesWithDegree = 0;
         var drawStart = 0;
 
         // Calculate total degree for the neighbour nodes
         graph.forEachNode((node, attributes) => {
           totalDegree += graph.degree(node);
+          if (graph.degree(node) > 0) {
+            nodesWithDegree += 1;
+          }
         });
 
+        var colours = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, nodesWithDegree + 1));
+
+        var index = 0;
+
         graph.forEachNode((node, attributes) => {
+
           if (graph.degree(node) > 0) {
-            console.log(graph.degree(node));
 
             var newSize = 1 * graph.degree(node) / totalDegree;
-            this.drawnode(graph, app, node, height, 1, levelRadius, drawStart, newSize, centerX, centerY);
+
+            var convertedColour = d3.color(colours(index)).formatHex().replace("#", "0x")
+
+            this.drawnode(graph, app, node, height, 1, levelRadius, drawStart, newSize, centerX, centerY, convertedColour);
             drawStart += newSize;
+            index += 1;
           }
         });
       }
     },
 
-  drawnode (graph: DirectedGraph, app: PIXI.Application, node: any, height: any, level: any, levelRadius: any, drawStart: any, size: any, centerX: any, centerY: any) {
+  drawnode (graph: DirectedGraph, app: PIXI.Application, node: any, height: any, level: any, levelRadius: any, drawStart: any, size: any, centerX: any, centerY: any, nodeColour: any) {
 
     // drawnode
     var minRadius = level * levelRadius;
@@ -193,7 +173,6 @@ export default defineComponent({
     var maxPosition = drawStart + size;
     var startAngle = 2 * Math.PI * drawStart;
     var endAngle = 2 * Math.PI * (drawStart + size);
-
 
     // Draw next layer
     if (level < height) {
@@ -207,13 +186,14 @@ export default defineComponent({
 
       graph.forEachNeighbor(node, (neighbour, attributes) => {
         var newSize = size * graph.degree(neighbour) / totalDegree;
-        this.drawnode(graph, app, neighbour, height, level + 1, levelRadius, drawStart, newSize, centerX, centerY);
+        this.drawnode(graph, app, neighbour, height, level + 1, levelRadius, drawStart, newSize, centerX, centerY, nodeColour);
         drawStart += newSize;
       });
     }
 
     var arcCircle = new PIXI.Graphics();
-    arcCircle.beginFill(0xff0000);
+
+    arcCircle.beginFill(nodeColour);
     arcCircle.lineStyle(2, 0xFFFFFF);
     arcCircle.drawTorus(centerX, centerY, minRadius, maxRadius, startAngle, endAngle);
     arcCircle.endFill();
