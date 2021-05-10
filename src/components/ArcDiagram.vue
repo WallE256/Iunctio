@@ -8,40 +8,8 @@ import { DefineComponent, defineComponent } from "vue";
 import * as PIXI from "pixi.js";
 import MultiDirectedGraph from "graphology";
 import Node from "graphology";
-import { Graphics } from "pixi.js";
-
-
-//custom type for each node's circle so it can be redrawn
-// type Attr = {
-//   obj: PIXI.Graphics,
-//   x: number,
-//   y: number,
-//   radius: number,
-//   style: number,
-//   startAngle?: number|undefined,
-//   endAngle?: number|undefined,
-//   value?: number|string,
-//   clicked?: boolean
-// }
-
-//event listener
-//I didn't figure out how to add this function inside the methods property
-// const onButtonOver = (obj: PIXI.Graphics, objAttributes: Attr, hover: boolean, app: PIXI.Application) => {
-//       //clear existing circle
-//       obj.clear();
-//       app.stage.removeChild(obj);
-
-//       //redraw the circle
-//       let color = hover? 0x282BDC:0xDE3249; 
-//       console.log(objAttributes.x);
-//       console.log(color)
-//       const circle = new Graphics();
-//       circle.lineStyle(0);
-//       circle.beginFill(color, 1);
-//       circle.drawCircle(objAttributes.x, objAttributes.y, objAttributes.radius);
-//       circle.endFill();
-//       app.stage.addChild(circle);
-//     }
+import { Application, Graphics } from "pixi.js";
+import { debounce } from "lodash";
 
 export default defineComponent({
   mounted() {
@@ -76,23 +44,20 @@ export default defineComponent({
       { source: 5, target: 18, attr: {} },
       { source: 20, target: 18, attr: {} }
     ];
-    const input = {
-      shape: "circle", // or line
+    this.input = {
+      shape: "line", // or line
     };
 
     const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
 
-    const graph = new MultiDirectedGraph({
-      //options
-    });
     for (const { key, attr } of nodes) {
-      graph.addNode(key, attr);
+      this.graph.addNode(key, attr);
     }
     for (const { source, target, attr } of edges) {
-      graph.addDirectedEdge(source, target, attr);
+      this.graph.addDirectedEdge(source, target, attr);
     }
 
-    const app = new PIXI.Application({
+    this.app = new PIXI.Application({
       view: canvas,
       width: window.innerWidth,
       height: window.innerHeight,
@@ -106,14 +71,15 @@ export default defineComponent({
     
     // give each node a corresponding index and corresponding text element
     let i = 0;
-    graph.forEachNode((source: any, sourceAttr) => {
+    this.graph.forEachNode((source: any, sourceAttr) => {
       const sourceString = source.toString();
       const text = new PIXI.Text(
         sourceString,
         defaultStyle,
       );
       text.anchor.set(0.5, 0.5);
-      app.stage.addChild(text);
+
+      (this.app as PIXI.Application).stage.addChild(text);
       this.nodeMap.set(source, {
         text: text,
         index: i,
@@ -121,10 +87,25 @@ export default defineComponent({
       i++;
     });
 
-    this.draw(graph, app, input.shape === "circle");
-  },
+    this.draw(this.graph, this.app as PIXI.Application, this.input.shape === "circle");
 
+  },
+  created(){
+    window.addEventListener(
+      "resize",
+      debounce((event) => {
+        this.handleResize(event, this.graph, this.app as PIXI.Application, this.input.shape as string);
+        console.log('resizing...')
+
+        }, 250)
+    )
+  },
+  
   data() {
+    type Input = {
+      shape?: string;
+    }
+
     return {
       // node map
       nodeMap: new Map<number, {
@@ -134,12 +115,26 @@ export default defineComponent({
       
       // the node that you're currently hovering over
       selectedIndex: null as number | null,
+      app:null as null | PIXI.Application ,
+      graph: new MultiDirectedGraph({
+    //options
+    }),
+      input: {} as Input
     };
   },
 
   methods: {
+    handleResize(e: any , graph: MultiDirectedGraph, app: PIXI.Application, input: string) {
+      this.draw(graph, app as PIXI.Application, input === 'circle');
+    },
+
     draw(graph: MultiDirectedGraph, app: PIXI.Application, circle: boolean) {
       const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
+
+      canvas.height = window.innerHeight;
+      canvas.width = window.innerWidth;
+     
+      
       const tooltip = this.$refs["graph-tooltip"] as HTMLElement;
       const vertexRadius = 240;
       const edgeRadius = vertexRadius - 20;
