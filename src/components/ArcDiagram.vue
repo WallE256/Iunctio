@@ -6,7 +6,7 @@
 <script lang="ts">
 import { DefineComponent, defineComponent } from "vue";
 import * as PIXI from "pixi.js";
-import DirectedGraph from "graphology";
+import MultiDirectedGraph from "graphology";
 import Node from "graphology";
 import { Graphics } from "pixi.js";
 
@@ -77,12 +77,12 @@ export default defineComponent({
       { source: 20, target: 18, attr: {} }
     ];
     const input = {
-      shape: "line", // or line
+      shape: "circle", // or line
     };
 
     const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
 
-    const graph = new DirectedGraph({
+    const graph = new MultiDirectedGraph({
       //options
     });
     for (const { key, attr } of nodes) {
@@ -138,7 +138,7 @@ export default defineComponent({
   },
 
   methods: {
-    draw(graph: DirectedGraph, app: PIXI.Application, circle: boolean) {
+    draw(graph: MultiDirectedGraph, app: PIXI.Application, circle: boolean) {
       const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
       const tooltip = this.$refs["graph-tooltip"] as HTMLElement;
       const vertexRadius = 240;
@@ -151,6 +151,13 @@ export default defineComponent({
       const graphics = new PIXI.Graphics();
       app.stage.addChild(graphics);
 
+      const nodeRadius = Math.floor(200 / graph.order); //hopefully no graph will have 0 nodes
+      const textDistance = 40;
+      const textStyle = new PIXI.TextStyle({
+        fill: "#000000",
+        fontSize: nodeRadius + 4,
+      });
+
       // NOTE: some forEach* callbacks have ": any", because graphology lies
       // about its types :(
       if (circle) {
@@ -161,13 +168,23 @@ export default defineComponent({
           if (typeof sourceData === "undefined") return; // not supposed to happen
 
           const text = sourceData.text;
-          text.x = centerX + vertexRadius * Math.cos(sourceData.index * angle);
-          text.y = centerY + vertexRadius * Math.sin(sourceData.index * angle);
+          text.style = textStyle;
+          text.x = centerX + (vertexRadius + textDistance) * Math.cos(sourceData.index * angle);
+          text.y = centerY + (vertexRadius + textDistance) * Math.sin(sourceData.index * angle);
+
+          const circle = new Graphics();
+          circle.lineStyle(0);
+          circle.beginFill(0xDE3249, 1);
+          circle.drawCircle(0, 0, nodeRadius);
+          circle.endFill();
+          circle.x = centerX + vertexRadius * Math.cos(sourceData.index * angle);
+          circle.y = centerY + vertexRadius * Math.sin(sourceData.index * angle);
 
           // tooltip display
-          text.interactive = true;
-          text.on("mousemove", (event) => {
-            if (event.target !== text) {
+          circle.interactive = true;
+          circle.buttonMode = true;
+          circle.on("mousemove", (event) => {
+            if (event.target !== circle) {
               return;
             }
             event.stopPropagation();
@@ -176,13 +193,14 @@ export default defineComponent({
             tooltip.style.left = (event.data.global.x + 20) + "px";
             tooltip.style.top = (event.data.global.y + 20) + "px";
           });
-          text.on("mouseout", (event) => {
-            if (event.currentTarget !== text) {
+          circle.on("mouseout", (event) => {
+            if (event.currentTarget !== circle) {
               return;
             }
             event.stopPropagation();
             tooltip.style.display = "none";
           });
+          app.stage.addChild(circle);
 
           // draw outgoing edges
           graph.forEachOutboundNeighbor(source, (target: any, targetAttr) => {
@@ -215,12 +233,7 @@ export default defineComponent({
         }
 
         const nodeLineY = canvas.height * 3/4;
-        const nodeRadius = Math.floor(200 / graph.order); //hopefully no graph will have 0 nodes
         let nodeLineX = canvas.width * 1/8;
-        const style = new PIXI.TextStyle({
-                fill: "#000000",
-                fontSize: nodeRadius+4
-              });
         let gap = Math.floor(canvas.width/(1.2 * graph.order));
 
         graph.forEachNode((source: any, sourceAttr) => {
@@ -237,7 +250,7 @@ export default defineComponent({
             circle.y = nodeLineY;
 
             // node's value
-            text.style = style;
+            text.style = textStyle;
             text.x = circle.x;
             text.y = circle.y + nodeRadius + text.height;
            
