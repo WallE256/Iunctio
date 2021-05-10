@@ -46,7 +46,7 @@ export default defineComponent({
       { source: 20, target: 18, attr: {} }
     ];
     const input = {
-      shape: "line", // or line
+      edgeType: "all", // or incoming or outgoing
     };
 
     const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
@@ -54,6 +54,7 @@ export default defineComponent({
     const graph = new DirectedGraph({
       //options
     });
+
     for (const { key, attr } of nodes) {
       graph.addNode(key, attr);
     }
@@ -96,7 +97,7 @@ export default defineComponent({
 
     var height = 5;
 
-    this.draw(graph, app, root, height, totalRadius);
+    this.draw(graph, app, root, height, totalRadius, input.edgeType);
   },
 
   data() {
@@ -113,34 +114,46 @@ export default defineComponent({
   },
 
   methods: {
-    draw(graph: DirectedGraph, app: PIXI.Application, root: any, height: any, totalRadius: any) {
+    draw(graph: DirectedGraph, app: PIXI.Application, root: any, height: any, totalRadius: any, edgeType: any) {
       const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
+
+      canvas.height = window.innerHeight;
+      canvas.width = window.innerWidth;
+
       const tooltip = this.$refs["graph-tooltip"] as HTMLElement;
-      const vertexRadius = 240;
-      const edgeRadius = vertexRadius - 20;
-      const angle = (2 * Math.PI) / graph.order;
+
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
+
       var levelRadius = totalRadius / (height + 1);
 
       const graphics = new PIXI.Graphics();
       app.stage.addChild(graphics);
 
       if (root) {
-        console.log("Root");
-        this.drawnode(graph, app, root, height, 0, levelRadius, 0, 1, centerX, centerY, 0x00BB00);
+        this.drawnode(graph, app, edgeType, root, height, 0, levelRadius, 0, 1, centerX, centerY, 0x00BB00);
       } else {
-        console.log("No root");
-
         var totalDegree = 0;
         var nodesWithDegree = 0;
         var drawStart = 0;
 
         // Calculate total degree for the neighbour nodes
         graph.forEachNode((node, attributes) => {
-          totalDegree += graph.degree(node);
-          if (graph.degree(node) > 0) {
-            nodesWithDegree += 1;
+          if (edgeType == 'incoming') {
+            totalDegree += graph.inDegree(node);
+            if (graph.inDegree(node) > 0) {
+              nodesWithDegree += 1;
+            }
+          } else if (edgeType == 'outgoing') {
+            totalDegree += graph.outDegree(node);
+            if (graph.outDegree(node) > 0) {
+              nodesWithDegree += 1;
+            }
+          } else {
+            totalDegree += graph.degree(node);
+            if (graph.degree(node) > 0) {
+              nodesWithDegree += 1;
+            }
           }
         });
 
@@ -150,13 +163,23 @@ export default defineComponent({
 
         graph.forEachNode((node, attributes) => {
 
-          if (graph.degree(node) > 0) {
+          if (((edgeType == 'incoming') && (graph.inDegree(node) > 0)) || ((edgeType == 'outgoing') && (graph.outDegree(node) > 0)) || ((edgeType != 'incoming') && (edgeType != 'outgoing') && (graph.degree(node) > 0))) {
 
-            var newSize = 1 * graph.degree(node) / totalDegree;
+            var newSize = 0;
+
+            if (edgeType == 'incoming') {
+              newSize = graph.inDegree(node);
+            } else if (edgeType == 'outgoing') {
+              newSize = graph.outDegree(node);
+            } else {
+              newSize = graph.degree(node);
+            }
+
+            newSize /= totalDegree;
 
             var convertedColour = d3.color(colours(index)).formatHex().replace("#", "0x")
 
-            this.drawnode(graph, app, node, height, 1, levelRadius, drawStart, newSize, centerX, centerY, convertedColour);
+            this.drawnode(graph, app, edgeType, node, height, 1, levelRadius, drawStart, newSize, centerX, centerY, convertedColour);
             drawStart += newSize;
             index += 1;
           }
@@ -164,7 +187,7 @@ export default defineComponent({
       }
     },
 
-  drawnode (graph: DirectedGraph, app: PIXI.Application, node: any, height: any, level: any, levelRadius: any, drawStart: any, size: any, centerX: any, centerY: any, nodeColour: any) {
+  drawnode (graph: DirectedGraph, app: PIXI.Application, edgeType: any, node: any, height: any, level: any, levelRadius: any, drawStart: any, size: any, centerX: any, centerY: any, nodeColour: any) {
 
     // drawnode
     var minRadius = level * levelRadius;
@@ -181,12 +204,27 @@ export default defineComponent({
 
       // Calculate total degree for the neighbour nodes
       graph.forEachNeighbor(node, function(neighbour, attributes) {
-        totalDegree += graph.degree(neighbour);
+        if (edgeType == 'incoming') {
+          totalDegree += graph.inDegree(neighbour);
+        } else if (edgeType == 'outgoing') {
+          totalDegree += graph.outDegree(neighbour);
+        } else {
+          totalDegree += graph.degree(neighbour);
+        }
       });
 
       graph.forEachNeighbor(node, (neighbour, attributes) => {
-        var newSize = size * graph.degree(neighbour) / totalDegree;
-        this.drawnode(graph, app, neighbour, height, level + 1, levelRadius, drawStart, newSize, centerX, centerY, nodeColour);
+        var newSize = size / totalDegree;
+
+        if (edgeType == 'incoming') {
+          newSize *= graph.inDegree(neighbour);
+        } else if (edgeType == 'outgoing') {
+          newSize *= graph.outDegree(neighbour);
+        } else {
+          newSize *= graph.degree(neighbour);
+        }
+
+        this.drawnode(graph, app, edgeType, neighbour, height, level + 1, levelRadius, drawStart, newSize, centerX, centerY, nodeColour);
         drawStart += newSize;
       });
     }
