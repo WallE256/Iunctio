@@ -6,7 +6,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { debounce } from "lodash";
+import { throttle } from "lodash";
 import NavigationBar from "@/components/NavigationBar.vue";
 import DenyAccess from "@/components/DenyAccess.vue";
 export default defineComponent({
@@ -14,19 +14,20 @@ export default defineComponent({
   components: { DenyAccess, NavigationBar },
   data() {
     return {
-      show_item: this.handleResize(),
+      show_item: window.innerHeight > 576 && window.innerWidth > 576,
     };
   },
-  created() {
+  mounted() {
     window.addEventListener(
       "resize",
-      debounce(() => this.handleResize(), 250)
+      throttle(() => this.handleResize(), 250)
     );
   },
   methods: {
     handleResize() {
       this.show_item = window.innerHeight > 576 && window.innerWidth > 576;
     },
+
   },
 });
 </script>

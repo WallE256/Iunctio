@@ -11,6 +11,7 @@
     "core-js": "^3.6.5",
     "graphology": "^0.19.3",
     "lodash.debounce": "^4.0.8",
+    "lodash.throttle": "^4.1.1",
     "rfs": "^9.0.3",
     "vue": "^3.0.0",
     "vue-router": "^4.0.0-0"
