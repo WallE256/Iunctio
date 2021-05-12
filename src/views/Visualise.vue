@@ -14,7 +14,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import ArcDiagram from "@/components/ArcDiagram.vue";
+import ArcDiagram from "@/components/vis-type/ArcDiagram.vue";
 export default defineComponent({
   name: "Visualise",
   components: { ArcDiagram },
