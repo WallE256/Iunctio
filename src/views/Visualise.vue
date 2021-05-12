@@ -1,22 +1,42 @@
 <template>
-  <arc-diagram></arc-diagram>
+  <main class="visualise">
+    <create-visualisations v-show="show_vis_home" @tile-click="toggleHome" />
+    <keep-alive
+      ><upload-dataset v-show="!show_vis_home" @back="toggleHome"
+    /></keep-alive>
+    <current-visualisations v-show="show_vis_home" />
+  </main>
 </template>
-
-<!--<style>
-  body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-  }
-</style>-->
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import ArcDiagram from "@/components/vis-type/ArcDiagram.vue";
+import CreateVisualisations from "@/components/visualise/CreateVisualisations.vue";
+import UploadDataset from "@/components/visualise/UploadDataset.vue";
+import CurrentVisualisations from "@/components/visualise/CurrentVisualisations.vue";
+import "@/scripts/store";
+
 export default defineComponent({
   name: "Visualise",
-  components: { ArcDiagram },
+  components: { UploadDataset, CurrentVisualisations, CreateVisualisations },
+  data() {
+    return {
+      show_vis_home: true,
+      selected_vis: null as { name: string; icon: string } | null,
+    };
+  },
+  methods: {
+    toggleHome() {
+      this.show_vis_home = !this.show_vis_home;
+    },
+  },
 });
 </script>
+
+<style scoped lang="scss">
+.visualise {
+  // Occupy entire viewport height.
+  height: 100%;
+  // Prevent content under nav-bar
+  padding: 50px 25px 25px 25px;
+}
+</style>
