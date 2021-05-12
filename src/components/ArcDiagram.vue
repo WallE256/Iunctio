@@ -45,7 +45,7 @@ export default defineComponent({
       { source: 20, target: 18, attr: {} }
     ];
     this.input = {
-      shape: "circle", // or line
+      shape: "circle", // circle/line
     };
 
     const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
@@ -135,16 +135,13 @@ export default defineComponent({
     });
 
     this.draw(this.graph, this.app as PIXI.Application, this.input.shape === "circle");
-
   },
   created(){
     window.addEventListener(
       "resize",
       debounce((event) => {
         this.handleResize(event, this.graph, this.app as PIXI.Application, this.input.shape as string);
-        console.log('resizing...')
-
-        }, 250)
+      }, 250),
     )
   },
   
@@ -163,11 +160,11 @@ export default defineComponent({
       
       // the node that you're currently hovering over
       selectedIndex: null as number | null,
-      app:null as null | PIXI.Application ,
+      app: null as null | PIXI.Application,
       graph: new MultiDirectedGraph({
-    //options
-    }),
-      input: {} as Input
+        //options
+      }),
+      input: {} as Input,
     };
   },
 
@@ -181,16 +178,13 @@ export default defineComponent({
 
       canvas.height = window.innerHeight;
       canvas.width = window.innerWidth;
-     
-      
-      const tooltip = this.$refs["graph-tooltip"] as HTMLElement;
+
       const vertexRadius = 240;
-      const edgeRadius = vertexRadius - 20;
-      const angle = (2 * Math.PI) / graph.order;
+      const angle = 2 * Math.PI / (graph.order == 0 ? 1 : graph.order);
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
 
-      const nodeRadius = Math.floor(200 / graph.order); //hopefully no graph will have 0 nodes
+      const nodeRadius = graph.order == 0 ? 200 : Math.floor(200 / graph.order);
       const textDistance = 40;
       const textStyle = new PIXI.TextStyle({
         fill: "#000000",
@@ -208,15 +202,13 @@ export default defineComponent({
         startAngle?: number|undefined,
         endAngle?: number|undefined,
         value?: number|string,
-        clicked?: boolean
+        clicked?: boolean,
       }
       
       // NOTE: some forEach* callbacks have ": any", because graphology lies
       // about its types :(
       if (circle) {
         graph.forEachNode((source: any, sourceAttr) => {
-          const sourceString = source.toString();
-
           const sourceData = this.nodeMap.get(source);
           if (typeof sourceData === "undefined") return; // not supposed to happen
 
@@ -242,12 +234,12 @@ export default defineComponent({
             const targetData = this.nodeMap.get(target);
             if (typeof targetData === "undefined") return;
 
-            const fromX = centerX + edgeRadius * Math.cos(sourceData.index * angle);
-            const fromY = centerY + edgeRadius * Math.sin(sourceData.index * angle);
-            const toX = centerX + edgeRadius * Math.cos(targetData.index * angle);
-            const toY = centerY + edgeRadius * Math.sin(targetData.index * angle);
+            const fromX = centerX + vertexRadius * Math.cos(sourceData.index * angle);
+            const fromY = centerY + vertexRadius * Math.sin(sourceData.index * angle);
+            const toX = centerX + vertexRadius * Math.cos(targetData.index * angle);
+            const toY = centerY + vertexRadius * Math.sin(targetData.index * angle);
             const edgeGraphics = new PIXI.Graphics()
-              .lineStyle(2, 0xff0000)
+              .lineStyle(2, 0xFFFFFF)
               .moveTo(fromX, fromY)
               .quadraticCurveTo(centerX, centerY, toX, toY);
             app.stage.addChild(edgeGraphics);
@@ -257,11 +249,9 @@ export default defineComponent({
               x: centerX,
               y: centerY,
               radius: 1, //?
-              startAngle: Math.PI,
-              endAngle: 2 * Math.PI,
               style: 0x0,
             }
-            graph.setEdgeAttribute(edge, 'arc', arcAttr);
+            graph.setEdgeAttribute(edge, "arc", arcAttr);
           });
         });
       } else {
@@ -270,47 +260,43 @@ export default defineComponent({
         let gap = Math.floor(canvas.width/(1.2 * graph.order));
 
         graph.forEachNode((source: any, sourceAttr) => {
-            const sourceData = this.nodeMap.get(source);
-            if (typeof sourceData === "undefined") return; // not supposed to happen
-            const text = sourceData.text;
+          const sourceData = this.nodeMap.get(source);
+          if (typeof sourceData === "undefined") return; // not supposed to happen
+          const text = sourceData.text;
 
-            const circle = sourceData.circle;
-            circle.clear();
-            circle.lineStyle(0);
-            circle.beginFill(0xDE3249, 1);
-            circle.drawCircle(0, 0, nodeRadius);
-            circle.endFill();
-            circle.x = nodeLineX + gap * sourceData.index;
-            circle.y = nodeLineY;
+          const circle = sourceData.circle;
+          circle.clear();
+          circle.lineStyle(0);
+          circle.beginFill(0xDE3249, 1);
+          circle.drawCircle(0, 0, nodeRadius);
+          circle.endFill();
+          circle.x = nodeLineX + gap * sourceData.index;
+          circle.y = nodeLineY;
 
-            // node's value
-            text.style = textStyle;
-            text.x = circle.x;
-            text.y = circle.y + nodeRadius + text.height;
-           
-            const circleAttr:Attr = {
-              obj: circle,
-              x: circle.x,
-              y: circle.y,
-              radius: nodeRadius,
-              style: 0xDE3249,
-              value: source,
-              clicked: false
-            }
-
-
-            //adding interactivity to button
-            circle.interactive = true;
-            circle.buttonMode = true;
-            
+          // node's value
+          text.style = textStyle;
+          text.x = circle.x;
+          text.y = circle.y + nodeRadius + text.height;
           
-            // TODO: should we also store the edges in a separate map???
-            // hmmmm...I dont think it bothers us for now
-            graph.setNodeAttribute(source, 'circle', circleAttr);
-            app.stage.addChild(circle, text);
-        });
+          const circleAttr:Attr = {
+            obj: circle,
+            x: circle.x,
+            y: circle.y,
+            radius: nodeRadius,
+            style: 0xDE3249,
+            value: source,
+            clicked: false,
+          }
 
-        
+          //adding interactivity to button
+          circle.interactive = true;
+          circle.buttonMode = true;
+
+          // TODO: should we also store the edges in a separate map???
+          // hmmmm...I dont think it bothers us for now
+          graph.setNodeAttribute(source, "circle", circleAttr);
+          app.stage.addChild(circle, text);
+        });
 
         //add edges as arcs
         graph.forEachEdge(
@@ -338,17 +324,15 @@ export default defineComponent({
             x: xArcCenter,
             y: sourceData.circle.y,
             radius: distanceBetweenNodes/2,
-            startAngle:Math.PI,
+            startAngle: Math.PI,
             endAngle: 2 * Math.PI,
-            style: 0x0
+            style: 0x0,
           }
           graph.setEdgeAttribute(edge, 'arc', arcAttr);
           arcEdge.lineStyle(2, 0xFFFFFF);
           arcEdge.arc(arcAttr.x, arcAttr.y, arcAttr.radius, arcAttr.startAngle as number, arcAttr.endAngle as number)
 
-          
           app.stage.addChild(arcEdge);
-         
         });
       }
     }
