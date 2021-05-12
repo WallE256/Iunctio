@@ -22,12 +22,9 @@ $z-indices: (
 
 //Set media query breakpoints:
 $mq-breakpts: (
-  mobile: 480px,
-  tablet: 768px,
-  desktop: 992px,
-  large-desktop: 1200px,
-  wide: 1366px,
-  ultrawide: 1536px,
+  sm: 576px,
+  md: 768px,
+  xl: 1200px,
 );
 
 /***************************************

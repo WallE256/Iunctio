@@ -13,6 +13,8 @@
     "graphology-types": "^0.19.2",
     "lodash": "^4.17.21",
     "pixi.js": "^6.0.2",
+    "lodash.debounce": "^4.0.8",
+    "lodash.throttle": "^4.1.1",
     "rfs": "^9.0.3",
     "vue": "^3.0.0",
     "vue-router": "^4.0.0-0"
