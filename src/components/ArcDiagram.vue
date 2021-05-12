@@ -1,5 +1,6 @@
 <template>
-  <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
+  
+  <canvas id="drawing-canvas" ref="drawing-canvas" style="margin:0; padding:0;"></canvas>
   <p id="graph-tooltip" ref="graph-tooltip" style="position: absolute;"></p>
 </template>
 
@@ -45,10 +46,10 @@ export default defineComponent({
       { source: 20, target: 18, attr: {} }
     ];
     this.input = {
-      shape: "circle", // or line
+      shape: "line", // or line
     };
 
-    const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
+    this.canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
 
     for (const { key, attr } of nodes) {
       this.graph.addNode(key, attr);
@@ -58,13 +59,13 @@ export default defineComponent({
     }
 
     this.app = new PIXI.Application({
-      view: canvas,
+      view: this.canvas,
       width: window.innerWidth,
       height: window.innerHeight,
       antialias: true,
       transparent: true,
+      resizeTo: window,
     });
-
     const tooltip = this.$refs["graph-tooltip"] as HTMLElement;
 
     const defaultStyle = new PIXI.TextStyle({
@@ -141,7 +142,7 @@ export default defineComponent({
     window.addEventListener(
       "resize",
       debounce((event) => {
-        this.handleResize(event, this.graph, this.app as PIXI.Application, this.input.shape as string);
+        this.handleResize(event, this.canvas as HTMLCanvasElement, this.graph, this.app as PIXI.Application, this.input.shape as string);
         console.log('resizing...')
 
         }, 250)
@@ -167,20 +168,37 @@ export default defineComponent({
       graph: new MultiDirectedGraph({
     //options
     }),
-      input: {} as Input
+      input: {} as Input,
+      canvas: null as null | HTMLCanvasElement,
     };
   },
 
   methods: {
-    handleResize(e: any , graph: MultiDirectedGraph, app: PIXI.Application, input: string) {
+    handleResize(e: any, canvas: HTMLCanvasElement , graph: MultiDirectedGraph, app: PIXI.Application, input: string) {
+      
+      // const gl = (this.canvas as HTMLCanvasElement).getContext("webgl2") as WebGL2RenderingContext;
+      
+      // I got this from stackoverflow idk if this works
+      
+      // just leave it here
+      // const red = 1;
+      // const green = 0.5;
+      // const blue = 0.7;
+      // const alpha = 1;
+      // gl.clearColor(red, green, blue, alpha);
+      // gl.clear(gl.COLOR_BUFFER_BIT);
+      
+      
+      // (this.canvas as HTMLCanvasElement).height = window.innerHeight;
+      // (this.canvas as HTMLCanvasElement).width = window.innerWidth;
       this.draw(graph, app as PIXI.Application, input === 'circle');
     },
 
     draw(graph: MultiDirectedGraph, app: PIXI.Application, circle: boolean) {
-      const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
-
-      canvas.height = window.innerHeight;
-      canvas.width = window.innerWidth;
+      //const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
+      const canvas = this.canvas as HTMLCanvasElement;
+      //canvas.height = window.innerHeight;
+      //canvas.width = window.innerWidth;
      
       
       const tooltip = this.$refs["graph-tooltip"] as HTMLElement;
