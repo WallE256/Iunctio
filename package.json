@@ -10,6 +10,7 @@
   "dependencies": {
     "core-js": "^3.6.5",
     "graphology": "^0.19.3",
+    "graphology-types": "^0.19.2",
     "lodash.debounce": "^4.0.8",
     "lodash.throttle": "^4.1.1",
     "rfs": "^9.0.3",
