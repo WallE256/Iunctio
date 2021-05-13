@@ -7,17 +7,28 @@
 import MultiDirectedGraph from "graphology";
 
 export class Diagram {
+  /// This diagram's unique identifier
   id: string;
-  
+
+  /// The graph that this diagram is drawing (the id refers to the graph's
+  /// unique id, which can be used in `getDataset()`).
   graphID: string;
 
-  /// possible options: arcdiagram, sunburst
+  /// The visualization type.
+  /// Possible options: arcdiagram, sunburst.
   type: string;
 
-  settings: any; // depends on the settings type
+  /// Any additional settings that are associated with this diagram.
+  /// What settings are stored depends on `this.type`.
+  /// To change a setting, use `changeSetting()` and don't use this property
+  /// directly.
+  settings: any;
 
+  /// The change listener, which is called when a setting is changed using
+  /// `changeSetting()`.
   onChange?: (settings: Diagram, changedKey: string) => void;
 
+  ///
   constructor(
     id: string,
     graphID: string,
@@ -113,7 +124,6 @@ export function getDiagram(id: string): Diagram | null {
   const storageKey = "vis-" + id;
   const storageItem = window.localStorage.getItem(storageKey);
   if (storageItem) {
-    console.log(storageItem);
     const deserialized = JSON.parse(storageItem);
     return new Diagram(
       deserialized.id,
