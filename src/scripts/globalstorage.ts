@@ -4,7 +4,7 @@
 // the Visualise.vue page should use these functions to manage the
 // uploaded datasets and the created visualizations/diagrams.
 
-import MultiDirectedGraph from "graphology";
+import Graph from "graphology";
 
 export class Diagram {
   /// This diagram's unique identifier
@@ -53,7 +53,7 @@ const selectedNode = null as {
   datasetID: string,
   nodeID: any,
 } | null;
-const datasets = new Map<string, MultiDirectedGraph>();
+const datasets = new Map<string, Graph>();
 
 function diagramToJSON(diagram: Diagram): string {
   // unfortunately this function is necessary, or it will try to serialize the
@@ -67,7 +67,7 @@ function diagramToJSON(diagram: Diagram): string {
 }
 
 /// `addDataset` adds a dataset to the global storage
-export function addDataset(id: string, graph: MultiDirectedGraph): void {
+export function addDataset(id: string, graph: Graph): void {
   datasets.set(id, graph);
   const storageKey = "dataset-" + id;
   window.localStorage.setItem(storageKey, JSON.stringify(graph.export()));
@@ -76,7 +76,7 @@ export function addDataset(id: string, graph: MultiDirectedGraph): void {
 /// `getDataset` returns the graph that corresponds to the given id, or
 /// `null` if it does not exist.
 /// It will be fetched from memory, or localStorage if that is not available.
-export function getDataset(id: string): MultiDirectedGraph | null {
+export function getDataset(id: string): Graph | null {
   // if it's in the memory, use that (so parsing JSON is not necessary)
   const inMemory = datasets.get(id);
   if (inMemory) {
@@ -87,9 +87,7 @@ export function getDataset(id: string): MultiDirectedGraph | null {
   const storageKey = "dataset-" + id;
   const storageItem = window.localStorage.getItem(storageKey);
   if (storageItem) {
-    const result = new MultiDirectedGraph();
-    result.import(JSON.parse(storageItem));
-    return result;
+    return Graph.from(JSON.parse(storageItem));
   }
 
   return null;
@@ -104,7 +102,7 @@ export function removeDataset(id: string): void {
 
 /// `addDiagram` will add a new diagram to local storage.
 export function addDiagram(diagram: Diagram): void {
-  const storageKey = "vis-" + diagram.id;
+  const storageKey = "dia-" + diagram.id;
   window.localStorage.setItem(storageKey, diagramToJSON(diagram));
   diagrams.set(diagram.id, diagram);
 }
@@ -121,7 +119,7 @@ export function getDiagram(id: string): Diagram | null {
   }
 
   // otherwise, try to get it from localStorage
-  const storageKey = "vis-" + id;
+  const storageKey = "dia-" + id;
   const storageItem = window.localStorage.getItem(storageKey);
   if (storageItem) {
     const deserialized = JSON.parse(storageItem);
@@ -140,7 +138,7 @@ export function getDiagram(id: string): Diagram | null {
 /// the local storage
 export function removeDiagram(diagram: Diagram): void {
   diagrams.delete(diagram.id);
-  const storageKey = "vis-" + diagram.id;
+  const storageKey = "dia-" + diagram.id;
   window.localStorage.removeItem(storageKey);
 }
 
@@ -151,7 +149,7 @@ export function changeSetting(diagram: Diagram, key: string, value: any): void {
   if (diagram.onChange) {
     diagram.onChange(diagram, key);
   }
-  const storageKey = "vis-" + diagram.id;
+  const storageKey = "dia-" + diagram.id;
 
   // local storage needs to be updated (which is still pretty cheap,
   // considering that the diagram's dataset is stored separately and is
