@@ -58,7 +58,47 @@ export default defineComponent({
       { source: 14, target: 16, attr: {} },
       { source: 2, target: 13, attr: {} },
       { source: 5, target: 18, attr: {} },
-      { source: 20, target: 18, attr: {} }
+      { source: 20, target: 18, attr: {} },
+      { source: 19, target: 6, attr: {} },
+      { source: 2, target: 13, attr: {} },
+      { source: 5, target: 18, attr: {} },
+      { source: 20, target: 18, attr: {} },
+      { source: 19, target: 6, attr: {} },
+      { source: 2, target: 13, attr: {} },
+      { source: 5, target: 18, attr: {} },
+      { source: 20, target: 18, attr: {} },
+      { source: 19, target: 6, attr: {} },
+      { source: 17, target: 4, attr: {} },
+      { source: 12, target: 15, attr: {} },
+      { source: 11, target: 20, attr: {} },
+      { source: 10, target: 17, attr: {} },
+      { source: 9, target: 15, attr: {} },
+      { source: 7, target: 8, attr: {} },
+      { source: 4, target: 7, attr: {} },
+      { source: 19, target: 6, attr: {} },
+      { source: 17, target: 4, attr: {} },
+      { source: 12, target: 15, attr: {} },
+      { source: 11, target: 20, attr: {} },
+      { source: 10, target: 17, attr: {} },
+      { source: 9, target: 15, attr: {} },
+      { source: 7, target: 8, attr: {} },
+      { source: 4, target: 7, attr: {} },
+      { source: 19, target: 6, attr: {} },
+      { source: 17, target: 4, attr: {} },
+      { source: 12, target: 15, attr: {} },
+      { source: 11, target: 20, attr: {} },
+      { source: 10, target: 17, attr: {} },
+      { source: 9, target: 15, attr: {} },
+      { source: 7, target: 8, attr: {} },
+      { source: 4, target: 7, attr: {} },
+      { source: 19, target: 6, attr: {} },
+      { source: 17, target: 4, attr: {} },
+      { source: 12, target: 15, attr: {} },
+      { source: 11, target: 20, attr: {} },
+      { source: 10, target: 17, attr: {} },
+      { source: 9, target: 15, attr: {} },
+      { source: 7, target: 8, attr: {} },
+      { source: 4, target: 7, attr: {} }
     ];
     const input = {
       edgeType: "all", // or incoming or outgoing
@@ -213,7 +253,7 @@ export default defineComponent({
 
           var convertedColour = d3.color(colours(index)).formatHex().replace("#", "0x")
 
-          var predecessors = [];
+          predecessors = [];
 
           this.drawGraph(graph, app, bothConnections, outConnections, predecessors, edgeType, node, height, 1, levelRadius, drawStart, newSize, centerX, centerY, convertedColour);
           drawStart += newSize;
@@ -309,7 +349,11 @@ export default defineComponent({
 
     arcCircle.beginFill(nodeColour);
     arcCircle.lineStyle(1.2, 0xFFFFFF);
-    arcCircle.drawTorus(centerX, centerY, minRadius, maxRadius, startAngle, endAngle);
+    if (level == 0) {
+      arcCircle.drawCircle(centerX, centerY, maxRadius);
+    } else {
+      arcCircle.drawTorus(centerX, centerY, minRadius, maxRadius, startAngle, endAngle);
+    }
     arcCircle.endFill();
     app.stage.addChild(arcCircle);
   }
