@@ -26,7 +26,7 @@ export class Diagram {
 
   /// The change listener, which is called when a setting is changed using
   /// `changeSetting()`.
-  onChange?: (settings: Diagram, changedKey: string) => void;
+  onChange?: (diagram: Diagram, changedKey: string) => void;
 
   ///
   constructor(
@@ -34,7 +34,7 @@ export class Diagram {
     graphID: string,
     type: string,
     settings?: any,
-    onChange?: (settings: Diagram, changedKey: string) => void,
+    onChange?: (diagram: Diagram, changedKey: string) => void,
   ) {
     this.id = id;
     this.graphID = graphID;
@@ -87,7 +87,9 @@ export function getDataset(id: string): Graph | null {
   const storageKey = "dataset-" + id;
   const storageItem = window.localStorage.getItem(storageKey);
   if (storageItem) {
-    return Graph.from(JSON.parse(storageItem));
+    const graph = Graph.from(JSON.parse(storageItem));
+    datasets.set(id, graph);
+    return graph;
   }
 
   return null;
@@ -123,12 +125,14 @@ export function getDiagram(id: string): Diagram | null {
   const storageItem = window.localStorage.getItem(storageKey);
   if (storageItem) {
     const deserialized = JSON.parse(storageItem);
-    return new Diagram(
+    const diagram = new Diagram(
       deserialized.id,
       deserialized.graphID,
       deserialized.type,
       deserialized.settings,
     );
+    diagrams.set(id, diagram);
+    return diagram;
   }
 
   return null;
