@@ -43,7 +43,9 @@ export default defineComponent({
       { source: 14, target: 16, attr: {} },
       { source: 2, target: 13, attr: {} },
       { source: 5, target: 18, attr: {} },
-      { source: 20, target: 18, attr: {} }
+      { source: 20, target: 18, attr: {} },
+      { source: 13, target: 2, attr: {} },
+  
     ];
     this.input = {
       shape: "circle", // circle/line
@@ -55,7 +57,7 @@ export default defineComponent({
       this.graph.addNode(key, attr);
     }
     for (const { source, target, attr } of edges) {
-      this.graph.addDirectedEdge(source, target, attr);
+      this.graph.addDirectedEdgeWithKey((source+'->'+target),source, target, attr);
     }
 
     this.app = new PIXI.Application({
@@ -95,17 +97,22 @@ export default defineComponent({
         tooltip.style.left = (circle.x + 20) + "px";
         tooltip.style.top = (circle.y + 40) + "px";
 
-        const color = 0x666666;
-        circle.tint = color;
+        const color = 0x00D737;
+        circle.tint = 0xFE00EF;
 
         this.graph.forEachOutboundEdge(source,
-        (edge, attributes, source, target: any, sourceAttributes, targetAttributes) => {
-          //console.log(`Edge from ${source} to ${target}`);
+        (edge, attributes, source: any, target: any, sourceAttributes, targetAttributes) => {
+          const edgeKey = source + '->' + target;
           const targetData = this.nodeMap.get(target);
-          if (typeof targetData === "undefined") return;
+          const edgeData = this.edgeMap.get(edgeKey);
+          
+          if (typeof targetData === "undefined" || typeof edgeData === "undefined") return;
           targetData.circle.tint = color;
-
-          attributes.arc.obj.tint = color;
+          if (edgeData.arc) {
+            edgeData.arc.tint = color;
+          } else if (edgeData.cord){
+            edgeData.cord.tint = color;
+          }
         });
       });
       circle.on("mouseout", (event) => {
@@ -119,11 +126,19 @@ export default defineComponent({
         this.graph.forEachOutboundEdge(source, 
         (edge, attributes, source, target: any, sourceAttributes, targetAttributes) => {
           //console.log(`Edge from ${source} to ${target}`);
+          const edgeKey = source + '->' + target;
           const targetData = this.nodeMap.get(target);
-          if (typeof targetData === "undefined") return;
-          targetData.circle.tint = color;
+          const edgeData = this.edgeMap.get(edgeKey);
 
-          attributes.arc.obj.tint = color;
+
+          if (typeof targetData === "undefined" || typeof edgeData === "undefined") return;
+          targetData.circle.tint = color;
+          if (edgeData.arc) {
+            edgeData.arc.tint = color;
+          } else if (edgeData.cord) {
+            edgeData.cord.tint = color;
+          }
+          
         });
       });
 
@@ -159,6 +174,13 @@ export default defineComponent({
         index: number,
       }>(),
       
+      //edge map
+      //the key is smth like '2->3'
+      edgeMap: new Map<string,{
+        cord?: PIXI.Graphics,
+        arc?: PIXI.Graphics
+      }>(),
+
       // the node that you're currently hovering over
       selectedIndex: null as number | null,
       app: null as null | PIXI.Application,
@@ -248,24 +270,32 @@ export default defineComponent({
             const targetData = this.nodeMap.get(target);
             if (typeof targetData === "undefined") return;
 
-            const fromX = centerX + vertexRadius * Math.cos(sourceData.index * angle);
-            const fromY = centerY + vertexRadius * Math.sin(sourceData.index * angle);
-            const toX = centerX + vertexRadius * Math.cos(targetData.index * angle);
-            const toY = centerY + vertexRadius * Math.sin(targetData.index * angle);
-            const edgeGraphics = new PIXI.Graphics()
-              .lineStyle(2, 0xFFFFFF)
-              .moveTo(fromX, fromY)
-              .quadraticCurveTo(centerX, centerY, toX, toY);
-            app.stage.addChild(edgeGraphics);
+            if(this.edgeMap.has(target+'->'+source)) {
+              const existentEdge = this.edgeMap.get(target+'->'+source);
+              if(typeof existentEdge === "undefined") return; //should never happen
+              this.edgeMap.set((source+'->'+target), {cord: existentEdge.cord})
+            } else {
+              const fromX = centerX + vertexRadius * Math.cos(sourceData.index * angle);
+              const fromY = centerY + vertexRadius * Math.sin(sourceData.index * angle);
+              const toX = centerX + vertexRadius * Math.cos(targetData.index * angle);
+              const toY = centerY + vertexRadius * Math.sin(targetData.index * angle);
+              const edgeGraphics = new PIXI.Graphics()
+                .lineStyle(2, 0xFFFFFF)
+                .moveTo(fromX, fromY)
+                .quadraticCurveTo(centerX, centerY, toX, toY);
+              app.stage.addChild(edgeGraphics);
 
-            const arcAttr:Attr = {
-              obj: edgeGraphics,
-              x: centerX,
-              y: centerY,
-              radius: 1, //?
-              style: 0x0,
+              const arcAttr:Attr = {
+                obj: edgeGraphics,
+                x: centerX,
+                y: centerY,
+                radius: 1, //?
+                style: 0x0,
+              }
+              graph.setEdgeAttribute(edge, "arc", arcAttr);
+              this.edgeMap.set((source+'->'+target), {cord: edgeGraphics});
             }
-            graph.setEdgeAttribute(edge, "arc", arcAttr);
+            
           });
         });
       } else {
@@ -280,8 +310,8 @@ export default defineComponent({
 
           const circle = sourceData.circle;
           circle.clear();
-          circle.lineStyle(0);
-          circle.beginFill(0xDE3249, 1);
+          circle.lineStyle(1);
+          circle.beginFill(0x50D5E8, 1);
           circle.drawCircle(0, 0, nodeRadius);
           circle.endFill();
           circle.x = nodeLineX + gap * sourceData.index;
@@ -315,38 +345,41 @@ export default defineComponent({
         //add edges as arcs
         graph.forEachEdge(
         (edge, attributes, source: any, target: any, sourceAttributes, targetAttributes) => {
-          const arcEdge = new PIXI.Graphics();
-
-          const sourceData = this.nodeMap.get(source);
-          const targetData = this.nodeMap.get(target);
-          if (typeof sourceData === "undefined" || typeof targetData === "undefined") return; // shouldn't happen
-        
-          //debugging stuff you can ignore it
-          // console.log(`${source} ${sourceAttributes.circle.y}`);
-          // console.log(`${target} ${targetAttributes.circle.y}`);
-          // console.log('--------------------------------')
-          const distanceBetweenNodes = Math.abs(sourceAttributes.circle.x - targetAttributes.circle.x)
-          let xArcCenter: number;
-          if (sourceData.index > targetData.index) {
-            xArcCenter = targetAttributes.circle.x + distanceBetweenNodes/2;
+          //gets rid of redundant arcs
+          if(this.edgeMap.has(target+'->'+source)) {
+            const existentEdge = this.edgeMap.get(target+'->'+source);
+            if(typeof existentEdge === "undefined") return; //should never happen
+            this.edgeMap.set((source+'->'+target), {arc: existentEdge.arc})
           } else {
-            xArcCenter = sourceAttributes.circle.x + distanceBetweenNodes/2;
-          }
+            const arcEdge = new PIXI.Graphics();
+            const sourceData = this.nodeMap.get(source);
+            const targetData = this.nodeMap.get(target);
+            if (typeof sourceData === "undefined" || typeof targetData === "undefined") return; // shouldn't happen
           
-          const arcAttr:Attr = {
-            obj: arcEdge,
-            x: xArcCenter,
-            y: sourceData.circle.y,
-            radius: distanceBetweenNodes/2,
-            startAngle: Math.PI,
-            endAngle: 2 * Math.PI,
-            style: 0x0,
+            const distanceBetweenNodes = Math.abs(sourceAttributes.circle.x - targetAttributes.circle.x)
+            let xArcCenter: number;
+            if (sourceData.index > targetData.index) {
+              xArcCenter = targetAttributes.circle.x + distanceBetweenNodes/2;
+            } else {
+              xArcCenter = sourceAttributes.circle.x + distanceBetweenNodes/2;
+            }
+            
+            const arcAttr:Attr = {
+              obj: arcEdge,
+              x: xArcCenter,
+              y: sourceData.circle.y,
+              radius: distanceBetweenNodes/2,
+              startAngle: Math.PI,
+              endAngle: 2 * Math.PI,
+              style: 0x0,
+            }
+            graph.setEdgeAttribute(edge, 'arc', arcAttr);
+            arcEdge.lineStyle(2, 0xFFFFFF, 0.8);
+            arcEdge.arc(arcAttr.x, arcAttr.y, arcAttr.radius, arcAttr.startAngle as number, arcAttr.endAngle as number)
+            this.edgeMap.set((source+'->'+target), {arc: arcEdge});
+            app.stage.addChild(arcEdge);
           }
-          graph.setEdgeAttribute(edge, 'arc', arcAttr);
-          arcEdge.lineStyle(2, 0xFFFFFF);
-          arcEdge.arc(arcAttr.x, arcAttr.y, arcAttr.radius, arcAttr.startAngle as number, arcAttr.endAngle as number)
-
-          app.stage.addChild(arcEdge);
+        
         });
       }
     }
