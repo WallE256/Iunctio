@@ -1,4 +1,3 @@
-
 // use as follows:
 // import * as GlobalStorage from "@/scripts/globalstorage";
 // the Visualise.vue page should use these functions to manage the
@@ -34,7 +33,7 @@ export class Diagram {
     graphID: string,
     type: string,
     settings?: any,
-    onChange?: (diagram: Diagram, changedKey: string) => void,
+    onChange?: (diagram: Diagram, changedKey: string) => void
   ) {
     this.id = id;
     this.graphID = graphID;
@@ -46,12 +45,12 @@ export class Diagram {
     }
     this.onChange = onChange;
   }
-};
+}
 
 const diagrams = new Map<string, Diagram>();
 const selectedNode = null as {
-  datasetID: string,
-  nodeID: any,
+  datasetID: string;
+  nodeID: any;
 } | null;
 const datasets = new Map<string, Graph>();
 
@@ -129,7 +128,7 @@ export function getDiagram(id: string): Diagram | null {
       deserialized.id,
       deserialized.graphID,
       deserialized.type,
-      deserialized.settings,
+      deserialized.settings
     );
     diagrams.set(id, diagram);
     return diagram;

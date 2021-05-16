@@ -1,7 +1,11 @@
 <template>
   <background-blobs />
   <main class="deny-access">
-    <img src="img/deny-access.svg" alt="Unsupported aspect ratio" class="deny-access__img">
+    <img
+      src="img/deny-access.svg"
+      alt="Unsupported aspect ratio"
+      class="deny-access__img"
+    />
     <h4 class="deny-access__hint">
       This website is currently not optimised for this aspect ratio.
     </h4>
@@ -40,7 +44,7 @@ export default defineComponent({
   &__hint {
     width: 75%;
     text-align: center;
-    @include font-sans("Poppins", 1.1rem, "Medium", $WHITE_D)
+    @include font-sans("Poppins", 1.1rem, "Medium", $WHITE_D);
   }
 }
 </style>

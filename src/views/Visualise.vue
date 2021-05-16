@@ -13,7 +13,6 @@ import { defineComponent } from "vue";
 import CreateVisualisations from "@/components/visualise/CreateVisualisations.vue";
 import UploadDataset from "@/components/visualise/UploadDataset.vue";
 import CurrentVisualisations from "@/components/visualise/CurrentVisualisations.vue";
-import "@/scripts/store";
 
 export default defineComponent({
   name: "Visualise",

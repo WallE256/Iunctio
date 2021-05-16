@@ -28,12 +28,6 @@ const routes: Array<RouteRecordRaw> = [
     component: () =>
       import(/* webpackChunkName: "visualise" */ "@/views/Visualise.vue"),
   },
-  {
-    path: "/parse",
-    name: "Parse test",
-    component: () =>
-      import(/* webpackChunkName: "parse" */ "@/views/Parse.vue"),
-  },
 ];
 
 const router = createRouter({
