@@ -14,7 +14,6 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import store from "@/scripts/store";
 
 export default defineComponent({
   name: "NewVis",
@@ -23,7 +22,7 @@ export default defineComponent({
   },
   methods: {
     selectDiagram() {
-      this.$emit('tile-click');
+      this.$emit("tile-click");
     },
   },
 });

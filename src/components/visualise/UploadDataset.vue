@@ -1,7 +1,7 @@
 <template>
   <div class="upload-panel">
     <span class="upload-panel__back" @click="$emit('back')">BACK</span>
-    <label tabindex="0" class="upload-panel__btn" @change="addDataset">
+    <label tabindex="0" class="upload-panel__btn" @change="parseDataset">
       <input type="file" accept="text/csv" />
       UPLOAD
     </label>
@@ -14,12 +14,17 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
+import * as GlobalStorage from "@/scripts/globalstorage";
+import { csvParse } from "@/scripts/parser";
+
 export default defineComponent({
   name: "UploadDataset",
   methods: {
-    addDataset(event: { target: { files: File[] } }) {
-      console.log(event);
-      this.$emit("back");
+    parseDataset(event: { target: { files: File[] } }): void {
+      const file = event.target.files[0];
+      // Send the file to the web-worker for parsing.
+      if (GlobalStorage.getDataset(file.name.replace(/\.[^/.]+$/, "")) == null)
+        csvParse(file);
     },
   },
 });

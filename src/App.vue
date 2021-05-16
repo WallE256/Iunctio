@@ -27,7 +27,6 @@ export default defineComponent({
     handleResize() {
       this.show_item = window.innerHeight > 576 && window.innerWidth > 576;
     },
-
   },
 });
 </script>

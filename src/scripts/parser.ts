@@ -1,27 +1,24 @@
 import Graph from "graphology";
+import * as GlobalStorage from "@/scripts/globalstorage";
 
-const ctx: Worker = self as never;
-
-ctx.addEventListener("message", (event) => {
-  console.log(event);
-  csvParse(event.data);
-});
-
-function csvParse(file: File): void {
+export function csvParse(file: File): void {
   const reader = new FileReader();
   reader.readAsText(file);
   reader.onload = () => {
-    processData(reader.result as string);
+    const graph = processData(reader.result as string);
+    // file name variable stores the name without the extension
+    const fileName = file.name.replace(/\.[^/.]+$/, "");
+    GlobalStorage.addDataset(fileName, graph);
   };
 }
 
-function processData(data: string): void {
+function processData(data: string): Graph {
   const t0 = performance.now();
   const lines = data.split("\n");
   for (let i = 0; i < lines.length; i++) lines[i] = lines[i].trim();
   const options = lines[0].split(",");
-  console.log(options);
-  // pop up for mapping options to node atributes or edge atributes
+  // console.log(options);
+  // pop up for mapping options to node attributes or edge attributes
   // pop up for graph options
   const graph = new Graph({ multi: true, type: "directed" });
   for (let i = 1; i < lines.length; i++) {
@@ -34,7 +31,10 @@ function processData(data: string): void {
       sentiment: line[8],
     });
   }
-  console.log(graph);
+  // console.log(graph);
   const t1 = performance.now();
   console.log("Parsing took " + (t1 - t0) + " milliseconds.");
+
+  // console.log(graph.export());
+  return graph;
 }
