@@ -109,6 +109,7 @@ export default defineComponent({
       graphType: "flame", // sumburst or flame or inverse-flame
       edgeType: "all", // all or incoming or outgoing
       widthType: "connections", // connections or subtree-size TODO
+      minRenderSize: 0.001, // minimum render size
     };
 
     const graph = new Graph({
@@ -146,7 +147,7 @@ export default defineComponent({
       i++;
     });
 
-    this.draw(graph, app, input.root, input.height, input.graphType, input.edgeType, bothConnections, outConnections);
+    this.draw(graph, app, input.root, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections);
   },
 
   data() {
@@ -183,7 +184,7 @@ export default defineComponent({
       return map;
     },*/
 
-    draw(graph: Graph, app: PIXI.Application, root: any, height:any, graphType: any, edgeType: any, bothConnections: any, outConnections: any) {
+    draw(graph: Graph, app: PIXI.Application, root: any, height:any, graphType: any, edgeType: any, minRenderSize: any, bothConnections: any, outConnections: any) {
       const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
       const tooltip = this.$refs["graph-tooltip"] as HTMLElement;
 
@@ -206,19 +207,19 @@ export default defineComponent({
         maxHeight = maxWidth;
         levelHeight = maxHeight / (2 * height);
 
-        this.drawGraph(graph, app, root, height, graphType, edgeType, bothConnections, outConnections, predecessors, 0, maxWidth, levelHeight, 0, 1, centerX, centerY, 0x4287f5);
+        this.drawGraph(graph, app, root, height, graphType, edgeType, minRenderSize, bothConnections, outConnections, predecessors, 0, maxWidth, levelHeight, 0, 1, centerX, centerY, 0x4287f5);
       } else {
         var borderSize = Math.min(canvas.width, canvas.height) * .2;
         maxWidth = canvas.width - borderSize;
         maxHeight = canvas.height - borderSize;
         levelHeight = maxHeight / (height + 1);
 
-        this.drawGraph(graph, app, root, height, graphType, edgeType, bothConnections, outConnections, predecessors, 0, maxWidth, levelHeight, 0, 1, centerX, centerY, 0x4287f5);
+        this.drawGraph(graph, app, root, height, graphType, edgeType, minRenderSize, bothConnections, outConnections, predecessors, 0, maxWidth, levelHeight, 0, 1, centerX, centerY, 0x4287f5);
       }
     },
 
-  drawGraph(graph: Graph, app: PIXI.Application, node: any, height: any, graphType: any, edgeType: any, bothConnections: any, outConnections: any, newPredecessors: any, level: any, maxWidth: any, levelHeight: any, drawStart: any, sizePerc: any, centerX: any, centerY: any, subtreeColour: any) {
-    if (sizePerc > 0) {
+  drawGraph(graph: Graph, app: PIXI.Application, node: any, height: any, graphType: any, edgeType: any, minRenderSize: any, bothConnections: any, outConnections: any, newPredecessors: any, level: any, maxWidth: any, levelHeight: any, drawStart: any, sizePerc: any, centerX: any, centerY: any, subtreeColour: any) {
+    if (sizePerc >= minRenderSize) {
       if (!node) {
         var totalDegree = 0;
         var nodesWithDegree = 0;
@@ -271,7 +272,7 @@ export default defineComponent({
               level = 1
             }
 
-            this.drawGraph(graph, app, node, height, graphType, edgeType, bothConnections, outConnections, predecessors, level, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, convertedColour);
+            this.drawGraph(graph, app, node, height, graphType, edgeType, minRenderSize, bothConnections, outConnections, predecessors, level, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, convertedColour);
             drawStart += newSizePerc;
             index += 1;
           }
@@ -326,19 +327,19 @@ export default defineComponent({
               if ((edgeType == 'incoming') && (outConnections.get(neighbour + ">" + node) > 0)) {
                 newSizePerc = sizePerc * outConnections.get(neighbour + ">" + node) / downstreamConnections;
 
-                this.drawGraph(graph, app, neighbour, height, graphType, edgeType, bothConnections, outConnections, predecessors, level + 1, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, subtreeColour);
+                this.drawGraph(graph, app, neighbour, height, graphType, edgeType, minRenderSize, bothConnections, outConnections, predecessors, level + 1, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, subtreeColour);
                 drawStart += newSizePerc;
 
               } else if ((edgeType == 'outgoing') && (outConnections.get(node + ">" + neighbour) > 0)) {
                 newSizePerc = sizePerc * outConnections.get(node + ">" + neighbour) / downstreamConnections;
 
-                this.drawGraph(graph, app, neighbour, height, graphType, edgeType, bothConnections, outConnections, predecessors, level + 1, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, subtreeColour);
+                this.drawGraph(graph, app, neighbour, height, graphType, edgeType, minRenderSize, bothConnections, outConnections, predecessors, level + 1, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, subtreeColour);
                 drawStart += newSizePerc;
 
               } else if ((edgeType != 'incoming') && (edgeType != 'outgoing') && (bothConnections.get(node + "_" + neighbour) > 0)) {
                 newSizePerc = sizePerc * bothConnections.get(node + "_" + neighbour) / downstreamConnections;
 
-                this.drawGraph(graph, app, neighbour, height, graphType, edgeType, bothConnections, outConnections, predecessors, level + 1, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, subtreeColour);
+                this.drawGraph(graph, app, neighbour, height, graphType, edgeType, minRenderSize, bothConnections, outConnections, predecessors, level + 1, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, subtreeColour);
                 drawStart += newSizePerc;
 
               }
