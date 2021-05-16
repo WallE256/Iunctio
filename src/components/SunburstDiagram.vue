@@ -23,6 +23,7 @@ export default defineComponent({
       height: window.innerHeight,
       antialias: true,
       transparent: true,
+      //backgroundColor: 0xFFFFFF,
     });
 
     const defaultStyle = new PIXI.TextStyle({
@@ -98,12 +99,16 @@ export default defineComponent({
       { source: 10, target: 17, attr: {} },
       { source: 9, target: 15, attr: {} },
       { source: 7, target: 8, attr: {} },
-      { source: 4, target: 7, attr: {} }
+      { source: 4, target: 7, attr: {} },
+      { source: 7, target: 10, attr: {} },
+      { source: 10, target: 11, attr: {} }
     ];
     const input = {
-      edgeType: "all", // or incoming or outgoing
-      widthType: "connections", // or subtree-size
-      graphType: "sunburst", // or flame
+      root: false, // false or root index
+      height: 5, // >= 0
+      graphType: "flame", // sumburst or flame or inverse-flame
+      edgeType: "all", // all or incoming or outgoing
+      widthType: "connections", // connections or subtree-size TODO
     };
 
     const graph = new Graph({
@@ -141,13 +146,7 @@ export default defineComponent({
       i++;
     });
 
-    var root = false;
-
-    var totalRadius = 400;
-
-    var height = 5;
-
-    this.draw(graph, app, bothConnections, outConnections, root, height, totalRadius, input.edgeType);
+    this.draw(graph, app, input.root, input.height, input.graphType, input.edgeType, bothConnections, outConnections);
   },
 
   data() {
@@ -184,178 +183,216 @@ export default defineComponent({
       return map;
     },*/
 
-    draw(graph: Graph, app: PIXI.Application, bothConnections: any, outConnections: any, root: any, height: any, totalRadius: any, edgeType: any) {
+    draw(graph: Graph, app: PIXI.Application, root: any, height:any, graphType: any, edgeType: any, bothConnections: any, outConnections: any) {
       const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
-
-      canvas.height = window.innerHeight;
-      canvas.width = window.innerWidth;
-
       const tooltip = this.$refs["graph-tooltip"] as HTMLElement;
-
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
-
-      var levelRadius = totalRadius / (height + 1);
 
       const graphics = new PIXI.Graphics();
       app.stage.addChild(graphics);
 
+      canvas.height = window.innerHeight;
+      canvas.width = window.innerWidth;
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+
       var predecessors = [];
 
-      this.drawGraph(graph, app, bothConnections, outConnections, predecessors, edgeType, root, height, 0, levelRadius, 0, 1, centerX, centerY, 0x00BB00);
+      var maxWidth;
+      var maxHeight;
+      var levelHeight;
+
+      if (graphType == "sunburst") {
+        maxWidth = Math.min(canvas.width, canvas.height) * .7;
+        maxHeight = maxWidth;
+        levelHeight = maxHeight / (2 * height);
+
+        this.drawGraph(graph, app, root, height, graphType, edgeType, bothConnections, outConnections, predecessors, 0, maxWidth, levelHeight, 0, 1, centerX, centerY, 0x4287f5);
+      } else {
+        var borderSize = Math.min(canvas.width, canvas.height) * .2;
+        maxWidth = canvas.width - borderSize;
+        maxHeight = canvas.height - borderSize;
+        levelHeight = maxHeight / (height + 1);
+
+        this.drawGraph(graph, app, root, height, graphType, edgeType, bothConnections, outConnections, predecessors, 0, maxWidth, levelHeight, 0, 1, centerX, centerY, 0x4287f5);
+      }
     },
 
-  drawGraph(graph: Graph, app: PIXI.Application, bothConnections: any, outConnections: any, predecessors: any, edgeType: any, node: any, height: any, level: any, levelRadius: any, drawStart: any, size: any, centerX: any, centerY: any, nodeColour: any) {
+  drawGraph(graph: Graph, app: PIXI.Application, node: any, height: any, graphType: any, edgeType: any, bothConnections: any, outConnections: any, newPredecessors: any, level: any, maxWidth: any, levelHeight: any, drawStart: any, sizePerc: any, centerX: any, centerY: any, subtreeColour: any) {
+    if (sizePerc > 0) {
+      if (!node) {
+        var totalDegree = 0;
+        var nodesWithDegree = 0;
 
-    if (!node) {
-      var totalDegree = 0;
-      var nodesWithDegree = 0;
-
-      // Calculate total degree for all nodes
-      graph.forEachNode((node, attributes) => {
-        if (edgeType == 'incoming') {
-          if (graph.inDegree(node) > 0) {
-            nodesWithDegree += 1;
-            totalDegree += graph.inDegree(node);
-          }
-        } else if (edgeType == 'outgoing') {
-          if (graph.outDegree(node) > 0) {
-            nodesWithDegree += 1;
-            totalDegree += graph.outDegree(node);
-          }
-        } else {
-          if (graph.degree(node) > 0) {
-            nodesWithDegree += 1;
-            totalDegree += graph.degree(node);
-          }
-        }
-      });
-
-      var colours = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, nodesWithDegree + 1));
-
-      let index = 0;
-
-      graph.forEachNode((node, attributes) => {
-
-        var newSize = 0;
-
-        if (edgeType == 'incoming') {
-          newSize = graph.inDegree(node);
-        } else if (edgeType == 'outgoing') {
-          newSize = graph.outDegree(node);
-        } else {
-          newSize = graph.degree(node);
-        }
-
-        if (newSize > 0) {
-
-          newSize /= totalDegree;
-
-          var convertedColour = d3.color(colours(index)).formatHex().replace("#", "0x")
-
-          predecessors = [];
-
-          this.drawGraph(graph, app, bothConnections, outConnections, predecessors, edgeType, node, height, 1, levelRadius, drawStart, newSize, centerX, centerY, convertedColour);
-          drawStart += newSize;
-          index += 1;
-        }
-      });
-    } else {
-
-      var minPosition = drawStart;
-      var maxPosition = drawStart + size;
-      var startAngle = 2 * Math.PI * drawStart;
-      var endAngle = 2 * Math.PI * (drawStart + size);
-
-      this.drawNodeSunburst(app, nodeColour, centerX, centerY, level, levelRadius, startAngle, endAngle);
-
-      // Add this node to predecessors
-      predecessors.push(node);
-
-      // Next layer
-      if (level < height) {
-
-        var downstreamConnections = 0;
-
-        graph.forEachNeighbor(node, (neighbour, attributes) => {
-
-          var isPredecessor = false;
-
-          for (let index = 0; index < predecessors.length; index++) {
-            if (predecessors[index] == neighbour) {
-              isPredecessor = true;
+        // Calculate total degree for all nodes
+        graph.forEachNode((node, attributes) => {
+          if (edgeType == 'incoming') {
+            if (graph.inDegree(node) > 0) {
+              nodesWithDegree += 1;
+              totalDegree += graph.inDegree(node);
             }
-          }
-
-          if (!isPredecessor) {
-
-            if (edgeType == 'incoming') {
-              downstreamConnections += outConnections.get(neighbour + ">" + node);
-            } else if (edgeType == 'outgoing') {
-              downstreamConnections += outConnections.get(node + ">" + neighbour);
-            } else {
-              downstreamConnections += bothConnections.get(node + "_" + neighbour);
+          } else if (edgeType == 'outgoing') {
+            if (graph.outDegree(node) > 0) {
+              nodesWithDegree += 1;
+              totalDegree += graph.outDegree(node);
             }
-
-          }
-        });
-
-        graph.forEachNeighbor(node, (neighbour, attributes) => {
-
-          var isPredecessor = false;
-
-          for (let index = 0; index < predecessors.length; index++) {
-            if (predecessors[index] == neighbour) {
-              isPredecessor = true;
-            }
-          }
-
-          if (!isPredecessor) {
-
-            var newSize = 0;
-
-            if ((edgeType == 'incoming') && (outConnections.get(neighbour + ">" + node) > 0)) {
-              newSize = size * outConnections.get(neighbour + ">" + node) / downstreamConnections;
-
-              this.drawGraph(graph, app, bothConnections, outConnections, predecessors, edgeType, neighbour, height, level + 1, levelRadius, drawStart, newSize, centerX, centerY, nodeColour);
-              drawStart += newSize;
-
-            } else if ((edgeType == 'outgoing') && (outConnections.get(node + ">" + neighbour) > 0)) {
-              newSize = size * outConnections.get(node + ">" + neighbour) / downstreamConnections;
-
-              this.drawGraph(graph, app, bothConnections, outConnections, predecessors, edgeType, neighbour, height, level + 1, levelRadius, drawStart, newSize, centerX, centerY, nodeColour);
-              drawStart += newSize;
-
-            } else if ((edgeType != 'incoming') && (edgeType != 'outgoing') && (bothConnections.get(node + "_" + neighbour) > 0)) {
-              newSize = size * bothConnections.get(node + "_" + neighbour) / downstreamConnections;
-
-              this.drawGraph(graph, app, bothConnections, outConnections, predecessors, edgeType, neighbour, height, level + 1, levelRadius, drawStart, newSize, centerX, centerY, nodeColour);
-              drawStart += newSize;
-
+          } else {
+            if (graph.degree(node) > 0) {
+              nodesWithDegree += 1;
+              totalDegree += graph.degree(node);
             }
           }
         });
+
+        var colours = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, nodesWithDegree + 1));
+
+        let index = 0;
+
+        graph.forEachNode((node, attributes) => {
+
+          var newSizePerc = 0;
+
+          if (edgeType == 'incoming') {
+            newSizePerc = graph.inDegree(node);
+          } else if (edgeType == 'outgoing') {
+            newSizePerc = graph.outDegree(node);
+          } else {
+            newSizePerc = graph.degree(node);
+          }
+
+          if (newSizePerc > 0) {
+
+            newSizePerc /= totalDegree;
+
+            var convertedColour = d3.color(colours(index)).formatHex().replace("#", "0x")
+
+            predecessors = [];
+
+            if (graphType == "sunburst") {
+              level = 1
+            }
+
+            this.drawGraph(graph, app, node, height, graphType, edgeType, bothConnections, outConnections, predecessors, level, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, convertedColour);
+            drawStart += newSizePerc;
+            index += 1;
+          }
+        });
+      } else {
+
+        if (graphType == "sunburst") {
+          var startAngle = 2 * Math.PI * drawStart;
+          var endAngle = 2 * Math.PI * (drawStart + sizePerc);
+          this.drawNodeSunburst(app, centerX, centerY, level, levelHeight, startAngle, endAngle, subtreeColour);
+        } else {
+          var posX = centerX - (maxWidth / 2) + (maxWidth * drawStart);
+          var posY;
+          if (graphType == "flame") {
+            posY = centerY + ((levelHeight * (height + 1)) / 2) - (levelHeight * level);
+          } else {
+            posY = centerY - ((levelHeight * (height + 1)) / 2) + (levelHeight * level);
+          }
+          this.drawNodeFlame(app, graphType, posX, posY, maxWidth * sizePerc, levelHeight, subtreeColour);
+        }
+
+        // Add this node to predecessors
+        var predecessors = [...newPredecessors];
+        predecessors.push(node);
+
+        // Next layer
+        if (level < height) {
+
+          var downstreamConnections = 0;
+
+          graph.forEachNeighbor(node, (neighbour, attributes) => {
+
+            if (!this.isPredecessor(predecessors, neighbour)) {
+
+              if (edgeType == 'incoming') {
+                downstreamConnections += outConnections.get(neighbour + ">" + node);
+              } else if (edgeType == 'outgoing') {
+                downstreamConnections += outConnections.get(node + ">" + neighbour);
+              } else {
+                downstreamConnections += bothConnections.get(node + "_" + neighbour);
+              }
+
+            }
+          });
+
+          graph.forEachNeighbor(node, (neighbour, attributes) => {
+
+            if (!this.isPredecessor(predecessors, neighbour)) {
+
+              var newSizePerc = 0;
+
+              if ((edgeType == 'incoming') && (outConnections.get(neighbour + ">" + node) > 0)) {
+                newSizePerc = sizePerc * outConnections.get(neighbour + ">" + node) / downstreamConnections;
+
+                this.drawGraph(graph, app, neighbour, height, graphType, edgeType, bothConnections, outConnections, predecessors, level + 1, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, subtreeColour);
+                drawStart += newSizePerc;
+
+              } else if ((edgeType == 'outgoing') && (outConnections.get(node + ">" + neighbour) > 0)) {
+                newSizePerc = sizePerc * outConnections.get(node + ">" + neighbour) / downstreamConnections;
+
+                this.drawGraph(graph, app, neighbour, height, graphType, edgeType, bothConnections, outConnections, predecessors, level + 1, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, subtreeColour);
+                drawStart += newSizePerc;
+
+              } else if ((edgeType != 'incoming') && (edgeType != 'outgoing') && (bothConnections.get(node + "_" + neighbour) > 0)) {
+                newSizePerc = sizePerc * bothConnections.get(node + "_" + neighbour) / downstreamConnections;
+
+                this.drawGraph(graph, app, neighbour, height, graphType, edgeType, bothConnections, outConnections, predecessors, level + 1, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, subtreeColour);
+                drawStart += newSizePerc;
+
+              }
+            }
+          });
+        }
       }
     }
   },
 
-  drawNodeSunburst(app: PIXI.Application, nodeColour: any, centerX: any, centerY: any, level: any, levelRadius: any, startAngle: any, endAngle: any) {
+  isPredecessor(predecessors: any, neighbour: any) {
+    var predecessor = false;
 
-    // drawGraph
-    var minRadius = level * levelRadius;
-    var maxRadius = minRadius + levelRadius;
-
-    var arcCircle = new PIXI.Graphics();
-
-    arcCircle.beginFill(nodeColour);
-    arcCircle.lineStyle(1.2, 0xFFFFFF);
-    if (level == 0) {
-      arcCircle.drawCircle(centerX, centerY, maxRadius);
-    } else {
-      arcCircle.drawTorus(centerX, centerY, minRadius, maxRadius, startAngle, endAngle);
+    for (let index = 0; index < predecessors.length; index++) {
+      if (predecessors[index] == neighbour) {
+        predecessor = true;
+      }
     }
-    arcCircle.endFill();
-    app.stage.addChild(arcCircle);
+    return predecessor;
+  },
+
+  // Draw node for sunburst graph
+  drawNodeSunburst(app: PIXI.Application, centerX: any, centerY: any, level: any, levelHeight: any, startAngle: any, endAngle: any, nodeColour: any) {
+
+    var minRadius = level * levelHeight;
+    var maxRadius = minRadius + levelHeight;
+
+    var sunburstNode = new PIXI.Graphics();
+
+    sunburstNode.beginFill(nodeColour);
+    sunburstNode.lineStyle(1, 0xFFFFFF);
+    if (level == 0) {
+      sunburstNode.drawCircle(centerX, centerY, maxRadius);
+    } else {
+      sunburstNode.drawTorus(centerX, centerY, minRadius, maxRadius, startAngle, endAngle);
+    }
+    sunburstNode.endFill();
+    app.stage.addChild(sunburstNode);
+  },
+
+  // Draw node for flame graph
+  drawNodeFlame(app: PIXI.Application, graphType: any, posX: any, posY: any, levelWidth: any, levelHeight: any, nodeColour: any) {
+
+    var flameNode = new PIXI.Graphics();
+
+    flameNode.beginFill(nodeColour);
+    flameNode.lineStyle(1, 0xFFFFFF);
+    if (graphType == "flame") {
+      flameNode.drawRect(posX, (posY - levelHeight), levelWidth, levelHeight);
+    } else {
+      flameNode.drawRect(posX, posY, levelWidth, levelHeight);
+    }
+    flameNode.endFill();
+    app.stage.addChild(flameNode);
   }
 },
 });
