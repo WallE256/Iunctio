@@ -1,62 +1,43 @@
 <template>
-  
   <canvas id="drawing-canvas" ref="drawing-canvas" style="margin:0; padding:0;"></canvas>
   <p id="graph-tooltip" ref="graph-tooltip" style="position: absolute;"></p>
 </template>
 
 <script lang="ts">
-import { DefineComponent, defineComponent } from "vue";
+import { defineComponent } from "vue";
 import * as PIXI from "pixi.js";
-import MultiDirectedGraph from "graphology";
-import Node from "graphology";
-import { Application, Graphics } from "pixi.js";
+import Graph from "graphology";
 import { debounce } from "lodash";
+import * as GlobalStorage from "@/scripts/globalstorage";
+
+type Settings = {
+  shape: string, // "circle" or "line"
+};
 
 export default defineComponent({
-  mounted() {
-    const nodes = [
-      { key: 25, attr: { name: "#1" } },
-      { key: 2, attr: { name: "#2" } },
-      { key: 3, attr: { name: "#three" } },
-      { key: 4, attr: { name: "for" } },
-      { key: 5, attr: { name: "5" } },
-      { key: 6, attr: { name: "#8" } },
-      { key: 7, attr: { name: "7" } },
-      { key: 8, attr: { name: "8" } },
-      { key: 9, attr: { name: "9" } },
-      { key: 10, attr: { name: "ten" } },
-      { key: 11, attr: { name: "XI" } },
-      { key: 12, attr: { name: "twelve" } },
-      { key: 13, attr: { name: "#thirteen" } },
-      { key: 14, attr: { name: "XIV" } },
-      { key: 15, attr: { name: "is" } },
-      { key: 16, attr: { name: "16" } },
-      { key: 17, attr: { name: "71" } },
-      { key: 18, attr: { name: "19-1" } },
-      { key: 19, attr: { name: "19-2" } },
-      { key: 20, attr: { name: "#20" } },
-    ];
-    const edges = [
-      { source: 25, target: 2, attr: {} },
-      { source: 25, target: 3, attr: {} },
-      { source: 6, target: 9, attr: {} },
-      { source: 14, target: 16, attr: {} },
-      { source: 2, target: 13, attr: {} },
-      { source: 5, target: 18, attr: {} },
-      { source: 20, target: 18, attr: {} }
-    ];
-    this.input = {
-      shape: "circle", // circle/line
-    };
+  props: {
+    diagramid: {
+      type: String,
+      required: true,
+    },
+  },
 
+  mounted() {
     this.canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
 
-    for (const { key, attr } of nodes) {
-      this.graph.addNode(key, attr);
+    //GlobalStorage.addDiagram(new GlobalStorage.Diagram("test", "enron-v1-reduced", "arcdiagram", { shape: "circle" }));
+    const diagram = GlobalStorage.getDiagram(this.diagramid);
+    if (!diagram) {
+      console.warn("Non-existent diagram ID:", this.diagramid);
+      return;
     }
-    for (const { source, target, attr } of edges) {
-      this.graph.addDirectedEdge(source, target, attr);
+
+    const graph = GlobalStorage.getDataset(diagram.graphID);
+    if (!graph) {
+      console.warn("Non-existent dataset:", diagram.graphID);
+      return;
     }
+    this.graph = graph;
 
     this.app = new PIXI.Application({
       view: this.canvas,
@@ -134,23 +115,26 @@ export default defineComponent({
       });
       i++;
     });
-
-    this.draw(this.graph, this.app as PIXI.Application, this.input.shape === "circle");
+    
+    diagram.onChange = (diagram, changedKey) => {
+      this.draw(this.graph, this.app as PIXI.Application, diagram.settings);
+    };
+    this.draw(this.graph, this.app as PIXI.Application, diagram.settings);
   },
+
   created(){
     window.addEventListener(
       "resize",
       debounce((event) => {
-        this.handleResize(event, this.graph, this.app as PIXI.Application, this.input.shape as string);
-        }, 250)
+        if (!this.diagram) {
+          return;
+        }
+        this.handleResize(event, this.graph, this.app as PIXI.Application, this.diagram.settings as Settings);
+      }, 250)
     )
   },
   
   data() {
-    type Input = {
-      shape?: string;
-    }
-
     return {
       // node map
       nodeMap: new Map<number, {
@@ -162,16 +146,16 @@ export default defineComponent({
       // the node that you're currently hovering over
       selectedIndex: null as number | null,
       app: null as null | PIXI.Application,
-      graph: new MultiDirectedGraph({
-    //options
-    }),
-      input: {} as Input,
+      graph: new Graph({
+        //options
+      }),
+      diagram: null as GlobalStorage.Diagram | null,
       canvas: null as null | HTMLCanvasElement,
     };
   },
 
   methods: {
-    handleResize(e: any, graph: MultiDirectedGraph, app: PIXI.Application, input: string) {
+    handleResize(e: any, graph: Graph, app: PIXI.Application, settings: Settings) {
       
       // const gl = (this.canvas as HTMLCanvasElement).getContext("webgl2") as WebGL2RenderingContext;
       
@@ -185,10 +169,10 @@ export default defineComponent({
       // gl.clearColor(red, green, blue, alpha);
       // gl.clear(gl.COLOR_BUFFER_BIT);
       
-      this.draw(graph, app as PIXI.Application, input === 'circle');
+      this.draw(graph, app, settings);
     },
 
-    draw(graph: MultiDirectedGraph, app: PIXI.Application, circle: boolean) {
+    draw(graph: Graph, app: PIXI.Application, settings: Settings) {
       //const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
       const canvas = this.canvas as HTMLCanvasElement;
 
@@ -221,7 +205,7 @@ export default defineComponent({
       
       // NOTE: some forEach* callbacks have ": any", because graphology lies
       // about its types :(
-      if (circle) {
+      if (settings.shape === "circle") {
         graph.forEachNode((source: any, sourceAttr) => {
           const sourceData = this.nodeMap.get(source);
           if (typeof sourceData === "undefined") return; // not supposed to happen
@@ -268,7 +252,7 @@ export default defineComponent({
             graph.setEdgeAttribute(edge, "arc", arcAttr);
           });
         });
-      } else {
+      } else if (settings.shape === "line") {
         const nodeLineY = canvas.height * 3/4;
         let nodeLineX = canvas.width * 1/8;
         let gap = Math.floor(canvas.width/(1.2 * graph.order));
@@ -348,6 +332,8 @@ export default defineComponent({
 
           app.stage.addChild(arcEdge);
         });
+      } else {
+        console.warn("Unrecognized shape", settings.shape);
       }
     }
   },

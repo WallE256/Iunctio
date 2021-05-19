@@ -4,16 +4,32 @@
 </template>
 
 <script lang="ts">
-import { DefineComponent, defineComponent } from "vue";
-import { Graph } from "graphology";
-import { Node } from "graphology";
+import { defineComponent } from "vue";
+import Graph from "graphology";
 import * as d3 from "d3";
 import * as PIXI from "pixi.js";
-import { Graphics } from "pixi.js";
-import '@pixi/graphics-extras';
+import "@pixi/graphics-extras";
+import * as GlobalStorage from "@/scripts/globalstorage";
 
 export default defineComponent({
+  props: {
+    diagramid: {
+      type: String,
+      required: true,
+    },
+  },
+
   mounted() {
+    const diagram = GlobalStorage.getDiagram(this.diagramid);
+    if (!diagram) {
+      console.warn("Non-existent diagram:", this.diagramid);
+      return;
+    }
+    const graph = GlobalStorage.getDataset(diagram.graphID);
+    if (!graph) {
+      console.warn("Non-existent dataset:", diagram.graphID);
+      return;
+    }
 
     const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
 
@@ -30,79 +46,6 @@ export default defineComponent({
       fill: "#000000",
     });
 
-    const nodes = [
-      { key: 25, attr: { name: "#1" } },
-      { key: 2, attr: { name: "#2" } },
-      { key: 3, attr: { name: "#three" } },
-      { key: 4, attr: { name: "for" } },
-      { key: 5, attr: { name: "5" } },
-      { key: 6, attr: { name: "#8" } },
-      { key: 7, attr: { name: "7" } },
-      { key: 8, attr: { name: "8" } },
-      { key: 9, attr: { name: "9" } },
-      { key: 10, attr: { name: "ten" } },
-      { key: 11, attr: { name: "XI" } },
-      { key: 12, attr: { name: "twelve" } },
-      { key: 13, attr: { name: "#thirteen" } },
-      { key: 14, attr: { name: "XIV" } },
-      { key: 15, attr: { name: "is" } },
-      { key: 16, attr: { name: "16" } },
-      { key: 17, attr: { name: "71" } },
-      { key: 18, attr: { name: "19-1" } },
-      { key: 19, attr: { name: "19-2" } },
-      { key: 20, attr: { name: "#20" } },
-    ];
-    const edges = [
-      { source: 25, target: 2, attr: {} },
-      { source: 25, target: 3, attr: {} },
-      { source: 6, target: 9, attr: {} },
-      { source: 14, target: 16, attr: {} },
-      { source: 2, target: 13, attr: {} },
-      { source: 5, target: 18, attr: {} },
-      { source: 20, target: 18, attr: {} },
-      { source: 19, target: 6, attr: {} },
-      { source: 2, target: 13, attr: {} },
-      { source: 5, target: 18, attr: {} },
-      { source: 20, target: 18, attr: {} },
-      { source: 19, target: 6, attr: {} },
-      { source: 2, target: 13, attr: {} },
-      { source: 5, target: 18, attr: {} },
-      { source: 20, target: 18, attr: {} },
-      { source: 19, target: 6, attr: {} },
-      { source: 17, target: 4, attr: {} },
-      { source: 12, target: 15, attr: {} },
-      { source: 11, target: 20, attr: {} },
-      { source: 10, target: 17, attr: {} },
-      { source: 9, target: 15, attr: {} },
-      { source: 7, target: 8, attr: {} },
-      { source: 4, target: 7, attr: {} },
-      { source: 19, target: 6, attr: {} },
-      { source: 17, target: 4, attr: {} },
-      { source: 12, target: 15, attr: {} },
-      { source: 11, target: 20, attr: {} },
-      { source: 10, target: 17, attr: {} },
-      { source: 9, target: 15, attr: {} },
-      { source: 7, target: 8, attr: {} },
-      { source: 4, target: 7, attr: {} },
-      { source: 19, target: 6, attr: {} },
-      { source: 17, target: 4, attr: {} },
-      { source: 12, target: 15, attr: {} },
-      { source: 11, target: 20, attr: {} },
-      { source: 10, target: 17, attr: {} },
-      { source: 9, target: 15, attr: {} },
-      { source: 7, target: 8, attr: {} },
-      { source: 4, target: 7, attr: {} },
-      { source: 19, target: 6, attr: {} },
-      { source: 17, target: 4, attr: {} },
-      { source: 12, target: 15, attr: {} },
-      { source: 11, target: 20, attr: {} },
-      { source: 10, target: 17, attr: {} },
-      { source: 9, target: 15, attr: {} },
-      { source: 7, target: 8, attr: {} },
-      { source: 4, target: 7, attr: {} },
-      { source: 7, target: 10, attr: {} },
-      { source: 10, target: 11, attr: {} }
-    ];
     const input = {
       root: false, // false or root index
       height: 5, // >= 0
@@ -111,17 +54,6 @@ export default defineComponent({
       widthType: "connections", // connections or subtree-size TODO
       minRenderSize: 0.001, // minimum render size
     };
-
-    const graph = new Graph({
-      multi: true,
-    });
-
-    for (const { key, attr } of nodes) {
-      graph.addNode(key, attr);
-    }
-    for (const { source, target, attr } of edges) {
-      graph.addDirectedEdge(source, target, attr);
-    }
 
     var bothConnections = new Map();
     var outConnections = new Map();
@@ -196,7 +128,7 @@ export default defineComponent({
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
 
-      var predecessors = [];
+      let predecessors = [] as any[];
 
       var maxWidth;
       var maxHeight;
@@ -244,7 +176,7 @@ export default defineComponent({
           }
         });
 
-        var colours = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, nodesWithDegree + 1));
+        const colours = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, nodesWithDegree + 1));
 
         let index = 0;
 
@@ -264,7 +196,8 @@ export default defineComponent({
 
             newSizePerc /= totalDegree;
 
-            var convertedColour = d3.color(colours(index)).formatHex().replace("#", "0x")
+            const c = d3.color(colours(index.toString()));
+            const convertedColour = c?.formatHex().replace("#", "0x") || "0xffffff";
 
             predecessors = [];
 
@@ -367,14 +300,14 @@ export default defineComponent({
     var minRadius = level * levelHeight;
     var maxRadius = minRadius + levelHeight;
 
-    var sunburstNode = new PIXI.Graphics();
+    const sunburstNode = new PIXI.Graphics();
 
     sunburstNode.beginFill(nodeColour);
     sunburstNode.lineStyle(1, 0xFFFFFF);
     if (level == 0) {
       sunburstNode.drawCircle(centerX, centerY, maxRadius);
     } else {
-      sunburstNode.drawTorus(centerX, centerY, minRadius, maxRadius, startAngle, endAngle);
+      (sunburstNode as any).drawTorus(centerX, centerY, minRadius, maxRadius, startAngle, endAngle);
     }
     sunburstNode.endFill();
     app.stage.addChild(sunburstNode);
@@ -382,8 +315,7 @@ export default defineComponent({
 
   // Draw node for flame graph
   drawNodeFlame(app: PIXI.Application, graphType: any, posX: any, posY: any, levelWidth: any, levelHeight: any, nodeColour: any) {
-
-    var flameNode = new PIXI.Graphics();
+    const flameNode = new PIXI.Graphics();
 
     flameNode.beginFill(nodeColour);
     flameNode.lineStyle(1, 0xFFFFFF);
