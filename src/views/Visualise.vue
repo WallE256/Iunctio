@@ -2,9 +2,10 @@
   <main class="visualise">
     <create-visualisations v-show="show_vis_home" @tile-click="toggleHome" />
     <keep-alive
-      ><upload-dataset v-show="!show_vis_home" @back="toggleHome"
+      ><upload-dataset v-show="show_upload" @back="toggleHome"
     /></keep-alive>
     <current-visualisations v-show="show_vis_home" />
+    <div class="visualise__panels" v-show="show_panels"></div>
   </main>
 </template>
 
@@ -20,12 +21,15 @@ export default defineComponent({
   data() {
     return {
       show_vis_home: true,
+      show_upload: false,
+      show_panels: false,
       selected_vis: null as { name: string; icon: string } | null,
     };
   },
   methods: {
     toggleHome() {
       this.show_vis_home = !this.show_vis_home;
+      this.show_upload = !this.show_upload;
     },
   },
 });
@@ -37,5 +41,11 @@ export default defineComponent({
   height: 100%;
   // Prevent content under nav-bar
   padding: 50px 25px 25px 25px;
+
+  &__panels {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+  }
 }
 </style>
