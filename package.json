@@ -8,13 +8,15 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@pixi-essentials/cull": "^1.1.0",
     "core-js": "^3.11.2",
     "graphology": "^0.19.3",
     "graphology-types": "^0.19.2",
     "lodash": "^4.17.21",
-    "pixi.js": "^6.0.2",
     "lodash.debounce": "^4.0.8",
     "lodash.throttle": "^4.1.1",
+    "pixi-viewport": "^4.31.0",
+    "pixi.js": "^6.0.2",
     "rfs": "^9.0.3",
     "vue": "^3.0.0",
     "vue-router": "^4.0.0-0"

@@ -1,7 +1,7 @@
 <template>
   
   <canvas id="drawing-canvas" ref="drawing-canvas" style="margin:0; padding:0;"></canvas>
-  <p id="graph-tooltip" ref="graph-tooltip" style="position: absolute;"></p>
+  <p id="graph-tooltip" ref="graph-tooltip" style="position: fixed;"></p>
 </template>
 
 <script lang="ts">
@@ -9,11 +9,45 @@ import { DefineComponent, defineComponent } from "vue";
 import * as PIXI from "pixi.js";
 import MultiDirectedGraph from "graphology";
 import Node from "graphology";
-import { Application, Graphics } from "pixi.js";
 import { debounce } from "lodash";
+import { Viewport } from 'pixi-viewport';
+import { Container } from "pixi.js";
 
 export default defineComponent({
   mounted() {
+
+
+    this.canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
+    this.app = new PIXI.Application({
+    view: this.canvas,
+    width: window.innerWidth,
+    height: window.innerHeight,
+    antialias: true,
+    transparent: true,
+    resizeTo: window,
+    });
+    //document.body.appendChild(this.app.view)
+
+    //create viewport
+    this.viewport = new Viewport({
+        screenWidth: window.innerWidth,
+        screenHeight: window.innerHeight,
+        interaction: this.app.renderer.plugins.interaction // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
+    })
+
+    // add the viewport to the stage
+    this.app.stage.addChild(this.viewport as Viewport)
+
+    //activate plugins
+    this.viewport
+        .drag()
+        .wheel()
+        .decelerate()
+        .clampZoom({maxScale:1});
+
+    this.viewport.moveCenter(window.innerWidth / 2, window.innerHeight / 2)
+    this.viewport.setZoom(0.5)
+
     const nodes = [
       { key: 25, attr: { name: "#1" } },
       { key: 2, attr: { name: "#2" } },
@@ -45,29 +79,54 @@ export default defineComponent({
       { source: 5, target: 18, attr: {} },
       { source: 20, target: 18, attr: {} },
       { source: 13, target: 2, attr: {} },
-  
+      { source: 10, target: 10, attr: {} },
     ];
+
+    for(let i=26; i<=8000; i++) {
+      const node = {key: i, attr: {name: ""}};
+      nodes.push(node);
+    }
+
+
+
     this.input = {
-      shape: "circle", // circle/line
+      shape: "line", // circle/line
     };
 
-    this.canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
+  
 
     for (const { key, attr } of nodes) {
       this.graph.addNode(key, attr);
     }
-    for (const { source, target, attr } of edges) {
-      this.graph.addDirectedEdgeWithKey((source+'->'+target),source, target, attr);
+
+    let source = -1;
+    let target = -1;
+    let nrOfNodes = 8000;
+    for(let i=0; i<3000; i++) {
+      try{
+        source = -1;
+        target = -1;
+        
+        while(!this.graph.hasNode(source)) {
+          source = Math.floor(Math.random() * nrOfNodes);
+        }
+        while(!this.graph.hasNode(target)) {
+          target = Math.floor(Math.random() * nrOfNodes);
+        }
+        
+        const edge = {source: source, target: target, attr: {}};
+        edges.push(edge);
+      } catch { continue }
     }
 
-    this.app = new PIXI.Application({
-      view: this.canvas,
-      width: window.innerWidth,
-      height: window.innerHeight,
-      antialias: true,
-      transparent: true,
-      resizeTo: window,
-    });
+    for (const { source, target, attr } of edges) {
+      try{
+        this.graph.addDirectedEdgeWithKey((source+'->'+target),source, target, attr);
+      } catch {continue}
+      
+    }
+
+
     const tooltip = this.$refs["graph-tooltip"] as HTMLElement;
 
     const defaultStyle = new PIXI.TextStyle({
@@ -108,13 +167,16 @@ export default defineComponent({
           
           if (typeof targetData === "undefined" || typeof edgeData === "undefined") return;
           targetData.circle.tint = color;
-          if (edgeData.arc) {
+          if (edgeData.arc) { 
             edgeData.arc.tint = color;
+            edgeData.arc.alpha = 5;
           } else if (edgeData.cord){
             edgeData.cord.tint = color;
+            edgeData.cord.alpha = 5
           }
         });
       });
+
       circle.on("mouseout", (event) => {
         event.stopPropagation();
 
@@ -135,8 +197,10 @@ export default defineComponent({
           targetData.circle.tint = color;
           if (edgeData.arc) {
             edgeData.arc.tint = color;
+            edgeData.arc.alpha = 1;
           } else if (edgeData.cord) {
             edgeData.cord.tint = color;
+            edgeData.cord.alpha = 1;
           }
           
         });
@@ -150,13 +214,13 @@ export default defineComponent({
       i++;
     });
 
-    this.draw(this.graph, this.app as PIXI.Application, this.input.shape === "circle");
+    this.draw(this.graph, this.app as PIXI.Application, this.input.shape === "circle", this.viewport as Viewport);
   },
   created(){
     window.addEventListener(
       "resize",
       debounce((event) => {
-        this.handleResize(event, this.graph, this.app as PIXI.Application, this.input.shape as string);
+        this.handleResize(event, this.graph, this.app as PIXI.Application, this.input.shape as string, this.viewport as Viewport);
         }, 250)
     )
   },
@@ -177,6 +241,7 @@ export default defineComponent({
       //edge map
       //the key is smth like '2->3'
       edgeMap: new Map<string,{
+        id: number,
         cord?: PIXI.Graphics,
         arc?: PIXI.Graphics
       }>(),
@@ -184,6 +249,7 @@ export default defineComponent({
       // the node that you're currently hovering over
       selectedIndex: null as number | null,
       app: null as null | PIXI.Application,
+      viewport: null as null | Viewport,
       graph: new MultiDirectedGraph({
     //options
     }),
@@ -193,7 +259,7 @@ export default defineComponent({
   },
 
   methods: {
-    handleResize(e: any, graph: MultiDirectedGraph, app: PIXI.Application, input: string) {
+    handleResize(e: any, graph: MultiDirectedGraph, app: PIXI.Application, input: string, viewport: Viewport) {
       
       // const gl = (this.canvas as HTMLCanvasElement).getContext("webgl2") as WebGL2RenderingContext;
       
@@ -207,10 +273,10 @@ export default defineComponent({
       // gl.clearColor(red, green, blue, alpha);
       // gl.clear(gl.COLOR_BUFFER_BIT);
       
-      this.draw(graph, app as PIXI.Application, input === 'circle');
+      this.draw(graph, app as PIXI.Application, input === 'circle', viewport);
     },
 
-    draw(graph: MultiDirectedGraph, app: PIXI.Application, circle: boolean) {
+    draw(graph: MultiDirectedGraph, app: PIXI.Application, circle: boolean, viewport: Viewport) {
       //const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
       const canvas = this.canvas as HTMLCanvasElement;
 
@@ -220,14 +286,16 @@ export default defineComponent({
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
 
-      const nodeRadius = graph.order == 0 ? 200 : Math.floor(200 / graph.order);
+      //const nodeRadius = graph.order == 0 ? 200 : Math.floor(500 / graph.order);
+      const nodeRadius = 10;
       const textDistance = 40;
       const textStyle = new PIXI.TextStyle({
         fill: "#000000",
         fontSize: nodeRadius + 4,
       });
 
-      app.stage.removeChildren();
+      //app.stage.removeChildren();
+      viewport.removeChildren();
 
       type Attr = {
         obj: PIXI.Graphics,
@@ -241,6 +309,7 @@ export default defineComponent({
         clicked?: boolean,
       }
       
+      let edgeId = 0;
       // NOTE: some forEach* callbacks have ": any", because graphology lies
       // about its types :(
       if (circle) {
@@ -252,17 +321,19 @@ export default defineComponent({
           text.style = textStyle;
           text.x = centerX + (vertexRadius + textDistance) * Math.cos(sourceData.index * angle);
           text.y = centerY + (vertexRadius + textDistance) * Math.sin(sourceData.index * angle);
-          app.stage.addChild(text);
+          //app.stage.addChild(text);
+          viewport.addChild(text);
 
           const circle = sourceData.circle;
           circle.clear();
-          circle.lineStyle(0);
-          circle.beginFill(0xDE3249, 1);
+          circle.lineStyle(1);
+          circle.beginFill(0x50D5E8, 1);
           circle.drawCircle(0, 0, nodeRadius);
           circle.endFill();
           circle.x = centerX + vertexRadius * Math.cos(sourceData.index * angle);
           circle.y = centerY + vertexRadius * Math.sin(sourceData.index * angle);
-          app.stage.addChild(circle);
+          //app.stage.addChild(circle);
+          viewport.addChild(circle);
 
           // draw outgoing edges
           graph.forEachOutboundEdge(source,
@@ -273,17 +344,18 @@ export default defineComponent({
             if(this.edgeMap.has(target+'->'+source)) {
               const existentEdge = this.edgeMap.get(target+'->'+source);
               if(typeof existentEdge === "undefined") return; //should never happen
-              this.edgeMap.set((source+'->'+target), {cord: existentEdge.cord})
+              this.edgeMap.set((source+'->'+target), {id: existentEdge.id, cord: existentEdge.cord})
             } else {
               const fromX = centerX + vertexRadius * Math.cos(sourceData.index * angle);
               const fromY = centerY + vertexRadius * Math.sin(sourceData.index * angle);
               const toX = centerX + vertexRadius * Math.cos(targetData.index * angle);
               const toY = centerY + vertexRadius * Math.sin(targetData.index * angle);
               const edgeGraphics = new PIXI.Graphics()
-                .lineStyle(2, 0xFFFFFF)
+                .lineStyle(2, 0xE06776, 0.2)
                 .moveTo(fromX, fromY)
                 .quadraticCurveTo(centerX, centerY, toX, toY);
-              app.stage.addChild(edgeGraphics);
+              //app.stage.addChild(edgeGraphics);
+              viewport.addChild(edgeGraphics);
 
               const arcAttr:Attr = {
                 obj: edgeGraphics,
@@ -293,15 +365,17 @@ export default defineComponent({
                 style: 0x0,
               }
               graph.setEdgeAttribute(edge, "arc", arcAttr);
-              this.edgeMap.set((source+'->'+target), {cord: edgeGraphics});
+              this.edgeMap.set((source+'->'+target), {id: edgeId++, cord: edgeGraphics});
             }
             
           });
         });
       } else {
-        const nodeLineY = canvas.height * 3/4;
-        let nodeLineX = canvas.width * 1/8;
-        let gap = Math.floor(canvas.width/(1.2 * graph.order));
+        const nodeLineY = canvas.height * 5/6;
+        let nodeLineX = canvas.width * 1/10;
+        //let gap = Math.floor(canvas.width/(1.2 * graph.order));
+        let gap = 30;
+        let largestRadius = 0;
 
         graph.forEachNode((source: any, sourceAttr) => {
           const sourceData = this.nodeMap.get(source);
@@ -339,7 +413,7 @@ export default defineComponent({
           // TODO: should we also store the edges in a separate map???
           // hmmmm...I dont think it bothers us for now
           graph.setNodeAttribute(source, "circle", circleAttr);
-          app.stage.addChild(circle, text);
+          viewport.addChild(circle, text);
         });
 
         //add edges as arcs
@@ -349,7 +423,7 @@ export default defineComponent({
           if(this.edgeMap.has(target+'->'+source)) {
             const existentEdge = this.edgeMap.get(target+'->'+source);
             if(typeof existentEdge === "undefined") return; //should never happen
-            this.edgeMap.set((source+'->'+target), {arc: existentEdge.arc})
+            this.edgeMap.set((source+'->'+target), {id: existentEdge.id, arc: existentEdge.arc})
           } else {
             const arcEdge = new PIXI.Graphics();
             const sourceData = this.nodeMap.get(source);
@@ -357,6 +431,8 @@ export default defineComponent({
             if (typeof sourceData === "undefined" || typeof targetData === "undefined") return; // shouldn't happen
           
             const distanceBetweenNodes = Math.abs(sourceAttributes.circle.x - targetAttributes.circle.x)
+            largestRadius = Math.max(distanceBetweenNodes/2, largestRadius);
+
             let xArcCenter: number;
             if (sourceData.index > targetData.index) {
               xArcCenter = targetAttributes.circle.x + distanceBetweenNodes/2;
@@ -374,10 +450,11 @@ export default defineComponent({
               style: 0x0,
             }
             graph.setEdgeAttribute(edge, 'arc', arcAttr);
-            arcEdge.lineStyle(2, 0xFFFFFF, 0.8);
+            arcEdge.lineStyle(2, 0xE06776, 0.2); // I like this color but it has bugs
             arcEdge.arc(arcAttr.x, arcAttr.y, arcAttr.radius, arcAttr.startAngle as number, arcAttr.endAngle as number)
-            this.edgeMap.set((source+'->'+target), {arc: arcEdge});
-            app.stage.addChild(arcEdge);
+            this.edgeMap.set((source+'->'+target), {id: edgeId++, arc: arcEdge});
+            //app.stage.addChild(arcEdge);
+            viewport.addChild(arcEdge);
           }
         
         });
