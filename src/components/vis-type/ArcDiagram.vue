@@ -1,6 +1,6 @@
 <template>
   <canvas id="drawing-canvas" ref="drawing-canvas" style="margin:0; padding:0;"></canvas>
-  <p id="graph-tooltip" ref="graph-tooltip" style="position: absolute;"></p>
+  <p id="graph-tooltip" ref="graph-tooltip" style="position: fixed; user-select: none;"></p>
 </template>
 
 <script lang="ts">
@@ -25,16 +25,15 @@ export default defineComponent({
   mounted() {
     this.canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
 
-    //GlobalStorage.addDiagram(new GlobalStorage.Diagram("test", "enron-v1-reduced", "arcdiagram", { shape: "circle" }));
-    const diagram = GlobalStorage.getDiagram(this.diagramid);
-    if (!diagram) {
+    this.diagram = GlobalStorage.getDiagram(this.diagramid);
+    if (!this.diagram) {
       console.warn("Non-existent diagram ID:", this.diagramid);
       return;
     }
 
-    const graph = GlobalStorage.getDataset(diagram.graphID);
+    const graph = GlobalStorage.getDataset(this.diagram.graphID);
     if (!graph) {
-      console.warn("Non-existent dataset:", diagram.graphID);
+      console.warn("Non-existent dataset:", this.diagram.graphID);
       return;
     }
     this.graph = graph;
@@ -47,6 +46,7 @@ export default defineComponent({
       transparent: true,
       resizeTo: window,
     });
+    this.app.stage.sortableChildren = true;
     const tooltip = this.$refs["graph-tooltip"] as HTMLElement;
 
     const defaultStyle = new PIXI.TextStyle({
@@ -73,11 +73,11 @@ export default defineComponent({
 
         tooltip.style.display = "inline";
         tooltip.innerText = "Node: " + sourceString;
-        tooltip.style.left = (circle.x + 20) + "px";
-        tooltip.style.top = (circle.y + 40) + "px";
+        tooltip.style.left = (circle.x + 40) + "px";
+        tooltip.style.top = (circle.y + 60) + "px";
 
-        const color = 0x666666;
-        circle.tint = color;
+        const color = 0x00D737;
+        circle.tint = 0xFF00FF;
 
         this.graph.forEachOutboundEdge(source,
         (edge, attributes, source, target: any, sourceAttributes, targetAttributes) => {
@@ -87,6 +87,7 @@ export default defineComponent({
           targetData.circle.tint = color;
 
           attributes.arc.obj.tint = color;
+          attributes.arc.obj.zIndex = 1;
         });
       });
       circle.on("mouseout", (event) => {
@@ -94,7 +95,7 @@ export default defineComponent({
 
         tooltip.style.display = "none";
 
-        const color = 0xffffff;
+        const color = 0x50D5E8;
         circle.tint = color;
 
         this.graph.forEachOutboundEdge(source, 
@@ -104,7 +105,8 @@ export default defineComponent({
           if (typeof targetData === "undefined") return;
           targetData.circle.tint = color;
 
-          attributes.arc.obj.tint = color;
+          attributes.arc.obj.tint = 0x884444;
+          attributes.arc.obj.zIndex = 0;
         });
       });
 
@@ -115,11 +117,11 @@ export default defineComponent({
       });
       i++;
     });
-    
-    diagram.onChange = (diagram, changedKey) => {
+
+    this.diagram.onChange = (diagram, changedKey) => {
       this.draw(this.graph, this.app as PIXI.Application, diagram.settings);
     };
-    this.draw(this.graph, this.app as PIXI.Application, diagram.settings);
+    this.draw(this.graph, this.app as PIXI.Application, this.diagram.settings);
   },
 
   created(){
@@ -176,14 +178,7 @@ export default defineComponent({
       //const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
       const canvas = this.canvas as HTMLCanvasElement;
 
-      const tooltip = this.$refs["graph-tooltip"] as HTMLElement;
-      const vertexRadius = 240;
-      const angle = 2 * Math.PI / (graph.order == 0 ? 1 : graph.order);
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
-
       const nodeRadius = graph.order == 0 ? 200 : Math.floor(200 / graph.order);
-      const textDistance = 40;
       const textStyle = new PIXI.TextStyle({
         fill: "#000000",
         fontSize: nodeRadius + 4,
@@ -206,6 +201,13 @@ export default defineComponent({
       // NOTE: some forEach* callbacks have ": any", because graphology lies
       // about its types :(
       if (!settings.shape || settings.shape === "circle") {
+        const textDistance = 40;
+        const vertexRadius = Math.min(canvas.width, canvas.height) / 3 - textDistance;
+        console.log(vertexRadius);
+        const angle = 2 * Math.PI / (graph.order == 0 ? 1 : graph.order);
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
         graph.forEachNode((source: any, sourceAttr) => {
           const sourceData = this.nodeMap.get(source);
           if (typeof sourceData === "undefined") return; // not supposed to happen
@@ -218,8 +220,8 @@ export default defineComponent({
 
           const circle = sourceData.circle;
           circle.clear();
-          circle.lineStyle(0);
-          circle.beginFill(0xDE3249, 1);
+          circle.lineStyle(4, 0xE06776, 0.2);
+          circle.beginFill(0x50D5E8, 1);
           circle.drawCircle(0, 0, nodeRadius);
           circle.endFill();
           circle.x = centerX + vertexRadius * Math.cos(sourceData.index * angle);
@@ -237,7 +239,7 @@ export default defineComponent({
             const toX = centerX + vertexRadius * Math.cos(targetData.index * angle);
             const toY = centerY + vertexRadius * Math.sin(targetData.index * angle);
             const edgeGraphics = new PIXI.Graphics()
-              .lineStyle(2, 0xFFFFFF)
+              .lineStyle(2, 0x884444)
               .moveTo(fromX, fromY)
               .quadraticCurveTo(centerX, centerY, toX, toY);
             app.stage.addChild(edgeGraphics);
@@ -265,7 +267,7 @@ export default defineComponent({
           const circle = sourceData.circle;
           circle.clear();
           circle.lineStyle(0);
-          circle.beginFill(0xDE3249, 1);
+          circle.beginFill(0x50D5E8, 1);
           circle.drawCircle(0, 0, nodeRadius);
           circle.endFill();
           circle.x = nodeLineX + gap * sourceData.index;
@@ -281,7 +283,7 @@ export default defineComponent({
             x: circle.x,
             y: circle.y,
             radius: nodeRadius,
-            style: 0xDE3249,
+            style: 0x50D5E8,
             value: source,
             clicked: false,
           }
@@ -327,7 +329,7 @@ export default defineComponent({
             style: 0x0,
           }
           graph.setEdgeAttribute(edge, 'arc', arcAttr);
-          arcEdge.lineStyle(2, 0xFFFFFF);
+          arcEdge.lineStyle(2, 0x884444);
           arcEdge.arc(arcAttr.x, arcAttr.y, arcAttr.radius, arcAttr.startAngle as number, arcAttr.endAngle as number)
 
           app.stage.addChild(arcEdge);
