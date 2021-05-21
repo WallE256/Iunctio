@@ -11,7 +11,7 @@ import { debounce } from "lodash";
 import * as GlobalStorage from "@/scripts/globalstorage";
 
 type Settings = {
-  shape: string, // "circle" or "line"
+  shape?: string, // "circle" or "line"
 };
 
 export default defineComponent({
@@ -205,7 +205,7 @@ export default defineComponent({
       
       // NOTE: some forEach* callbacks have ": any", because graphology lies
       // about its types :(
-      if (settings.shape === "circle") {
+      if (!settings.shape || settings.shape === "circle") {
         graph.forEachNode((source: any, sourceAttr) => {
           const sourceData = this.nodeMap.get(source);
           if (typeof sourceData === "undefined") return; // not supposed to happen

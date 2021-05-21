@@ -6,7 +6,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 export default defineComponent({
-  name: "Arc Diagram",
+  name: "ArcDiagram",
   icon: "img/vis/arc-diagram.png",
 });
 </script>
