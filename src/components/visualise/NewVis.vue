@@ -22,7 +22,7 @@ export default defineComponent({
   },
   methods: {
     selectDiagram() {
-      this.$emit("tile-click");
+      this.$emit("tile-click", this.vis_type);
     },
   },
 });

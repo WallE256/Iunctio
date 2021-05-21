@@ -1,11 +1,45 @@
 <template>
-  <div class="diagram-panel"></div>
+  <div class="diagram-panel">
+    <component :is="componentName" :diagramid="diagram_id"></component>
+  </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
+import ArcDiagram from "@/components/vis-type/ArcDiagram.vue";
+import SunburstDiagram from "@/components/vis-type/SunburstDiagram.vue";
+import * as GlobalStorage from "@/scripts/globalstorage";
+
 export default defineComponent({
   name: "DiagramPanel",
+
+  components: { ArcDiagram, SunburstDiagram },
+
+  props: {
+    diagram_id: {
+      type: String,
+      required: true,
+    },
+  },
+
+  data() {
+    return {
+      componentName: "",
+    };
+  },
+
+  created() {
+    const diagram = GlobalStorage.getDiagram(this.diagram_id);
+    if (!diagram) {
+      console.warn("Non-existent diagram", this.diagram_id);
+      return;
+    }
+    this.componentName = diagram.type;
+  },
+
+  mounted() {
+    console.log(this.componentName);
+  },
 });
 </script>
 

@@ -7,7 +7,7 @@
         v-for="vis in vis_types"
         :key="vis.name"
         :vis_type="vis"
-        @tile-click="$emit('tile-click')"
+        @tile-click="onTileClick"
       />
     </div>
   </div>
@@ -17,14 +17,22 @@
 import { defineComponent } from "vue";
 import NewVis from "@/components/visualise/NewVis.vue";
 import ArcDiagram from "@/components/visualise/vis-type/ArcDiagram.vue";
-import Sunburst from "@/components/visualise/vis-type/Sunburst.vue";
+import SunburstDiagram from "@/components/visualise/vis-type/SunburstDiagram.vue";
 export default defineComponent({
   name: "CreateVisualisations",
   components: { NewVis },
   data() {
     return {
-      vis_types: [ArcDiagram, Sunburst],
+      vis_types: [
+        ArcDiagram,
+        SunburstDiagram,
+      ],
     };
+  },
+  methods: {
+    onTileClick(component: any) {
+      this.$emit("tile-click", component);
+    },
   },
 });
 </script>
