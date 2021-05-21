@@ -1,6 +1,6 @@
 <template>
   <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
-  <p id="graph-tooltip" ref="graph-tooltip" style="position: absolute"></p>
+  <p id="graph-tooltip" ref="graph-tooltip" style="position: fixed; user-select: none;"></p>
 </template>
 
 <script lang="ts">
