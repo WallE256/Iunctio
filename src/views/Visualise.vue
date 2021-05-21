@@ -13,7 +13,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, DefineComponent } from "vue";
 import CreateVisualisations from "@/components/visualise/CreateVisualisations.vue";
 import UploadDataset from "@/components/visualise/UploadDataset.vue";
 import DiagramPanel from "@/components/visualise/DiagramPanel.vue";
@@ -27,7 +27,7 @@ export default defineComponent({
       show_vis_home: true,
       show_upload: false,
       show_panels: false,
-      selectedDiagram: null as { name: string; icon: string } | null,
+      selectedDiagram: null as DefineComponent | null,
       shownDiagrams: [] as string[],
     };
   },
@@ -37,13 +37,14 @@ export default defineComponent({
       this.show_upload = !this.show_upload;
     },
 
-    createNew(component: any) {
+    createNew(component: DefineComponent) {
+      console.log(component);
       this.toggleHome();
       this.selectedDiagram = component;
     },
 
     onUpload(diagramID: string) {
-      this.show_vis_home = true;
+      this.show_vis_home = false;
       this.show_upload = false;
       this.show_panels = true;
       console.log(diagramID);
