@@ -1,6 +1,5 @@
 <template>
   <div class="upload-panel">
-    <span class="upload-panel__back" @click="$emit('back')">BACK</span>
     <label tabindex="0" class="upload-panel__btn" @change="parseDataset">
       <input type="file" accept="text/csv" />
       UPLOAD
@@ -66,16 +65,6 @@ export default defineComponent({
   justify-content: center;
 
   position: relative;
-
-  &__back {
-    @include font-sans("Poppins", 0.75rem, "Regular", $BLACK_DDD);
-    @include abs(30px 0 0 30px);
-    cursor: pointer;
-
-    &:hover {
-      text-decoration: underline;
-    }
-  }
 
   &__btn {
     input[type="file"] {
