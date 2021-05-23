@@ -16,6 +16,7 @@ import { defineComponent } from "vue";
 import * as GlobalStorage from "@/scripts/globalstorage";
 import { csvParse } from "@/scripts/parser";
 import { uniqueId } from "lodash";
+import Graph from "graphology";
 
 export default defineComponent({
   name: "UploadDataset",
@@ -26,25 +27,31 @@ export default defineComponent({
   },
   methods: {
     parseDataset(event: { target: { files: File[] } }): void {
-      if (!this.diagram_component) {
-        console.warn("The diagram component is not passed");
-        return;
-      }
-
       const file = event.target.files[0];
-      // Send the file to the web-worker for parsing.
       const graphID = file.name.replace(/\.[^/.]+$/, "");
       const diagramID = uniqueId(graphID);
-      if (GlobalStorage.getDataset(graphID) == null)
-        csvParse(file);
+      const graph = GlobalStorage.getDataset(graphID);
 
-      GlobalStorage.addDiagram(new GlobalStorage.Diagram(
-        diagramID,
-        graphID,
-        this.diagram_component.name,
-      ));
+      const onFinish = (_: Graph) => {
+        if (!this.diagram_component) {
+          console.warn("The diagram component is not passed");
+          return;
+        }
 
-      this.$emit("dataset-upload", diagramID);
+        GlobalStorage.addDiagram(new GlobalStorage.Diagram(
+          diagramID,
+          graphID,
+          this.diagram_component.name,
+        ));
+
+        this.$emit("dataset-upload", diagramID);
+      };
+
+      if (graph) {
+        onFinish(graph);
+      } else {
+        csvParse(file, onFinish);
+      }
     },
   },
 });

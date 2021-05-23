@@ -1,7 +1,9 @@
 import Graph from "graphology";
 import * as GlobalStorage from "@/scripts/globalstorage";
 
-export function csvParse(file: File): void {
+/// Parses the CSV file `file` describing a graph.
+/// When done reading and parsing, it returns the 
+export function csvParse(file: File, onFinish: (graph: Graph) => void): void {
   const reader = new FileReader();
   reader.readAsText(file);
   reader.onload = () => {
@@ -9,6 +11,7 @@ export function csvParse(file: File): void {
     // file name variable stores the name without the extension
     const fileName = file.name.replace(/\.[^/.]+$/, "");
     GlobalStorage.addDataset(fileName, graph);
+    onFinish(graph);
   };
 }
 
