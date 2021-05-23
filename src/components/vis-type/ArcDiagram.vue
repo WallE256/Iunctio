@@ -10,8 +10,10 @@ import Graph from "graphology";
 import { debounce } from "lodash";
 import * as GlobalStorage from "@/scripts/globalstorage";
 
+// see also DiagramSettings.vue and UploadDataset.vue
 type Settings = {
-  shape?: string, // "circle" or "line"
+  variety?: string, // "circle" or "line"
+  hoverEdgeDirection?: string,
 };
 
 export default defineComponent({
@@ -200,7 +202,7 @@ export default defineComponent({
       
       // NOTE: some forEach* callbacks have ": any", because graphology lies
       // about its types :(
-      if (!settings.shape || settings.shape === "circle") {
+      if (!settings.variety || settings.variety === "circle") {
         const textDistance = 40;
         const vertexRadius = Math.min(canvas.width, canvas.height) / 3 - textDistance;
         console.log(vertexRadius);
@@ -254,7 +256,7 @@ export default defineComponent({
             graph.setEdgeAttribute(edge, "arc", arcAttr);
           });
         });
-      } else if (settings.shape === "line") {
+      } else if (settings.variety === "line") {
         const nodeLineY = canvas.height * 3/4;
         let nodeLineX = canvas.width * 1/8;
         let gap = Math.floor(canvas.width/(1.2 * graph.order));
@@ -335,7 +337,7 @@ export default defineComponent({
           app.stage.addChild(arcEdge);
         });
       } else {
-        console.warn("Unrecognized shape", settings.shape);
+        console.warn("Unrecognized shape", settings.variety);
       }
     }
   },
