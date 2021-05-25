@@ -95,12 +95,10 @@ export default defineComponent({
     // correct yet (because they've not been rendered yet)
     this.$nextTick(() => {
       app.resize();
-      this.diagram.onChange = (diagram: any, changedKey: any) => {
+      this.diagram.onChange = (diagram: GlobalStorage.Diagram, changedKey: string) => {
+        if (changedKey === "selectedNode") return; // TODO
 
-        const settings = diagram.settings;
-        const root = settings.root === "[no root]" ? null : settings.root;
-
-        this.draw(app, settings);
+        this.draw(app, diagram.settings);
       };
     });
 
@@ -444,7 +442,19 @@ export default defineComponent({
       } else {
         clearTimeout(this.double);
         this.clickedNode = node;
-        this.double = setTimeout(() => { this.clickedNode = false; }, 600); // Set timeout at 600 ms for double click detection
+        this.double = setTimeout(() => {
+          this.clickedNode = false;
+
+          // single click means selecting --> brush-and-link interactivity
+          GlobalStorage.getDiagram(this.diagramid)
+          .then((diagram) => {
+            if (!diagram) return;
+
+            const append = (event.data.originalEvent as MouseEvent).ctrlKey;
+            this.$emit("selected-node-change", diagram.graphID, node, append);
+          });
+        }, 600); // Set timeout at 600 ms for double click detection
+
       }
     });
 

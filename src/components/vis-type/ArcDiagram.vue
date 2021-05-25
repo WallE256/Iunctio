@@ -149,6 +149,15 @@ export default defineComponent({
         }
       });
 
+      // select/brush-and-linking interactivity
+      circle.on("click", (event) => {
+        if (!this.diagram) {
+          return;
+        }
+        const append = (event.data.originalEvent as MouseEvent).ctrlKey;
+        this.$emit("selected-node-change", this.diagram.graphID, source, append);
+      });
+
       this.nodeMap.set(source, {
         text: text,
         circle: circle,
@@ -165,6 +174,7 @@ export default defineComponent({
       app.resize();
 
       diagram.onChange = (diagram, changedKey) => {
+        if (changedKey === "selectedNode") return; // TODO
         this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
       };
       this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
@@ -349,7 +359,7 @@ export default defineComponent({
       } else {
         console.warn("Unrecognized shape", settings.variety);
       }
-    }
+    },
   },
 });
 </script>

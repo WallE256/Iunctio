@@ -49,10 +49,6 @@ export class Diagram {
 }
 
 const diagrams = new Map<string, Diagram>();
-const selectedNode = null as {
-  datasetID: string;
-  nodeID: any;
-} | null;
 const datasets = new Map<string, Graph>();
 
 function diagramToJSON(diagram: Diagram): string {
@@ -167,3 +163,13 @@ export function changeSetting(diagram: Diagram, ...values: any[]): void {
   // never updated)
   localforage.setItem(storageKey, diagramToJSON(diagram));
 }
+
+/// The currently selected nodes (the user can select multiple with
+/// Ctrl+Click).
+export const selectedNodes = [] as {
+  // The ID of the dataset, so `GlobalStorage.getDataset(datasetID)` will give
+  // you the graph that the node belongs to.
+  datasetID: string,
+  // The ID of the node in the Graph object
+  nodeID: any,
+}[];
