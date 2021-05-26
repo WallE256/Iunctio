@@ -86,23 +86,6 @@ export default defineComponent({
       [bothConnections, outConnections] = this.mapConnections(graph);
     }
 
-    // give each node a corresponding index and corresponding text element
-    let i = 0;
-    graph.forEachNode((source: any, sourceAttr) => {
-      const sourceString = source.toString();
-      const text = new PIXI.Text(
-        sourceString,
-        defaultStyle,
-      );
-      text.anchor.set(0.5, 0.5);
-      app.stage.addChild(text);
-      this.nodeMap.set(source, {
-        text: text,
-        index: i,
-      });
-      i++;
-    });
-
     this.draw(graph, app, input.root, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections);
   },
 
