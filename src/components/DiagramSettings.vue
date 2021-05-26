@@ -4,10 +4,10 @@
       v-for="setting in settings"
       :key="setting.id"
       :is="setting.component"
-      :diagramid="this.diagramid"
       :settingid="setting.id"
       :settinglabel="setting.name"
       v-bind="setting.properties"
+      @setting-changed="onSettingChanged"
     />
   </div>
 </template>
@@ -83,7 +83,7 @@ export default defineComponent({
             options: [ "sunburst", "flame", "inverted-flame" ],
           } },
           { id: "rootNode", component: "SelectSetting", name: "Root Node", properties: {
-            options: graph.nodes(),
+            options: graph.nodes(), // TODO this has to show a proper name instead of IDs
           } },
           { id: "edgeDirection", component: "SelectSetting", name: "Edge Direction", properties: {
             options: [ "incoming", "outgoing", "both" ],
@@ -103,6 +103,12 @@ export default defineComponent({
         this.settings = [];
         break;
     }
+  },
+
+  methods: {
+    onSettingChanged(id: string, value: any) {
+      this.$emit("setting-changed", id, value);
+    },
   },
 });
 </script>
