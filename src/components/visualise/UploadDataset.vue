@@ -26,11 +26,11 @@ export default defineComponent({
     },
   },
   methods: {
-    parseDataset(event: { target: { files: File[] } }): void {
+    async parseDataset(event: { target: { files: File[] } }): Promise<void> {
       const file = event.target.files[0];
       const graphID = file.name.replace(/\.[^/.]+$/, "");
       const diagramID = uniqueId(graphID);
-      const graph = GlobalStorage.getDataset(graphID);
+      const graph = await GlobalStorage.getDataset(graphID);
 
       const onFinish = (_: Graph) => {
         if (!this.diagram_component) {

@@ -28,8 +28,8 @@ export default defineComponent({
     };
   },
 
-  created() {
-    const diagram = GlobalStorage.getDiagram(this.diagram_id);
+  async created() {
+    const diagram = await GlobalStorage.getDiagram(this.diagram_id);
     if (!diagram) {
       console.warn("Non-existent diagram", this.diagram_id);
       return;
