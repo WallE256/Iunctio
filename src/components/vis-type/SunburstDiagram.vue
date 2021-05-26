@@ -54,13 +54,13 @@ export default defineComponent({
     },
   },
 
-  mounted() {
-    const diagram = GlobalStorage.getDiagram(this.diagramid);
+  async mounted() {
+    const diagram = await GlobalStorage.getDiagram(this.diagramid);
     if (!diagram) {
       console.warn("Non-existent diagram:", this.diagramid);
       return;
     }
-    const graph = GlobalStorage.getDataset(diagram.graphID);
+    const graph = await GlobalStorage.getDataset(diagram.graphID);
     if (!graph) {
       console.warn("Non-existent dataset:", diagram.graphID);
       return;

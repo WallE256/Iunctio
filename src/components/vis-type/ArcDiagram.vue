@@ -27,19 +27,19 @@ export default defineComponent({
     },
   },
 
-  mounted() {
+  async mounted() {
     const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
     this.canvas = canvas;
     const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
 
-    const diagram = GlobalStorage.getDiagram(this.diagramid);
+    const diagram = await GlobalStorage.getDiagram(this.diagramid);
     if (!diagram) {
       console.warn("Non-existent diagram ID:", this.diagramid);
       return;
     }
     this.diagram = diagram;
 
-    const graph = GlobalStorage.getDataset(this.diagram.graphID);
+    const graph = await GlobalStorage.getDataset(this.diagram.graphID);
     if (!graph) {
       console.warn("Non-existent dataset:", this.diagram.graphID);
       return;
