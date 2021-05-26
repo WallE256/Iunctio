@@ -1,7 +1,7 @@
 <template>
   <div>
     <label :for="settingid">{{ settinglabel }}</label>
-    <input type="checkbox" :name="settingid" v-on:change="onChange" />
+    <input type="checkbox" :name="settingid" v-on:change="onChange" :checked="value" />
   </div>
 </template>
 
@@ -16,6 +16,10 @@ export default defineComponent({
     },
     settinglabel: {
       type: String,
+      required: true,
+    },
+    value: {
+      type: Boolean,
       required: true,
     },
   },

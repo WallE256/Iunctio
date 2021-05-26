@@ -1,7 +1,14 @@
 <template>
   <div>
     <label :for="settingid">{{ settinglabel }}</label>
-    <input type="number" :name="settingid" value="0" v-on:change="onChange" :min="min" :max="max" />
+    <input
+      type="number"
+      :name="settingid"
+      v-on:change="onChange"
+      :min="min"
+      :max="max"
+      :value="value"
+    />
   </div>
 </template>
 
@@ -25,6 +32,10 @@ export default defineComponent({
     max: {
       type: Number,
       default: () => 10000000,
+    },
+    value: {
+      type: Number,
+      required: true,
     },
   },
 

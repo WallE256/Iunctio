@@ -51,10 +51,11 @@ export default defineComponent({
           case "SunburstDiagram":
             defaultSettings = {
               variety: "sunburst",
-              rootNode: "",
-              edgeDirection: "outgoing",
-              layerCount: 4,
-              minSize: 1,
+              root: null,
+              edgeType: "outgoing",
+              height: 4,
+              widthType: "connections",
+              minRenderSize: 0.001,
             };
             break;
 

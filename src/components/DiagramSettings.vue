@@ -65,35 +65,45 @@ export default defineComponent({
 
     // see UploadDataset.vue for setting default values
     switch (diagram.type) {
-      // TODO: give these diagrams a default value that corresponds
       case "ArcDiagram":
         this.settings = [
           { id: "variety", component: "SelectSetting", name: "Node-Link Diagram Variety", properties: {
             options: [ "circle", "line" ],
+            value: diagram.settings.variety,
           } },
           { id: "hoverEdgeDirection", component: "SelectSetting", name: "Edge Direction", properties: {
             options: [ "incoming", "outgoing", "both" ],
+            value: diagram.settings.hoverEdgeDirection,
           } },
         ];
         break;
 
       case "SunburstDiagram":
         this.settings = [
-          { id: "variety", component: "SelectSetting", name: "Hierarhical Diagram Variety", properties: {
-            options: [ "sunburst", "flame", "inverted-flame" ],
+          { id: "variety", component: "SelectSetting", name: "Hierarchical Diagram Variety", properties: {
+            options: [ "sunburst", "flame", "inverse-flame" ],
+            value: diagram.settings.variety,
           } },
-          { id: "rootNode", component: "SelectSetting", name: "Root Node", properties: {
-            options: graph.nodes(), // TODO this has to show a proper name instead of IDs
+          { id: "root", component: "SelectSetting", name: "Root Node", properties: {
+            options: ["[no root]"].concat(graph.nodes()), // TODO this has to show a proper name instead of IDs
+            value: diagram.settings.root,
           } },
-          { id: "edgeDirection", component: "SelectSetting", name: "Edge Direction", properties: {
+          { id: "edgeType", component: "SelectSetting", name: "Edge Direction", properties: {
             options: [ "incoming", "outgoing", "both" ],
+            value: diagram.settings.edgeType,
           } },
-          { id: "layerCount", component: "NumberSetting", name: "Layer Count", properties: {
+          { id: "height", component: "NumberSetting", name: "Layer Count", properties: {
             min: 0,
             max: 10,
+            value: diagram.settings.height,
           } },
-          { id: "minSize", component: "NumberSetting", name: "Minimum Node Size", properties: {
-            min: 1,
+          { id: "widthType", component: "SelectSetting", name: "Width Determined By", properties: {
+            options: [ "connections", "subtree-size" ],
+            value: diagram.settings.widthType,
+          } },
+          { id: "minRenderSize", component: "NumberSetting", name: "Minimum Node Size", properties: {
+            min: 0,
+            value: diagram.settings.minRenderSize,
           } },
         ];
         break;
