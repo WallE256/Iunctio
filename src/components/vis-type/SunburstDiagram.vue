@@ -8,8 +8,32 @@ import { defineComponent } from "vue";
 import Graph from "graphology";
 import * as d3 from "d3";
 import * as PIXI from "pixi.js";
-import "@pixi/graphics-extras";
 import * as GlobalStorage from "@/scripts/globalstorage";
+
+// stolen from https://pixijs.download/dev/docs/packages_graphics-extras_src_drawTorus.ts.html
+function drawTorus(graphics: PIXI.Graphics,
+    x: number,
+    y: number,
+    innerRadius: number,
+    outerRadius: number,
+    startArc = 0,
+    endArc: number = Math.PI * 2,
+): PIXI.Graphics {
+  if (Math.abs(endArc - startArc) >= Math.PI * 2)
+  {
+    return graphics
+      .drawCircle(x, y, outerRadius)
+      .beginHole()
+      .drawCircle(x, y, innerRadius)
+      .endHole();
+  }
+  graphics.finishPoly();
+  graphics
+    .arc(x, y, innerRadius, endArc, startArc, true)
+    .arc(x, y, outerRadius, startArc, endArc, false)
+    .finishPoly();
+  return graphics;
+}
 
 export default defineComponent({
   props: {
@@ -307,7 +331,7 @@ export default defineComponent({
     if (level == 0) {
       sunburstNode.drawCircle(centerX, centerY, maxRadius);
     } else {
-      (sunburstNode as any).drawTorus(centerX, centerY, minRadius, maxRadius, startAngle, endAngle);
+      drawTorus(sunburstNode, centerX, centerY, minRadius, maxRadius, startAngle, endAngle);
     }
     sunburstNode.endFill();
     app.stage.addChild(sunburstNode);
