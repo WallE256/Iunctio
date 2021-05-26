@@ -2,7 +2,7 @@
   <div>
     <label :for="settingid">{{ settinglabel }}</label>
     <select :name="settingid" v-on:change="onChange">
-      <option v-for="option in options" :key="option">
+      <option v-for="option in options" :key="option" :selected="option === value">
         {{ option }}
       </option>
     </select>
@@ -26,6 +26,10 @@ export default defineComponent({
       type: Array,
       required: true,
     },
+    value: {
+      type: String,
+      required: true,
+    },
   },
 
   data() {
@@ -40,7 +44,7 @@ export default defineComponent({
       this.$emit(
         "setting-changed",
         this.$props.settingid,
-        { index: target.selectedIndex, value: target.value },
+        target.value,
       );
     },
   },
