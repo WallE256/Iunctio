@@ -63,7 +63,7 @@ export default defineComponent({
     this.viewport
         .drag()
         .wheel()
-        .decelerate()
+        //.decelerate() //this might lower perfomance a lot
         .clampZoom({maxScale:1});
 
     this.viewport.moveCenter(window.innerWidth / 2, window.innerHeight / 2)
@@ -233,7 +233,7 @@ export default defineComponent({
       //---------------------------------------------
 
       //TESTING
-      settings.shape = 'line'
+      //settings.shape = 'line'
       
       const textStyle = new PIXI.TextStyle({
         fill: "#000000",
