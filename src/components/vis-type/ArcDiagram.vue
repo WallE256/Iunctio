@@ -47,7 +47,7 @@ export default defineComponent({
       transparent: true,
       resizeTo: window,
     });
-    this.app.stage.sortableChildren = true;
+    //this.app.stage.sortableChildren = true;
 
     this.viewport = new Viewport({
         screenWidth: window.innerWidth,
@@ -55,6 +55,7 @@ export default defineComponent({
         interaction: this.app.renderer.plugins.interaction // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
     })
 
+    this.viewport.sortableChildren = true;
     // add the viewport to the stage
     this.app.stage.addChild(this.viewport as Viewport)
 
@@ -110,9 +111,11 @@ export default defineComponent({
           if (edgeData.arc) { 
             edgeData.arc.tint = color;
             edgeData.arc.alpha = 5;
+            edgeData.arc.zIndex = 1;
           } else if (edgeData.cord){
             edgeData.cord.tint = color;
             edgeData.cord.alpha = 5
+            edgeData.cord.zIndex = 1;
           }
         });
       });
@@ -138,9 +141,11 @@ export default defineComponent({
           if (edgeData.arc) {
             edgeData.arc.tint = color;
             edgeData.arc.alpha = 1;
+            edgeData.arc.zIndex = 0;
           } else if (edgeData.cord) {
             edgeData.cord.tint = color;
             edgeData.cord.alpha = 1;
+            edgeData.cord.zIndex = 0;
           }
           
         });
@@ -223,19 +228,12 @@ export default defineComponent({
       //const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
       const canvas = this.canvas as HTMLCanvasElement;
       
-      //-----------------------------
-      // const tooltip = this.$refs["graph-tooltip"] as HTMLElement;
-      // const vertexRadius = 240;
-      // const angle = 2 * Math.PI / (graph.order == 0 ? 1 : graph.order);
-      // const centerX = canvas.width / 2;
-      // const centerY = canvas.height / 2;
-
-      // //const nodeRadius = graph.order == 0 ? 200 : Math.floor(500 / graph.order);
+      //const nodeRadius = graph.order == 0 ? 200 : Math.floor(500 / graph.order);
       const nodeRadius = 10;
-      // const textDistance = 40;
       //---------------------------------------------
-      //const nodeRadius = graph.order == 0 ? 200 : Math.floor(200 / graph.order);
 
+      //TESTING
+      settings.shape = 'line'
       
       const textStyle = new PIXI.TextStyle({
         fill: "#000000",
@@ -263,7 +261,8 @@ export default defineComponent({
       // about its types :(
       if (!settings.shape || settings.shape === "circle") {
         const textDistance = 40;
-        const vertexRadius = Math.min(canvas.width, canvas.height) / 3 - textDistance;
+        const vertexRadius = Math.min(canvas.width, canvas.height) - textDistance;
+        //const vertexRadius = 300
         console.log(vertexRadius);
         const angle = 2 * Math.PI / (graph.order == 0 ? 1 : graph.order);
         const centerX = canvas.width / 2;
