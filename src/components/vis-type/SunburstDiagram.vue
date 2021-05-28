@@ -91,12 +91,6 @@ export default defineComponent({
 
   data() {
     return {
-      // node map
-      nodeMap: new Map<number, {
-        text: PIXI.Text,
-        index: number,
-      }>(),
-
       // the node that you're currently hovering over
       selectedIndex: null as number | null,
     };
