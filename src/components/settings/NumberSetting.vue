@@ -48,7 +48,7 @@ export default defineComponent({
   methods: {
     onChange(event: Event) {
       const target = event.target as HTMLInputElement;
-      const number = parseInt(target.value);
+      const number = parseFloat(target.value);
       if (!isNaN(number) && number >= this.min && number <= this.max) {
         this.$emit("setting-changed", this.$props.settingid, number);
       }
