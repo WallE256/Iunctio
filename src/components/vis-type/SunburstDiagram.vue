@@ -1,5 +1,7 @@
 <template>
-  <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
+  <div id="canvas-parent" ref="canvas-parent" style="margin: 0; padding: 0; height: 100%; width: 100%;">
+    <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
+  </div>
   <p id="graph-tooltip" ref="graph-tooltip" style="position: fixed; user-select: none;"></p>
 </template>
 
@@ -65,17 +67,13 @@ export default defineComponent({
     }
 
     const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
+    const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
 
     const app = new PIXI.Application({
       view: canvas,
-      width: window.innerWidth,
-      height: window.innerHeight,
       antialias: true,
       transparent: true,
-    });
-
-    const defaultStyle = new PIXI.TextStyle({
-      fill: "#000000",
+      resizeTo: canvasParent,
     });
 
     const settings = diagram.settings as Settings;
@@ -88,15 +86,21 @@ export default defineComponent({
       [bothConnections, outConnections] = this.mapConnections(graph);
     }
 
-    diagram.onChange = (diagram, changedKey) => {
-      app.stage.removeChildren();
+    // this has to happen next tick because otherwise the element sizes are not
+    // correct yet (because they've not been rendered yet)
+    this.$nextTick(() => {
+      app.resize();
+      this.draw(graph, app, input.root, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections);
+      diagram.onChange = (diagram, changedKey) => {
+        app.stage.removeChildren();
 
-      const settings = diagram.settings;
-      const root = settings.root === "[no root]" ? null : settings.root;
-      this.draw(graph, app, root, settings, bothConnections, outConnections);
-    };
+        const settings = diagram.settings;
+        const root = settings.root === "[no root]" ? null : settings.root;
+        this.draw(graph, app, root, settings, bothConnections, outConnections);
+      };
 
-    this.draw(graph, app, settings.root, settings, bothConnections, outConnections);
+      this.draw(graph, app, settings.root, settings, bothConnections, outConnections);
+    });
   },
 
   data() {
