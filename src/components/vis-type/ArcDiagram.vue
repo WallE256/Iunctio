@@ -1,5 +1,7 @@
 <template>
-  <canvas id="drawing-canvas" ref="drawing-canvas" style="margin:0; padding:0;"></canvas>
+  <div id="canvas-parent" ref="canvas-parent" style="margin: 0; padding: 0; height: 100%; width: 100%;">
+    <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
+  </div>
   <p id="graph-tooltip" ref="graph-tooltip" style="position: fixed; user-select: none;"></p>
 </template>
 
@@ -25,13 +27,16 @@ export default defineComponent({
   },
 
   mounted() {
-    this.canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
+    const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
+    this.canvas = canvas;
+    const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
 
-    this.diagram = GlobalStorage.getDiagram(this.diagramid);
-    if (!this.diagram) {
+    const diagram = GlobalStorage.getDiagram(this.diagramid);
+    if (!diagram) {
       console.warn("Non-existent diagram ID:", this.diagramid);
       return;
     }
+    this.diagram = diagram;
 
     const graph = GlobalStorage.getDataset(this.diagram.graphID);
     if (!graph) {
@@ -41,14 +46,13 @@ export default defineComponent({
     this.graph = graph;
 
     this.app = new PIXI.Application({
-      view: this.canvas,
-      width: window.innerWidth,
-      height: window.innerHeight,
+      view: canvas,
       antialias: true,
       transparent: true,
-      resizeTo: window,
+      resizeTo: canvasParent,
     });
     this.app.stage.sortableChildren = true;
+
     const tooltip = this.$refs["graph-tooltip"] as HTMLElement;
 
     const defaultStyle = new PIXI.TextStyle({
@@ -120,10 +124,17 @@ export default defineComponent({
       i++;
     });
 
-    this.diagram.onChange = (diagram, changedKey) => {
-      this.draw(this.graph, this.app as PIXI.Application, diagram.settings);
-    };
-    this.draw(this.graph, this.app as PIXI.Application, this.diagram.settings);
+    // this has to happen next tick, otherwise the elements do not have their
+    // size yet (because they've not been renderd yet)
+    this.$nextTick(() => {
+      const app = this.app as PIXI.Application;
+      app.resize();
+
+      diagram.onChange = (diagram, changedKey) => {
+        this.draw(this.graph, app, diagram.settings);
+      };
+      this.draw(this.graph, app, diagram.settings);
+    });
   },
 
   created(){
@@ -177,7 +188,6 @@ export default defineComponent({
     },
 
     draw(graph: Graph, app: PIXI.Application, settings: Settings) {
-      //const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
       const canvas = this.canvas as HTMLCanvasElement;
 
       const nodeRadius = graph.order == 0 ? 200 : Math.floor(200 / graph.order);
@@ -204,8 +214,7 @@ export default defineComponent({
       // about its types :(
       if (!settings.variety || settings.variety === "circle") {
         const textDistance = 40;
-        const vertexRadius = Math.min(canvas.width, canvas.height) / 3 - textDistance;
-        console.log(vertexRadius);
+        const vertexRadius = Math.min(canvas.width, canvas.height) / 2.3 - textDistance;
         const angle = 2 * Math.PI / (graph.order == 0 ? 1 : graph.order);
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
