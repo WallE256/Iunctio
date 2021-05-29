@@ -47,7 +47,7 @@ export default defineComponent({
       transparent: true,
       resizeTo: window,
     });
-    //this.app.stage.sortableChildren = true;
+    
 
     this.viewport = new Viewport({
         screenWidth: window.innerWidth,
@@ -208,19 +208,6 @@ export default defineComponent({
 
   methods: {
     handleResize(e: any, graph: Graph, app: PIXI.Application, settings: Settings, viewport: Viewport) {
-      
-      // const gl = (this.canvas as HTMLCanvasElement).getContext("webgl2") as WebGL2RenderingContext;
-      
-      // I got this from stackoverflow idk if this works
-      // just leave it here
-
-      // const red = 1;
-      // const green = 0.5;
-      // const blue = 0.7;
-      // const alpha = 1;
-      // gl.clearColor(red, green, blue, alpha);
-      // gl.clear(gl.COLOR_BUFFER_BIT);
-      
       this.draw(graph, app, settings, viewport);
     },
 
@@ -228,6 +215,7 @@ export default defineComponent({
       //const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
       const canvas = this.canvas as HTMLCanvasElement;
       
+      //node radius has to be fixed size otherwise they become very small when adding too many nodes
       //const nodeRadius = graph.order == 0 ? 200 : Math.floor(500 / graph.order);
       const nodeRadius = 10;
       //---------------------------------------------
@@ -262,7 +250,6 @@ export default defineComponent({
       if (!settings.shape || settings.shape === "circle") {
         const textDistance = 40;
         const vertexRadius = Math.min(canvas.width, canvas.height) - textDistance;
-        //const vertexRadius = 300
         console.log(vertexRadius);
         const angle = 2 * Math.PI / (graph.order == 0 ? 1 : graph.order);
         const centerX = canvas.width / 2;
@@ -276,7 +263,7 @@ export default defineComponent({
           text.style = textStyle;
           text.x = centerX + (vertexRadius + textDistance) * Math.cos(sourceData.index * angle);
           text.y = centerY + (vertexRadius + textDistance) * Math.sin(sourceData.index * angle);
-          //app.stage.addChild(text);
+
           viewport.addChild(text);
 
           const circle = sourceData.circle;
@@ -287,7 +274,7 @@ export default defineComponent({
           circle.endFill();
           circle.x = centerX + vertexRadius * Math.cos(sourceData.index * angle);
           circle.y = centerY + vertexRadius * Math.sin(sourceData.index * angle);
-          //app.stage.addChild(circle);
+
           viewport.addChild(circle);
 
           // draw outgoing edges
@@ -309,7 +296,7 @@ export default defineComponent({
                 .lineStyle(2, 0xE06776, 0.2)
                 .moveTo(fromX, fromY)
                 .quadraticCurveTo(centerX, centerY, toX, toY);
-              //app.stage.addChild(edgeGraphics);
+
               viewport.addChild(edgeGraphics);
 
               const arcAttr:Attr = {
@@ -365,8 +352,6 @@ export default defineComponent({
           circle.interactive = true;
           circle.buttonMode = true;
 
-          // TODO: should we also store the edges in a separate map???
-          // hmmmm...I dont think it bothers us for now
           graph.setNodeAttribute(source, "circle", circleAttr);
           viewport.addChild(circle, text);
         });
@@ -405,10 +390,9 @@ export default defineComponent({
               style: 0x0,
             }
             graph.setEdgeAttribute(edge, 'arc', arcAttr);
-            arcEdge.lineStyle(2, 0xE06776, 0.2); // I like this color but it has bugs
+            arcEdge.lineStyle(2, 0xE06776, 0.2); 
             arcEdge.arc(arcAttr.x, arcAttr.y, arcAttr.radius, arcAttr.startAngle as number, arcAttr.endAngle as number)
             this.edgeMap.set((source+'->'+target), {id: edgeId++, arc: arcEdge});
-            //app.stage.addChild(arcEdge);
             viewport.addChild(arcEdge);
           }
         
