@@ -92,7 +92,7 @@ export default defineComponent({
     }
 
     // Draw the diagram
-    this.draw(graph, app, input.root, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections);
+    this.draw(graph, app, input.root, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections, 0x4287f5);
   },
 
   data() {
@@ -121,7 +121,7 @@ export default defineComponent({
     },
 
     // Draw the diagram
-    draw(graph: Graph, app: PIXI.Application, root: any, height:any, graphType: any, edgeType: any, minRenderSize: any, bothConnections: any, outConnections: any) {
+    draw(graph: Graph, app: PIXI.Application, root: any, height:any, graphType: any, edgeType: any, minRenderSize: any, bothConnections: any, outConnections: any, nodeColour: any) {
       const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
       const tooltip = this.$refs["graph-tooltip"] as HTMLElement;
 
@@ -144,14 +144,14 @@ export default defineComponent({
         maxHeight = maxWidth;
         levelHeight = maxHeight / (2 * height);
 
-        this.drawDiagram(graph, app, root, height, graphType, edgeType, minRenderSize, bothConnections, outConnections, predecessors, 0, maxWidth, levelHeight, 0, 1, centerX, centerY, 0x4287f5);
+        this.drawDiagram(graph, app, root, height, graphType, edgeType, minRenderSize, bothConnections, outConnections, predecessors, 0, maxWidth, levelHeight, 0, 1, centerX, centerY, nodeColour);
       } else {
         var borderSize = Math.min(canvas.width, canvas.height) * .2;
         maxWidth = canvas.width - borderSize;
         maxHeight = canvas.height - borderSize;
         levelHeight = maxHeight / (height + 1);
 
-        this.drawDiagram(graph, app, root, height, graphType, edgeType, minRenderSize, bothConnections, outConnections, predecessors, 0, maxWidth, levelHeight, 0, 1, centerX, centerY, 0x4287f5);
+        this.drawDiagram(graph, app, root, height, graphType, edgeType, minRenderSize, bothConnections, outConnections, predecessors, 0, maxWidth, levelHeight, 0, 1, centerX, centerY, nodeColour);
       }
     },
 
@@ -334,9 +334,9 @@ export default defineComponent({
 
       // Reset graph is the user presses the node in the middle
       if (level == 0) {
-        this.draw(graph, app, false, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections);
+        this.draw(graph, app, false, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections, nodeColour);
       } else {
-        this.draw(graph, app, node, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections);
+        this.draw(graph, app, node, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections, nodeColour);
       }
     });
 
@@ -393,9 +393,9 @@ export default defineComponent({
 
       // Reset graph is the user presses the node in the middle
       if ((level == 0) && (sizePerc == 1)) {
-        this.draw(graph, app, false, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections);
+        this.draw(graph, app, false, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections, nodeColour);
       } else {
-        this.draw(graph, app, node, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections);
+        this.draw(graph, app, node, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections, nodeColour);
       }
     });
 
