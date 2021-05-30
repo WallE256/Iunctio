@@ -12,6 +12,7 @@ import * as GlobalStorage from "@/scripts/globalstorage";
 
 var graph = new Graph();
 var app;
+let tooltip = document.createElement('null');
 
 // Create map for number of connections between nodes
 var bothConnections = new Map();
@@ -72,6 +73,7 @@ export default defineComponent({
     }
 
     const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
+    tooltip = this.$refs["graph-tooltip"] as HTMLElement;
 
     const app = new PIXI.Application({
       view: canvas,
@@ -313,17 +315,21 @@ export default defineComponent({
     sunburstNode.beginFill(nodeColour);
     sunburstNode.lineStyle(1, 0xFFFFFF);
     if (level == 0) {
-      sunburstNode.drawCircle(centerX, centerY, maxRadius);
+      sunburstNode.drawCircle(0, 0, maxRadius);
     } else {
-      drawTorus(sunburstNode, centerX, centerY, minRadius, maxRadius, startAngle, endAngle);
+      drawTorus(sunburstNode, 0, 0, minRadius, maxRadius, startAngle, endAngle);
     }
+    sunburstNode.x = centerX;
+    sunburstNode.y = centerY;
     sunburstNode.endFill();
     app.stage.addChild(sunburstNode);
 
     // Interactivity
     sunburstNode.interactive = true;
     sunburstNode.buttonMode = true;
-    sunburstNode.on('pointerdown', (event) => {
+
+    // Set root on click
+    sunburstNode.on('click', (event) => {
       event.stopPropagation();
 
       // Reset graph is the user presses the node in the middle
@@ -333,16 +339,33 @@ export default defineComponent({
         this.draw(graph, app, node, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections);
       }
     });
+
+    // Show node name on hover
+    sunburstNode.on('mouseover', (event) => {
+      event.stopPropagation();
+
+      tooltip.style.display = "inline";
+      tooltip.innerText = "Node: " + node;
+      tooltip.style.left = sunburstNode.x + "px";
+      tooltip.style.top = sunburstNode.y + "px";
+    });
+
+    // Hide node name after hover
+    sunburstNode.on('mouseout', (event) => {
+      event.stopPropagation();
+
+      tooltip.style.display = "none";
+    });
   },
 
   // Draw node for flame graph
   drawNodeFlame(app: PIXI.Application, graphType: any, node: any, centerX: any, centerY: any, maxWidth: any, drawStart: any, sizePerc: any, height: any, level: any, levelHeight: any, nodeColour: any) {
     var posX = centerX - (maxWidth / 2) + (maxWidth * drawStart);
-    var posY;
+    var posY = 0;
     if (graphType == "flame") {
-      posY = centerY + ((levelHeight * (height + 1)) / 2) - (levelHeight * level);
+      posY = centerY + ((levelHeight * (height + 1)) / 2) - (levelHeight * (level + 1));
     } else {
-      posY = centerY - ((levelHeight * (height + 1)) / 2) + (levelHeight * level);
+      posY = centerY - ((levelHeight * (height + 1)) / 2) + (levelHeight * (level + 1));
     }
     var levelWidth = maxWidth * sizePerc;
 
@@ -351,25 +374,46 @@ export default defineComponent({
     flameNode.beginFill(nodeColour);
     flameNode.lineStyle(1, 0xFFFFFF);
     if (graphType == "flame") {
-      flameNode.drawRect(posX, (posY - levelHeight), levelWidth, levelHeight);
+      flameNode.drawRect(0, 0, levelWidth, levelHeight);
     } else {
-      flameNode.drawRect(posX, posY, levelWidth, levelHeight);
+      flameNode.drawRect(0, 0, levelWidth, levelHeight);
     }
     flameNode.endFill();
+    flameNode.x = posX;
+    flameNode.y = posY;
     app.stage.addChild(flameNode);
 
     // Interactivity
     flameNode.interactive = true;
     flameNode.buttonMode = true;
+
+    // Set root on click
     flameNode.on('pointerdown', (event) => {
       event.stopPropagation();
 
       // Reset graph is the user presses the node in the middle
-      if (level == 0) {
+      if ((level == 0) && (sizePerc == 1)) {
         this.draw(graph, app, false, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections);
       } else {
         this.draw(graph, app, node, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections);
       }
+    });
+
+    // Show node name on hover
+    flameNode.on('pointerover', (event) => {
+      event.stopPropagation();
+
+      tooltip.style.display = "inline";
+      tooltip.innerText = "Node: " + node;
+      tooltip.style.left = flameNode.x + (levelWidth / 2) + "px";
+      tooltip.style.top = flameNode.y + "px";
+    });
+
+    // Hide node name after hover
+    flameNode.on('pointerout', (event) => {
+      event.stopPropagation();
+
+      tooltip.style.display = "none";
     });
   }
 },
