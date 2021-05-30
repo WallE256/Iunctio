@@ -3,14 +3,13 @@ import * as GlobalStorage from "@/scripts/globalstorage";
 
 /// Parses the CSV file `file` describing a graph.
 /// When done reading and parsing, it returns the 
-export function csvParse(file: File, onFinish: (graph: Graph) => void): void {
+export function csvParse(file: File, id: string, onFinish: (graph: Graph) => void): void {
   const reader = new FileReader();
   reader.readAsText(file);
   reader.onload = () => {
     const graph = processData(reader.result as string);
     // file name variable stores the name without the extension
-    const fileName = file.name.replace(/\.[^/.]+$/, "");
-    GlobalStorage.addDataset(fileName, graph);
+    GlobalStorage.addDataset(id, graph);
     onFinish(graph);
   };
 }
