@@ -15,7 +15,6 @@
 import { defineComponent } from "vue";
 import * as GlobalStorage from "@/scripts/globalstorage";
 import { csvParse } from "@/scripts/parser";
-import { uniqueId } from "lodash";
 import Graph from "graphology";
 
 export default defineComponent({
@@ -26,11 +25,16 @@ export default defineComponent({
     },
   },
   methods: {
-    async parseDataset(event: { target: { files: File[] } }): Promise<void> {
+    parseDataset(event: { target: { files: File[] } }): void {
+      function createID(id: string): string {
+        // this is unique enough and not too long
+        return String(Math.floor(Date.now() % 1e5)) + "-" + id;
+      }
+      
       const file = event.target.files[0];
-      const graphID = file.name.replace(/\.[^/.]+$/, "");
-      const diagramID = uniqueId(graphID);
-      const graph = await GlobalStorage.getDataset(graphID);
+      const filename = file.name.replace(/\.[^/.]+$/, ""); 
+      const graphID = createID(filename);
+      const diagramID = createID(filename);
 
       const onFinish = (_: Graph) => {
         if (!this.diagram_component) {
@@ -75,11 +79,7 @@ export default defineComponent({
         this.$emit("dataset-upload", diagramID);
       };
 
-      if (graph) {
-        onFinish(graph);
-      } else {
-        csvParse(file, onFinish);
-      }
+      csvParse(file, diagramID, onFinish);
     },
   },
 });
