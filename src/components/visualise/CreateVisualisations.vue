@@ -18,6 +18,7 @@ import { defineComponent } from "vue";
 import NewVis from "@/components/visualise/NewVis.vue";
 import ArcDiagram from "@/components/visualise/vis-type/ArcDiagram.vue";
 import SunburstDiagram from "@/components/visualise/vis-type/SunburstDiagram.vue";
+import DistributionDiagram from "@/components/visualise/vis-type/DistributionDiagram.vue";
 export default defineComponent({
   name: "CreateVisualisations",
   components: { NewVis },
@@ -26,6 +27,7 @@ export default defineComponent({
       vis_types: [
         ArcDiagram,
         SunburstDiagram,
+        DistributionDiagram
       ],
     };
   },
