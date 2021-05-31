@@ -12,6 +12,8 @@ import Graph from "graphology";
 import { debounce } from "lodash";
 import * as GlobalStorage from "@/scripts/globalstorage";
 import { Viewport } from 'pixi-viewport';
+import { Cull } from '@pixi-essentials/cull'; 
+import { Container } from '@pixi/display';
 
 // see also scripts/settingconfig.ts
 type Settings = {
@@ -61,8 +63,8 @@ export default defineComponent({
     });
     
     this.viewport = new Viewport({
-        screenWidth: window.innerWidth,
-        screenHeight: window.innerHeight,
+        screenWidth: canvas.width,
+        screenHeight: canvas.height,
         interaction: this.app.renderer.plugins.interaction // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
     })
 
@@ -139,6 +141,8 @@ export default defineComponent({
       i++;
     });
 
+
+
     // this has to happen next tick, otherwise the elements do not have their
     // size yet (because they've not been renderd yet)
     this.$nextTick(() => {
@@ -168,6 +172,18 @@ export default defineComponent({
       };
       this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
     });
+
+
+    //culling
+    const cull = new Cull().addAll((this.viewport as Viewport).children);
+    this.app.loader.load(()=> {
+      (this.viewport as Viewport).on('frame-end', () => {
+        if((this.viewport as Viewport).dirty) {
+          cull.cull((this.app as PIXI.Application).renderer.screen);
+          (this.viewport as Viewport).dirty = false;
+        }
+      })
+    })
   },
 
   created(){
@@ -201,6 +217,17 @@ export default defineComponent({
   },
 
   methods: {
+    saveSnapshot(app: PIXI.Application, viewport: Viewport) {
+      
+      const graphics = new PIXI.Graphics()
+          .beginFill(0xFF0000)
+          .drawCircle(0, 0, 50);
+      
+      let image = app.renderer.plugins.extract.image(graphics);
+      viewport.addChild(image, 'image/jpeg', 1)
+
+    },
+
     handleResize(e: any, graph: Graph, app: PIXI.Application, settings: Settings, viewport: Viewport) {
       this.draw(graph, app, settings, viewport);
     },
