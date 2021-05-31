@@ -46,8 +46,8 @@ export default defineComponent({
   },
 
   methods: {
-    onSettingChanged(id: string, value: any) {
-      const diagram = GlobalStorage.getDiagram(this.diagram_id);
+    async onSettingChanged(id: string, value: any) {
+      const diagram = await GlobalStorage.getDiagram(this.diagram_id);
       if (!diagram) {
         console.warn("Non-existent diagram:", this.diagram_id);
         return;

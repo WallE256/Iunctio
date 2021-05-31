@@ -2,8 +2,10 @@
     <label :for="settingid" class="num">
       <span class="num__label"> {{settinglabel}} </span>
       <div class="num__container">
-        <button class="input__decrease" onclick="this.nextElementSibling.stepDown();preventDefault()"></button>
+        <button class="input__decrease" onclick="this.nextElementSibling.stepDown();" @click="onChange"></button>
         <input
+          id="number-input"
+          ref="number-input"
           type="number"
           :name="settingid"
           v-on:change="onChange"
@@ -12,7 +14,7 @@
           :value="value"
           class="num__input"
         />
-        <button class="input__increase" onclick="this.previousElementSibling.stepUp();preventDefault()"></button>
+        <button class="input__increase" onclick="this.previousElementSibling.stepUp();" @click="onChange"></button>
       </div>
     </label>
 </template>
@@ -120,7 +122,7 @@ export default defineComponent({
 
   methods: {
     onChange(event: Event) {
-      const target = event.target as HTMLInputElement;
+      const target = this.$refs["number-input"] as HTMLInputElement;
       const number = parseFloat(target.value);
       if (!isNaN(number) && number >= this.min && number <= this.max) {
         this.$emit("setting-changed", this.$props.settingid, number);
