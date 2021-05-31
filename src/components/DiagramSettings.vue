@@ -108,6 +108,15 @@ export default defineComponent({
         ];
         break;
 
+      case "DistributionDiagram":
+        this.settings = [
+          { id: "variety", component: "SelectSetting", name: "Diagram Variety", properties: {
+            options: [ "distribution", "histogram"],
+            value: diagram.settings.variety,
+          } },
+        ];
+        break;
+
       default:
         console.warn("Non-existent diagram type:", diagram.type);
         this.settings = [];
