@@ -1,6 +1,9 @@
 <template>
   <div class="diagram-panel">
-    <component :is="componentName" :diagramid="diagram_id"></component>
+    <div class="diagram-panel__canvas">
+      <component :is="componentName" :diagramid="diagram_id"></component>
+    </div>
+    <diagram-settings :diagramid="diagram_id" />
   </div>
 </template>
 
@@ -8,12 +11,13 @@
 import { defineComponent } from "vue";
 import ArcDiagram from "@/components/vis-type/ArcDiagram.vue";
 import SunburstDiagram from "@/components/vis-type/SunburstDiagram.vue";
+import DiagramSettings from "@/components/DiagramSettings.vue";
 import * as GlobalStorage from "@/scripts/globalstorage";
 
 export default defineComponent({
   name: "DiagramPanel",
 
-  components: { ArcDiagram, SunburstDiagram },
+  components: { DiagramSettings, ArcDiagram, SunburstDiagram },
 
   props: {
     diagram_id: {
@@ -52,5 +56,7 @@ export default defineComponent({
   border-radius: 5px;
   margin: 0px 3px;
   box-shadow: 2px 2px 4px rgba($BLACK_DDD, 0.25);
+  @include font-face("Poppins", "Regular");
+  @include font-sans("Poppins", 0.75rem, "Regular", $BLACK_DDD);
 }
 </style>
