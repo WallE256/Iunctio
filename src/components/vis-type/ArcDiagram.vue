@@ -1,5 +1,7 @@
 <template>
-  <canvas id="drawing-canvas" ref="drawing-canvas" style="margin:0; padding:0;"></canvas>
+  <div id="canvas-parent" ref="canvas-parent" style="margin: 0; padding: 0; height: 100%; width: 100%;">
+    <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
+  </div>
   <p id="graph-tooltip" ref="graph-tooltip" style="position: fixed; user-select: none;"></p>
 </template>
 
@@ -11,8 +13,10 @@ import { debounce } from "lodash";
 import * as GlobalStorage from "@/scripts/globalstorage";
 import { Viewport } from 'pixi-viewport';
 
+// see also DiagramSettings.vue and UploadDataset.vue
 type Settings = {
-  shape?: string, // "circle" or "line"
+  variety?: string, // "circle" or "line"
+  hoverEdgeDirection?: string,
 };
 
 export default defineComponent({
@@ -24,13 +28,16 @@ export default defineComponent({
   },
 
   mounted() {
-    this.canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
+    const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
+    this.canvas = canvas;
+    const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
 
-    this.diagram = GlobalStorage.getDiagram(this.diagramid);
-    if (!this.diagram) {
+    const diagram = GlobalStorage.getDiagram(this.diagramid);
+    if (!diagram) {
       console.warn("Non-existent diagram ID:", this.diagramid);
       return;
     }
+    this.diagram = diagram;
 
     const graph = GlobalStorage.getDataset(this.diagram.graphID);
     if (!graph) {
@@ -40,15 +47,12 @@ export default defineComponent({
     this.graph = graph;
 
     this.app = new PIXI.Application({
-      view: this.canvas,
-      width: window.innerWidth,
-      height: window.innerHeight,
+      view: canvas,
       antialias: true,
       transparent: true,
-      resizeTo: window,
+      resizeTo: canvasParent,
     });
     
-
     this.viewport = new Viewport({
         screenWidth: window.innerWidth,
         screenHeight: window.innerHeight,
@@ -159,10 +163,17 @@ export default defineComponent({
       i++;
     });
 
-    this.diagram.onChange = (diagram, changedKey) => {
-      this.draw(this.graph, this.app as PIXI.Application, diagram.settings, this.viewport as Viewport);
-    };
-    this.draw(this.graph, this.app as PIXI.Application, this.diagram.settings, this.viewport as Viewport);
+    // this has to happen next tick, otherwise the elements do not have their
+    // size yet (because they've not been renderd yet)
+    this.$nextTick(() => {
+      const app = this.app as PIXI.Application;
+      app.resize();
+
+      diagram.onChange = (diagram, changedKey) => {
+        this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
+      };
+      this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
+    });
   },
 
   created(){
@@ -212,7 +223,6 @@ export default defineComponent({
     },
 
     draw(graph: Graph, app: PIXI.Application, settings: Settings, viewport: Viewport) {
-      //const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
       const canvas = this.canvas as HTMLCanvasElement;
       
       //node radius has to be fixed size otherwise they become very small when adding too many nodes
@@ -247,10 +257,9 @@ export default defineComponent({
       let edgeId = 0;
       // NOTE: some forEach* callbacks have ": any", because graphology lies
       // about its types :(
-      if (!settings.shape || settings.shape === "circle") {
+      if (!settings.variety || settings.variety === "circle") {
         const textDistance = 40;
         const vertexRadius = Math.min(canvas.width, canvas.height) - textDistance;
-        console.log(vertexRadius);
         const angle = 2 * Math.PI / (graph.order == 0 ? 1 : graph.order);
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
@@ -312,7 +321,7 @@ export default defineComponent({
             
           });
         });
-      } else if (settings.shape === "line"){
+      } else if (settings.variety === "line"){
         const nodeLineY = canvas.height * 5/6;
         let nodeLineX = canvas.width * 1/10;
         //let gap = Math.floor(canvas.width/(1.2 * graph.order));
@@ -398,7 +407,7 @@ export default defineComponent({
         
         });
       } else {
-      console.warn("Unrecognized shape", settings.shape);
+        console.warn("Unrecognized shape", settings.variety);
       }
     }
   },

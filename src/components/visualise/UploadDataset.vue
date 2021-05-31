@@ -38,10 +38,38 @@ export default defineComponent({
           return;
         }
 
+        // see DiagramSettings.vue for the IDs that are used here
+        let defaultSettings;
+        switch (this.diagram_component.name) {
+          case "ArcDiagram":
+            defaultSettings = {
+              variety: "circle",
+              hoverEdgeDirection: "outgoing",
+            };
+            break;
+
+          case "SunburstDiagram":
+            defaultSettings = {
+              variety: "sunburst",
+              root: null,
+              edgeType: "outgoing",
+              height: 4,
+              widthType: "connections",
+              minRenderSize: 0.001,
+            };
+            break;
+
+          default:
+            console.warn("Non-existent diagram type:", this.diagram_component.name);
+            defaultSettings = {};
+            break;
+        }
+
         GlobalStorage.addDiagram(new GlobalStorage.Diagram(
           diagramID,
           graphID,
           this.diagram_component.name,
+          defaultSettings,
         ));
 
         this.$emit("dataset-upload", diagramID);
