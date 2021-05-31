@@ -45,6 +45,7 @@
       box-shadow: 1px 1px 2px rgba($BLACK_DDD, 0.2);
       text-align: center;
       border-radius: 2rem;
+      max-width: 100px;
 
       // Hide default spin-arrows.
       &::-webkit-inner-spin-button,
