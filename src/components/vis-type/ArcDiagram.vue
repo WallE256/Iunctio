@@ -171,19 +171,12 @@ export default defineComponent({
         this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
       };
       this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
+      //culling
+      this.culling(this.app as PIXI.Application, this.viewport as Viewport, this.graph);
     });
 
 
-    //culling
-    const cull = new Cull().addAll((this.viewport as Viewport).children);
-    this.app.loader.load(()=> {
-      (this.viewport as Viewport).on('frame-end', () => {
-        if((this.viewport as Viewport).dirty) {
-          cull.cull((this.app as PIXI.Application).renderer.screen);
-          (this.viewport as Viewport).dirty = false;
-        }
-      })
-    })
+    
   },
 
   created(){
@@ -217,6 +210,37 @@ export default defineComponent({
   },
 
   methods: {
+    culling(app: PIXI.Application, viewport: Viewport, graph: Graph) {
+      const cull = new Cull().addAll(viewport.children);
+      app.loader.load(()=> {
+      viewport.on('frame-end', () => {
+        if((viewport as Viewport).dirty) {
+          cull.cull(app.renderer.screen);
+          viewport.dirty = false;
+          
+          //lvl of detail
+          const zoom = viewport.scale.x;
+
+          //the level points can be changed later 
+          const zoomingSteps = [0.1, 0.35, 0.5, 1];
+          const zoomingStep = zoomingSteps.findIndex(zoomStep => zoom <= zoomStep);
+
+          graph.forEachNode((node:any) => {
+            const nodeObj = this.nodeMap.get(node);
+            if(!nodeObj) {console.log("node does not exist"); return;}
+
+            const nodeGFX = nodeObj.circle;
+            const nodeText = nodeObj.text;
+
+            nodeText.visible = zoomingStep > 2;
+            //later we can change to only make nodes that have low degree
+            //and their corresponding edges dissapear
+            nodeGFX.visible = zoomingStep > 1;
+          })
+        }
+      })
+    })
+    },
     saveSnapshot(app: PIXI.Application, viewport: Viewport) {
       
       const graphics = new PIXI.Graphics()
