@@ -222,8 +222,9 @@ export default defineComponent({
           const zoom = viewport.scale.x;
 
           //the level points can be changed later 
-          const zoomingSteps = [0.1, 0.35, 0.5, 1];
+          const zoomingSteps = [0.2, 0.35, 0.5, 1];
           const zoomingStep = zoomingSteps.findIndex(zoomStep => zoom <= zoomStep);
+          console.log(zoomingStep, zoom)
 
           graph.forEachNode((node:any) => {
             const nodeObj = this.nodeMap.get(node);
@@ -235,7 +236,24 @@ export default defineComponent({
             nodeText.visible = zoomingStep > 2;
             //later we can change to only make nodes that have low degree
             //and their corresponding edges dissapear
-            nodeGFX.visible = zoomingStep > 1;
+            nodeGFX.visible = zoomingStep > 0;
+          })
+
+          graph.forEachEdge((edge:any) => {
+            const nodes = graph.extremities(edge);
+            const edgeKey = nodes[0]+'->'+nodes[1];
+            const edgeObj = this.edgeMap.get(edgeKey);
+           
+            if(!edgeObj) {console.log("edge does not exist"); return;}
+
+            if(edgeObj.cord) {
+              const edgeGFX = edgeObj.cord;
+              edgeGFX.visible = zoomingStep>1;
+            } else if(edgeObj.arc) {
+              const edgeGFX = edgeObj.arc;
+              edgeGFX.visible = zoomingStep>1;
+            }
+            
           })
         }
       })
@@ -279,7 +297,7 @@ export default defineComponent({
       // about its types :(
       if (!settings.variety || settings.variety === "circle") {
         const textDistance = 40;
-        const vertexRadius = Math.min(canvas.width, canvas.height) - textDistance;
+        const vertexRadius = Math.min(canvas.width, canvas.height)*1.2 - textDistance;
         const angle = 2 * Math.PI / (graph.order == 0 ? 1 : graph.order);
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
