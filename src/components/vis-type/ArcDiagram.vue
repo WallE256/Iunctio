@@ -226,9 +226,8 @@ export default defineComponent({
           const zoom = viewport.scale.x;
 
           //the level points can be changed later 
-          const zoomingSteps = [0.2, 0.35, 0.5, 1];
+          const zoomingSteps = [0.1, 0.35, 0.5, 1];
           const zoomingStep = zoomingSteps.findIndex(zoomStep => zoom <= zoomStep);
-          console.log(zoomingStep, zoom)
 
           graph.forEachNode((node:any) => {
             const nodeObj = this.nodeMap.get(node);
