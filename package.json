@@ -19,6 +19,7 @@
     "lodash.debounce": "^4.0.8",
     "lodash.throttle": "^4.1.1",
     "lodash.uniqueid": "^4.0.1",
+    "pixi-viewport": "^4.31.0",
     "pixi.js": "^6.0.2",
     "rfs": "^9.0.3",
     "vue": "^3.0.0",
