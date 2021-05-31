@@ -3,7 +3,7 @@
     <div class="diagram-panel__canvas">
       <component :is="componentName" :diagramid="diagram_id"></component>
     </div>
-    <diagram-settings :diagramid="diagram_id" />
+    <diagram-settings :diagramid="diagram_id" @setting-changed="onSettingChanged" />
   </div>
 </template>
 
@@ -43,6 +43,17 @@ export default defineComponent({
 
   mounted() {
     console.log(this.componentName);
+  },
+
+  methods: {
+    onSettingChanged(id: string, value: any) {
+      const diagram = GlobalStorage.getDiagram(this.diagram_id);
+      if (!diagram) {
+        console.warn("Non-existent diagram:", this.diagram_id);
+        return;
+      }
+      GlobalStorage.changeSetting(diagram, id, value);
+    },
   },
 });
 </script>
