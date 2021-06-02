@@ -12,18 +12,6 @@ import * as d3 from "d3";
 import * as PIXI from "pixi.js";
 import * as GlobalStorage from "@/scripts/globalstorage";
 
-var graph = null as any;
-var diagram = null as any;
-var app;
-let tooltip = document.createElement('null');
-
-// Create map for number of connections between nodes
-var bothConnections = new Map();
-var outConnections = new Map();
-
-var clickedNode = false;
-var double = 0;
-
 // stolen from https://pixijs.download/dev/docs/packages_graphics-extras_src_drawTorus.ts.html
 function drawTorus(graphics: PIXI.Graphics,
     x: number,
@@ -68,48 +56,55 @@ export default defineComponent({
   },
 
   async mounted() {
-    diagram = await GlobalStorage.getDiagram(this.diagramid);
-    if (!diagram) {
+    const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
+    this.canvas = canvas;
+    const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
+
+    this.diagram = await GlobalStorage.getDiagram(this.diagramid);
+    if (!this.diagram) {
       console.warn("Non-existent diagram:", this.diagramid);
       return;
     }
-    graph = await GlobalStorage.getDataset(diagram.graphID);
-    if (!graph) {
-      console.warn("Non-existent dataset:", diagram.graphID);
+    this.graph = await GlobalStorage.getDataset(this.diagram.graphID);
+    if (!this.graph) {
+      console.warn("Non-existent dataset:", this.diagram.graphID);
       return;
     }
 
-    const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
-    const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
-    tooltip = this.$refs["graph-tooltip"] as HTMLElement;
+    this.tooltip = this.$refs["graph-tooltip"] as HTMLElement;
 
-    const app = new PIXI.Application({
+    this.app = new PIXI.Application({
       view: canvas,
       antialias: true,
       backgroundAlpha: 0,
       resizeTo: canvasParent,
     });
 
-    const settings = diagram.settings as Settings;
+    const settings = this.diagram.settings as Settings;
+
+    // Create map for number of connections between nodes
+    this.bothConnections = new Map();
+    this.outConnections = new Map();
 
     if (settings.widthType == "connections") {
-      [bothConnections, outConnections] = this.mapConnections(graph);
+      [this.bothConnections, this.outConnections] = this.mapConnections(this.graph);
     }
 
     // this has to happen next tick because otherwise the element sizes are not
     // correct yet (because they've not been rendered yet)
     this.$nextTick(() => {
+      const app = this.app as PIXI.Application;
       app.resize();
-      diagram.onChange = (diagram: any, changedKey: any) => {
+      this.diagram.onChange = (diagram: any, changedKey: any) => {
         app.stage.removeChildren();
 
         const settings = diagram.settings;
         const root = settings.root === "[no root]" ? null : settings.root;
 
-        this.draw(graph, app, root, settings, bothConnections, outConnections);
+        this.draw(this.graph, app, settings, this.bothConnections, this.outConnections);
       };
 
-      this.draw(graph, app, settings.root, settings, bothConnections, outConnections);
+      this.draw(this.graph, app, settings, this.bothConnections, this.outConnections);
     });
   },
 
@@ -117,6 +112,20 @@ export default defineComponent({
     return {
       // the node that you're currently hovering over
       hoverNode: null as string | null,
+      graph: null as any,
+      diagram: null as any,
+      app: null as null | PIXI.Application,
+      tooltip: document.createElement('null'),
+      canvas: null as null | HTMLCanvasElement,
+      clickedNode: false,
+      double: 0,
+      centerX: 0,
+      centerY: 0,
+      levelHeight: 0,
+      maxWidth: 0,
+      maxHeight: 0,
+      bothConnections: new Map(),
+      outConnections: new Map(),
     };
   },
 
@@ -142,40 +151,31 @@ export default defineComponent({
     draw(
       graph: Graph,
       app: PIXI.Application,
-      root: any,
       settings: Settings,
       bothConnections: any,
       outConnections: any,
     ) {
-      const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
+      const canvas = this.canvas as HTMLCanvasElement;
 
-      app.stage.removeChildren();
-
-      canvas.height = window.innerHeight;
-      canvas.width = window.innerWidth;
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
+      this.centerX = canvas.width / 2;
+      this.centerY = canvas.height / 2;
 
       const predecessors = [] as any[];
 
-      var maxWidth;
-      var maxHeight;
-      var levelHeight;
-
       // Calculate height based on graph type
       if (settings.variety === "sunburst") {
-        maxWidth = Math.min(canvas.width, canvas.height) * .7;
-        maxHeight = maxWidth;
-        levelHeight = maxHeight / (2 * settings.height);
+        this.maxWidth = Math.min(canvas.width, canvas.height) * .7;
+        this.maxHeight = this.maxWidth;
+        this.levelHeight = this.maxHeight / (1.75 * settings.height);
 
-        this.drawDiagram(graph, app, settings, root, bothConnections, outConnections, predecessors, 0, maxWidth, levelHeight, 0, 1, centerX, centerY, settings.diagramColour);
+        this.drawDiagram(graph, app, settings, settings.root, predecessors, 0, 0, 1, settings.diagramColour);
       } else {
         var borderSize = Math.min(canvas.width, canvas.height) * .2;
-        maxWidth = canvas.width - borderSize;
-        maxHeight = canvas.height - borderSize;
-        levelHeight = maxHeight / (settings.height + 1);
+        this.maxWidth = canvas.width - borderSize;
+        this.maxHeight = canvas.height - borderSize;
+        this.levelHeight = this.maxHeight / settings.height;
 
-        this.drawDiagram(graph, app, settings, root, bothConnections, outConnections, predecessors, 0, maxWidth, levelHeight, 0, 1, centerX, centerY, settings.diagramColour);
+        this.drawDiagram(graph, app, settings, settings.root, predecessors, 0, 0, 1, settings.diagramColour);
       }
     },
 
@@ -185,16 +185,10 @@ export default defineComponent({
     app: PIXI.Application,
     settings: Settings,
     node: any,
-    bothConnections: any,
-    outConnections: any,
     newPredecessors: any,
     level: number,
-    maxWidth: number,
-    levelHeight: number,
     drawStart: number,
     sizePerc: number,
-    centerX: number,
-    centerY: number,
     subtreeColour: any,
   ) {
 
@@ -258,7 +252,7 @@ export default defineComponent({
               level = 1;
             }
 
-            this.drawDiagram(graph, app, settings, node, bothConnections, outConnections, predecessors, level, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, convertedColour);
+            this.drawDiagram(graph, app, settings, node, predecessors, level, drawStart, newSizePerc, convertedColour);
             drawStart += newSizePerc;
             index += 1;
           }
@@ -266,18 +260,14 @@ export default defineComponent({
       } else {
 
         // Draw node
-        if (settings.variety === "sunburst") {
-          this.drawNodeSunburst(app, settings, node, centerX, centerY, level, levelHeight, drawStart, sizePerc, subtreeColour);
-        } else {
-          this.drawNodeFlame(app, settings, node, centerX, centerY, maxWidth, drawStart, sizePerc, level, levelHeight, subtreeColour);
-        }
+        this.drawNode(app, settings, node, level, drawStart, sizePerc, subtreeColour);
 
         // Add this node to copy of predecessors
         var predecessors = [...newPredecessors];
         predecessors.push(node);
 
         // Next layer
-        if (level < settings.height) {
+        if (level < settings.height - 1) {
 
           var downstreamConnections = 0;
 
@@ -287,11 +277,11 @@ export default defineComponent({
             if (!this.isPredecessor(predecessors, neighbour)) {
 
               if (settings.edgeType == "incoming") {
-                downstreamConnections += outConnections.get(neighbour + ">" + node);
+                downstreamConnections += this.outConnections.get(neighbour + ">" + node);
               } else if (settings.edgeType == "outgoing") {
-                downstreamConnections += outConnections.get(node + ">" + neighbour);
+                downstreamConnections += this.outConnections.get(node + ">" + neighbour);
               } else {
-                downstreamConnections += bothConnections.get(node + "_" + neighbour);
+                downstreamConnections += this.bothConnections.get(node + "_" + neighbour);
               }
 
             }
@@ -304,24 +294,23 @@ export default defineComponent({
 
               var newSizePerc = 0;
 
-              if ((settings.edgeType === "incoming") && (outConnections.get(neighbour + ">" + node) > 0)) {
-                newSizePerc = sizePerc * outConnections.get(neighbour + ">" + node) / downstreamConnections;
+              if ((settings.edgeType === "incoming") && (this.outConnections.get(neighbour + ">" + node) > 0)) {
+                newSizePerc = sizePerc * this.outConnections.get(neighbour + ">" + node) / downstreamConnections;
 
-                this.drawDiagram(graph, app, settings, neighbour, bothConnections, outConnections, predecessors, level + 1, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, subtreeColour);
+                this.drawDiagram(graph, app, settings, neighbour, predecessors, level + 1, drawStart, newSizePerc, subtreeColour);
                 drawStart += newSizePerc;
 
-              } else if ((settings.edgeType === "outgoing") && (outConnections.get(node + ">" + neighbour) > 0)) {
-                newSizePerc = sizePerc * outConnections.get(node + ">" + neighbour) / downstreamConnections;
+              } else if ((settings.edgeType === "outgoing") && (this.outConnections.get(node + ">" + neighbour) > 0)) {
+                newSizePerc = sizePerc * this.outConnections.get(node + ">" + neighbour) / downstreamConnections;
 
-                this.drawDiagram(graph, app, settings, neighbour, bothConnections, outConnections, predecessors, level + 1, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, subtreeColour);
+                this.drawDiagram(graph, app, settings, neighbour, predecessors, level + 1, drawStart, newSizePerc, subtreeColour);
                 drawStart += newSizePerc;
 
-              } else if ((settings.edgeType !== "incoming") && (settings.edgeType !== "outgoing") && (bothConnections.get(node + "_" + neighbour) > 0)) {
-                newSizePerc = sizePerc * bothConnections.get(node + "_" + neighbour) / downstreamConnections;
+              } else if ((settings.edgeType !== "incoming") && (settings.edgeType !== "outgoing") && (this.bothConnections.get(node + "_" + neighbour) > 0)) {
+                newSizePerc = sizePerc * this.bothConnections.get(node + "_" + neighbour) / downstreamConnections;
 
-                this.drawDiagram(graph, app, settings, neighbour, bothConnections, outConnections, predecessors, level + 1, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, subtreeColour);
+                this.drawDiagram(graph, app, settings, neighbour, predecessors, level + 1, drawStart, newSizePerc, subtreeColour);
                 drawStart += newSizePerc;
-
               }
             }
           });
@@ -342,142 +331,99 @@ export default defineComponent({
     return predecessor;
   },
 
-  // Draw node for sunburst graph
-  drawNodeSunburst(app: PIXI.Application, settings: Settings, node: any, centerX: any, centerY: any, level: any, levelHeight: any, drawStart: any, sizePerc: any, nodeColour: any) {
+  // Draw node
+  drawNode(app: PIXI.Application, settings: Settings, node: any, level: any, drawStart: any, sizePerc: any, nodeColour: any) {
 
-    var startAngle = 2 * Math.PI * drawStart;
-    var endAngle = 2 * Math.PI * (drawStart + sizePerc);
-    var minRadius = level * levelHeight;
-    var maxRadius = minRadius + levelHeight;
+    // Create graphics
+    const drawnNode = new PIXI.Graphics();
+    drawnNode.beginFill(nodeColour);
+    drawnNode.lineStyle(1, 0xFFFFFF);
 
-    const sunburstNode = new PIXI.Graphics();
+    const canvas = this.canvas as HTMLCanvasElement;
 
-    sunburstNode.beginFill(nodeColour);
-    sunburstNode.lineStyle(1, 0xFFFFFF);
-    if (level == 0) {
-      sunburstNode.drawCircle(0, 0, maxRadius);
-    } else {
-      drawTorus(sunburstNode, 0, 0, minRadius, maxRadius, startAngle, endAngle);
-    }
-    sunburstNode.x = centerX;
-    sunburstNode.y = centerY;
-    sunburstNode.endFill();
-    app.stage.addChild(sunburstNode);
+    if (settings.variety === "sunburst") {
 
-    // Interactivity
-    sunburstNode.interactive = true;
-    sunburstNode.buttonMode = true;
+      var startAngle = 2 * Math.PI * drawStart;
+      var endAngle = 2 * Math.PI * (drawStart + sizePerc);
+      var minRadius = level * this.levelHeight;
+      var maxRadius = minRadius + this.levelHeight;
 
-    // Set root on click
-    sunburstNode.on('click', (event) => {
-      event.stopPropagation();
-
-      // If another click has been detected in the past 600 ms.
-      if ((clickedNode) && (clickedNode == node)) {
-
-        // Reset graph is the user presses the node in the middle
-        if (level == 0) {
-          GlobalStorage.changeSetting(diagram, "root", null, "diagramColour", nodeColour)
-        } else {
-          GlobalStorage.changeSetting(diagram, "root", node, "diagramColour", nodeColour)
-        }
-
-        clickedNode = false;
-        clearTimeout(double);
-
+      if (level == 0) {
+        drawnNode.drawCircle(0, 0, maxRadius);
       } else {
-        clearTimeout(double);
-        clickedNode = node;
-        double = setTimeout(() => { clickedNode = false; }, 600); // Set timeout at 600 ms for double click detection
+        drawTorus(drawnNode, 0, 0, minRadius, maxRadius, startAngle, endAngle);
       }
-    });
 
-    // Show node name on hover
-    sunburstNode.on('mouseover', (event) => {
-      event.stopPropagation();
+      drawnNode.x = this.centerX;
+      drawnNode.y = this.centerY;
 
-      tooltip.style.display = "inline";
-      tooltip.innerText = "Node: " + node;
-      tooltip.style.left = sunburstNode.x + "px";
-      tooltip.style.top = sunburstNode.y + "px";
-    });
+    } else if (settings.variety === "flame") {
 
-    // Hide node name after hover
-    sunburstNode.on('mouseout', (event) => {
-      event.stopPropagation();
+      drawnNode.drawRect(0, 0, this.maxWidth * sizePerc, this.levelHeight);
 
-      tooltip.style.display = "none";
-    });
-  },
+      drawnNode.x = this.centerX - (this.maxWidth / 2) + (this.maxWidth * drawStart);
+      drawnNode.y = this.centerY + (this.maxHeight / 2) - (this.levelHeight * (level + 1));
 
-  // Draw node for flame graph
-  drawNodeFlame(app: PIXI.Application, settings: Settings, node: any, centerX: any, centerY: any, maxWidth: any, drawStart: any, sizePerc: any, level: any, levelHeight: any, nodeColour: any) {
-    var posX = centerX - (maxWidth / 2) + (maxWidth * drawStart);
-    var posY = 0;
-    if (settings.variety == "flame") {
-      posY = centerY + ((levelHeight * (settings.height + 1)) / 2) - (levelHeight * (level + 1));
     } else {
-      posY = centerY - ((levelHeight * (settings.height + 1)) / 2) + (levelHeight * (level + 1));
-    }
-    var levelWidth = maxWidth * sizePerc;
 
-    const flameNode = new PIXI.Graphics();
+      drawnNode.drawRect(0, 0, this.maxWidth * sizePerc, this.levelHeight);
 
-    flameNode.beginFill(nodeColour);
-    flameNode.lineStyle(1, 0xFFFFFF);
-    flameNode.drawRect(0, 0, levelWidth, levelHeight);
-    flameNode.endFill();
-    flameNode.x = posX;
-    if (settings.variety === "flame") {
-      flameNode.y = posY;
-    } else {
-      flameNode.y = posY - levelHeight;
+      drawnNode.x = this.centerX - (this.maxWidth / 2) + (this.maxWidth * drawStart);
+      drawnNode.y = this.centerY - (this.maxHeight / 2) + (this.levelHeight * level);
+
     }
-    app.stage.addChild(flameNode);
+
+    drawnNode.endFill();
+    app.stage.addChild(drawnNode);
 
     // Interactivity
-    flameNode.interactive = true;
-    flameNode.buttonMode = true;
+    drawnNode.interactive = true;
+    drawnNode.buttonMode = true;
 
     // Set root on click
-    flameNode.on('click', (event) => {
+    drawnNode.on('click', (event) => {
       event.stopPropagation();
 
       // If another click has been detected in the past 600 ms.
-      if ((clickedNode) && (clickedNode == node)) {
+      if ((this.clickedNode) && (this.clickedNode == node)) {
 
         // Reset graph is the user presses the node in the middle
         if ((level == 0) && (sizePerc == 1)) {
-          GlobalStorage.changeSetting(diagram, "root", null, "diagramColour", nodeColour)
+          GlobalStorage.changeSetting(this.diagram, "root", null, "diagramColour", nodeColour)
         } else {
-          GlobalStorage.changeSetting(diagram, "root", node, "diagramColour", nodeColour)
+          GlobalStorage.changeSetting(this.diagram, "root", node, "diagramColour", nodeColour)
         }
 
-        clickedNode = false;
-        clearTimeout(double);
+        this.clickedNode = false;
+        clearTimeout(this.double);
 
       } else {
-        clearTimeout(double);
-        clickedNode = node;
-        double = setTimeout(() => { clickedNode = false; }, 600); // Set timeout at 600 ms for double click detection
+        clearTimeout(this.double);
+        this.clickedNode = node;
+        this.double = setTimeout(() => { this.clickedNode = false; }, 600); // Set timeout at 600 ms for double click detection
       }
     });
 
     // Show node name on hover
-    flameNode.on('pointerover', (event) => {
+    drawnNode.on('pointerover', (event) => {
       event.stopPropagation();
 
-      tooltip.style.display = "inline";
-      tooltip.innerText = "Node: " + node;
-      tooltip.style.left = flameNode.x + (levelWidth / 2) + "px";
-      tooltip.style.top = flameNode.y + "px";
+      this.tooltip.style.display = "inline";
+      this.tooltip.innerText = "Node: " + node;
+      if (settings.variety === "sunburst") {
+        this.tooltip.style.left = drawnNode.x + "px";
+        this.tooltip.style.top = drawnNode.y + canvas.height * 0.05 + "px";
+      } else {
+        this.tooltip.style.left = drawnNode.x + (this.maxWidth * sizePerc / 2) + "px";
+        this.tooltip.style.top = drawnNode.y + canvas.height * 0.15 + "px";
+      }
     });
 
     // Hide node name after hover
-    flameNode.on('pointerout', (event) => {
+    drawnNode.on('pointerout', (event) => {
       event.stopPropagation();
 
-      tooltip.style.display = "none";
+      this.tooltip.style.display = "none";
     });
   }
 },

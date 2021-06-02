@@ -93,7 +93,7 @@ export default defineComponent({
             value: diagram.settings.edgeType,
           } },
           { id: "height", component: "NumberSetting", name: "Layer Count", properties: {
-            min: 0,
+            min: 1,
             max: 10,
             value: diagram.settings.height,
           } },
@@ -102,7 +102,7 @@ export default defineComponent({
             value: diagram.settings.widthType,
           } },
           { id: "minRenderSize", component: "NumberSetting", name: "Minimum Node Size 1/x", properties: {
-            min: 0,
+            min: 1,
             value: diagram.settings.minRenderSize,
           } },
         ];
