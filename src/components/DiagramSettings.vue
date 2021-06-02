@@ -52,9 +52,9 @@ export default defineComponent({
   },
 
   async mounted() {
-    const diagram = await GlobalStorage.getDiagram(this.$props.diagramid);
+    const diagram = await GlobalStorage.getDiagram(this.diagramid);
     if (!diagram) {
-      console.warn("Non-existent diagram:", this.$props.diagramid);
+      console.warn("Non-existent diagram:", this.diagramid);
       return;
     }
     const graph = await GlobalStorage.getDataset(diagram.graphID);
