@@ -50,6 +50,8 @@ type Settings = {
   colourType: string,
   diagramColour: number,
   minRenderSize: number,
+  showTimeline: boolean,
+  timeRange: [any, any],
 };
 
 export default defineComponent({
@@ -132,8 +134,11 @@ export default defineComponent({
 
           return;
         }
+        if (changedKey === "showTimeline") {
+          this.showTimeline = diagram.settings.showTimeline;
+        }
 
-        this.draw(app, this.diagram.settings);
+        this.draw(app, diagram.settings);
         this.unhighlight();
         this.highlight();
       });
@@ -184,6 +189,7 @@ export default defineComponent({
       infotoolXPos: 0,
       infotoolYPos: 0,
       infotoolDisplay: "none",
+      showTimeline: false,
     };
   },
 

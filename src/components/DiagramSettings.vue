@@ -24,11 +24,11 @@
 
 import { defineComponent } from "vue";
 import * as GlobalStorage from "@/scripts/globalstorage";
+import { getVisibleSettings, Setting } from "@/scripts/settingconfig";
 import CheckboxSetting from "@/components/settings/CheckboxSetting.vue";
 import NumberSetting from "@/components/settings/NumberSetting.vue";
 import SelectSetting from "@/components/settings/SelectSetting.vue";
 import TextSetting from "@/components/settings/TextSetting.vue";
-import { Setting, getVisibleSettings } from "@/scripts/settingconfig";
 
 export default defineComponent({
   components: {

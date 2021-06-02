@@ -18,7 +18,9 @@ export function getDefaultSettings(componentName: string): any {
       return {
         variety: "circle",
         edgeHighlightDirection: "outgoing",
-        filterJobtitle: "None"
+        filterJobtitle: "None",
+        showTimeline: false,
+        timeRange: [0, 1],
       };
     }
 
@@ -32,6 +34,8 @@ export function getDefaultSettings(componentName: string): any {
         colourType: "rainbow",
         diagramColour: 0x4287f5,
         minRenderSize: 10000,
+        showTimeline: false,
+        timeRange: [0, 1],
       };
     }
 
@@ -75,6 +79,9 @@ export function getVisibleSettings(diagram: GlobalStorage.Diagram, graph: Graph)
           options: [ "None", "Employee", "Trader", "Vice President", "Managing Director", "Unknown", "Manager", "Director", "President", "CEO", "In House Lawyer" ],
           value: diagram.settings.filterJobtitle,
         } },
+        { id: "showTimeline", component: "CheckboxSetting", name: "Show Timeline", properties: {
+          value: diagram.settings.showTimeline,
+        } },
       ];
     }
 
@@ -104,6 +111,9 @@ export function getVisibleSettings(diagram: GlobalStorage.Diagram, graph: Graph)
           min: 2,
           max: 10,
           value: diagram.settings.height,
+        } },
+        { id: "showTimeline", component: "CheckboxSetting", name: "Show Timeline", properties: {
+          value: diagram.settings.showTimeline,
         } },
       ];
     }
