@@ -20,7 +20,7 @@ export function getDefaultSettings(componentName: string): any {
         edgeHighlightDirection: "outgoing",
         filterJobtitle: "None",
         showTimeline: false,
-        timeRange: [0, 1],
+        timeRange: ["1000-01-01", "3000-12-31"],
       };
     }
 

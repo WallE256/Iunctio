@@ -51,7 +51,7 @@ type Settings = {
   diagramColour: number,
   minRenderSize: number,
   showTimeline: boolean,
-  timeRange: [any, any],
+  timeRange: [string, string],
 };
 
 export default defineComponent({
