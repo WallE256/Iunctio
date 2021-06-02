@@ -184,7 +184,7 @@ export default defineComponent({
   ) {
 
     // Only draw if the node is rendered wide enough
-    if (sizePerc >= settings.minRenderSize) {
+    if (sizePerc >= 1 / settings.minRenderSize) {
 
       // If no node is given (so no root was selected)
       if (!node) {
