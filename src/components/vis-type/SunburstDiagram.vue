@@ -11,12 +11,16 @@ import * as PIXI from "pixi.js";
 import * as GlobalStorage from "@/scripts/globalstorage";
 
 var graph = new Graph();
+var diagram = null as any;
 var app;
 let tooltip = document.createElement('null');
 
 // Create map for number of connections between nodes
 var bothConnections = new Map();
 var outConnections = new Map();
+
+var clickedNode = false;
+var double = 0;
 
 const input = {
   root: false, // false or root index
@@ -61,7 +65,7 @@ export default defineComponent({
   },
 
   mounted() {
-    const diagram = GlobalStorage.getDiagram(this.diagramid);
+    diagram = GlobalStorage.getDiagram(this.diagramid);
     if (!diagram) {
       console.warn("Non-existent diagram:", this.diagramid);
       return;
@@ -332,11 +336,23 @@ export default defineComponent({
     sunburstNode.on('click', (event) => {
       event.stopPropagation();
 
-      // Reset graph is the user presses the node in the middle
-      if (level == 0) {
-        this.draw(graph, app, false, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections, nodeColour);
+      // If another click has been detected in the past 600 ms.
+      if ((clickedNode) && (clickedNode == node)) {
+
+        // Reset graph is the user presses the node in the middle
+        if (level == 0) {
+          this.draw(graph, app, false, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections, nodeColour);
+        } else {
+          this.draw(graph, app, node, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections, nodeColour);
+        }
+
+        clickedNode = false;
+        clearTimeout(double);
+
       } else {
-        this.draw(graph, app, node, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections, nodeColour);
+        clearTimeout(double);
+        clickedNode = node;
+        double = setTimeout(() => { clickedNode = false; }, 600); // Set timeout at 600 ms for double click detection
       }
     });
 
@@ -388,14 +404,26 @@ export default defineComponent({
     flameNode.buttonMode = true;
 
     // Set root on click
-    flameNode.on('pointerdown', (event) => {
+    flameNode.on('click', (event) => {
       event.stopPropagation();
 
-      // Reset graph is the user presses the node in the middle
-      if ((level == 0) && (sizePerc == 1)) {
-        this.draw(graph, app, false, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections, nodeColour);
+      // If another click has been detected in the past 600 ms.
+      if ((clickedNode) && (clickedNode == node)) {
+
+        // Reset graph is the user presses the node in the middle
+        if ((level == 0) && (sizePerc == 1)) {
+          this.draw(graph, app, false, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections, nodeColour);
+        } else {
+          this.draw(graph, app, node, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections, nodeColour);
+        }
+
+        clickedNode = false;
+        clearTimeout(double);
+
       } else {
-        this.draw(graph, app, node, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections, nodeColour);
+        clearTimeout(double);
+        clickedNode = node;
+        double = setTimeout(() => { clickedNode = false; }, 600); // Set timeout at 600 ms for double click detection
       }
     });
 
