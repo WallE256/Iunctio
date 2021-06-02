@@ -167,14 +167,14 @@ export default defineComponent({
         maxHeight = maxWidth;
         levelHeight = maxHeight / (2 * settings.height);
 
-        this.drawDiagram(graph, app, root, settings, bothConnections, outConnections, predecessors, 0, maxWidth, levelHeight, 0, 1, centerX, centerY, nodeColour);
+        this.drawDiagram(graph, app, settings, root, bothConnections, outConnections, predecessors, 0, maxWidth, levelHeight, 0, 1, centerX, centerY, nodeColour);
       } else {
         var borderSize = Math.min(canvas.width, canvas.height) * .2;
         maxWidth = canvas.width - borderSize;
         maxHeight = canvas.height - borderSize;
         levelHeight = maxHeight / (settings.height + 1);
 
-        this.drawDiagram(graph, app, root, settings, bothConnections, outConnections, predecessors, 0, maxWidth, levelHeight, 0, 1, centerX, centerY, nodeColour);
+        this.drawDiagram(graph, app, settings, root, bothConnections, outConnections, predecessors, 0, maxWidth, levelHeight, 0, 1, centerX, centerY, nodeColour);
       }
     },
 
@@ -182,8 +182,8 @@ export default defineComponent({
   drawDiagram(
     graph: Graph,
     app: PIXI.Application,
-    node: any,
     settings: Settings,
+    node: any,
     bothConnections: any,
     outConnections: any,
     newPredecessors: any,
@@ -257,7 +257,7 @@ export default defineComponent({
               level = 1;
             }
 
-            this.drawDiagram(graph, app, node, settings, bothConnections, outConnections, predecessors, level, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, convertedColour);
+            this.drawDiagram(graph, app, settings, node, bothConnections, outConnections, predecessors, level, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, convertedColour);
             drawStart += newSizePerc;
             index += 1;
           }
@@ -268,7 +268,7 @@ export default defineComponent({
         if (settings.variety === "sunburst") {
           this.drawNodeSunburst(app, settings, node, centerX, centerY, level, levelHeight, drawStart, sizePerc, subtreeColour);
         } else {
-          this.drawNodeFlame(app, settings, node, centerX, centerY, maxWidth, drawStart, sizePerc, settings.height, level, levelHeight, subtreeColour);
+          this.drawNodeFlame(app, settings, node, centerX, centerY, maxWidth, drawStart, sizePerc, level, levelHeight, subtreeColour);
         }
 
         // Add this node to copy of predecessors
@@ -306,19 +306,19 @@ export default defineComponent({
               if ((settings.edgeType === "incoming") && (outConnections.get(neighbour + ">" + node) > 0)) {
                 newSizePerc = sizePerc * outConnections.get(neighbour + ">" + node) / downstreamConnections;
 
-                this.drawDiagram(graph, app, neighbour, settings, bothConnections, outConnections, predecessors, level + 1, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, subtreeColour);
+                this.drawDiagram(graph, app, settings, neighbour, bothConnections, outConnections, predecessors, level + 1, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, subtreeColour);
                 drawStart += newSizePerc;
 
               } else if ((settings.edgeType === "outgoing") && (outConnections.get(node + ">" + neighbour) > 0)) {
                 newSizePerc = sizePerc * outConnections.get(node + ">" + neighbour) / downstreamConnections;
 
-                this.drawDiagram(graph, app, neighbour, settings, bothConnections, outConnections, predecessors, level + 1, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, subtreeColour);
+                this.drawDiagram(graph, app, settings, neighbour, bothConnections, outConnections, predecessors, level + 1, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, subtreeColour);
                 drawStart += newSizePerc;
 
               } else if ((settings.edgeType !== "incoming") && (settings.edgeType !== "outgoing") && (bothConnections.get(node + "_" + neighbour) > 0)) {
                 newSizePerc = sizePerc * bothConnections.get(node + "_" + neighbour) / downstreamConnections;
 
-                this.drawDiagram(graph, app, neighbour, settings, bothConnections, outConnections, predecessors, level + 1, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, subtreeColour);
+                this.drawDiagram(graph, app, settings, neighbour, bothConnections, outConnections, predecessors, level + 1, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, subtreeColour);
                 drawStart += newSizePerc;
 
               }
@@ -410,13 +410,13 @@ export default defineComponent({
   },
 
   // Draw node for flame graph
-  drawNodeFlame(app: PIXI.Application, settings: Settings, node: any, centerX: any, centerY: any, maxWidth: any, drawStart: any, sizePerc: any, height: any, level: any, levelHeight: any, nodeColour: any) {
+  drawNodeFlame(app: PIXI.Application, settings: Settings, node: any, centerX: any, centerY: any, maxWidth: any, drawStart: any, sizePerc: any, level: any, levelHeight: any, nodeColour: any) {
     var posX = centerX - (maxWidth / 2) + (maxWidth * drawStart);
     var posY = 0;
     if (settings.variety == "flame") {
-      posY = centerY + ((levelHeight * (height + 1)) / 2) - (levelHeight * (level + 1));
+      posY = centerY + ((levelHeight * (settings.height + 1)) / 2) - (levelHeight * (level + 1));
     } else {
-      posY = centerY - ((levelHeight * (height + 1)) / 2) + (levelHeight * (level + 1));
+      posY = centerY - ((levelHeight * (settings.height + 1)) / 2) + (levelHeight * (level + 1));
     }
     var levelWidth = maxWidth * sizePerc;
 
