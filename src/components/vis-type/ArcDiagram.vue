@@ -14,6 +14,7 @@ import Graph from "graphology";
 import { debounce, random } from "lodash";
 import * as GlobalStorage from "@/scripts/globalstorage";
 import InfoTool from "@/components/visualise/InfoTool.vue";
+import { dateIsBetween } from "@/scripts/util";
 import { Viewport } from 'pixi-viewport';
 import { Cull } from '@pixi-essentials/cull';
 import { Container } from '@pixi/display';
@@ -25,7 +26,7 @@ type Settings = {
   edgeHighlightDirection: string,
   filterJobtitle: string
   showTimeline: boolean,
-  timeRange: [any, any],
+  timeRange: [string, string],
 };
 
 type NodeData = {
@@ -37,6 +38,17 @@ type NodeData = {
   outboundDegree: number,
   jobTitle: string,
 };
+function shouldDrawEdges(graph: Graph, source: number, target: number, timeRange: [string, string]): boolean {
+  let found = false;
+  graph.forEachEdgeUntil(source, target, (edge, edgeAttributes) => {
+    if (dateIsBetween(edgeAttributes.date, timeRange)) {
+      found = true;
+      return true; // break
+    }
+    return false;
+  });
+  return found;
+}
 
 export default defineComponent({
 
@@ -449,6 +461,8 @@ export default defineComponent({
 
             // draw outgoing edges
             const callback = (target: any, attributes: any) => {
+              if (!shouldDrawEdges(graph, source, target, settings.timeRange)) return;
+
               const targetData = this.nodeMap.get(target);
 
               if (typeof targetData === "undefined") return;
@@ -471,7 +485,7 @@ export default defineComponent({
             }
 
             viewport.addChild(edgeGraphics);
-          };
+          }
         });
       } else if (settings.variety === "line") {
         const centerX = viewport.center.x;
@@ -486,8 +500,7 @@ export default defineComponent({
           const sourceData = this.nodeMap.get(source);
           if (!sourceData) return; // not supposed to happen
 
-          if(settings.filterJobtitle === "None" || sourceData.jobTitle === settings.filterJobtitle) {
-
+          if (settings.filterJobtitle === "None" || sourceData.jobTitle === settings.filterJobtitle) {
             if(drawOutgoing) {
               nodeRadius = Math.min(30, Math.max(5 * Math.log(sourceData.outboundDegree), 5));
             } else {
@@ -518,14 +531,18 @@ export default defineComponent({
           const sourceData = this.nodeMap.get(source);
           if (!sourceData) return;
 
-          if(settings.filterJobtitle === "None" || sourceData.jobTitle === settings.filterJobtitle) {
-
+          if (settings.filterJobtitle === "None" || sourceData.jobTitle === settings.filterJobtitle) {
             const edgeGraphics = sourceData.edgeGraphics;
             edgeGraphics.clear();
 
             const sourceX = sourceData.circle.x;
             const sourceY = sourceData.circle.y;
             const callback = (target: any, targetAttributes: any) => {
+              // TODO: this is pretty slow, because it makes the algorithm
+              // O(edges) in the worst case... a solution would be to store the
+              // edges sorted by date
+              if (!shouldDrawEdges(graph, source, target, settings.timeRange)) return;
+
               const targetData = this.nodeMap.get(target);
               if (!targetData) return; // shouldn't happen
               if(settings.filterJobtitle === "None" || targetData.jobTitle === settings.filterJobtitle) {
