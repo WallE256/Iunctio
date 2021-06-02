@@ -1,5 +1,5 @@
 <template>
-  <div id="canvas-parent" ref="canvas-parent" style="margin: 0; padding: 0; height: 100%; width: 100%;">
+  <div id="canvas-parent" ref="canvas-parent" style="height: 100%; width: 100%;">
     <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
   </div>
   <p id="graph-tooltip" ref="graph-tooltip" style="position: fixed; user-select: none;"></p>
@@ -49,7 +49,7 @@ export default defineComponent({
     this.app = new PIXI.Application({
       view: canvas,
       antialias: true,
-      transparent: true,
+      backgroundAlpha: 0,
       resizeTo: canvasParent,
     });
     

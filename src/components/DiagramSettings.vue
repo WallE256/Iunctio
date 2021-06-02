@@ -51,13 +51,13 @@ export default defineComponent({
     };
   },
 
-  mounted() {
-    const diagram = GlobalStorage.getDiagram(this.$props.diagramid);
+  async mounted() {
+    const diagram = await GlobalStorage.getDiagram(this.diagramid);
     if (!diagram) {
-      console.warn("Non-existent diagram:", this.$props.diagramid);
+      console.warn("Non-existent diagram:", this.diagramid);
       return;
     }
-    const graph = GlobalStorage.getDataset(diagram.graphID);
+    const graph = await GlobalStorage.getDataset(diagram.graphID);
     if (!graph) {
       console.warn("Non-existent data set:", diagram.graphID);
       return;
@@ -98,10 +98,10 @@ export default defineComponent({
             value: diagram.settings.height,
           } },
           { id: "widthType", component: "SelectSetting", name: "Width Determined By", properties: {
-            options: [ "connections", "subtree-size" ],
+            options: [ "connections" ],
             value: diagram.settings.widthType,
           } },
-          { id: "minRenderSize", component: "NumberSetting", name: "Minimum Node Size", properties: {
+          { id: "minRenderSize", component: "NumberSetting", name: "Minimum Node Size 1/x", properties: {
             min: 0,
             value: diagram.settings.minRenderSize,
           } },

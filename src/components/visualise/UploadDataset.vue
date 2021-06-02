@@ -55,7 +55,7 @@ export default defineComponent({
               edgeType: "outgoing",
               height: 4,
               widthType: "connections",
-              minRenderSize: 0.001,
+              minRenderSize: 10000,
             };
             break;
 
