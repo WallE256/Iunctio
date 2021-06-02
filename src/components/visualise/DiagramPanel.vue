@@ -86,12 +86,6 @@ export default defineComponent({
   @include font-face("Poppins", "Regular");
   @include font-sans("Poppins", 0.75rem, "Regular", $BLACK_DDD);
 
-  &__canvas {
-    display: block;
-    @include setSize(100%, 100%);
-    outline: 1px solid black;
-  }
-
   &__settings {
     background-color: darken($WHITE_D, 5%);
     border-radius: 5px;

@@ -98,10 +98,10 @@ export default defineComponent({
             value: diagram.settings.height,
           } },
           { id: "widthType", component: "SelectSetting", name: "Width Determined By", properties: {
-            options: [ "connections", "subtree-size" ],
+            options: [ "connections" ],
             value: diagram.settings.widthType,
           } },
-          { id: "minRenderSize", component: "NumberSetting", name: "Minimum Node Size", properties: {
+          { id: "minRenderSize", component: "NumberSetting", name: "Minimum Node Size 1/x", properties: {
             min: 0,
             value: diagram.settings.minRenderSize,
           } },
