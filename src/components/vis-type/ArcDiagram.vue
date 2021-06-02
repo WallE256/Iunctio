@@ -24,6 +24,8 @@ type Settings = {
   variety: string, // "circle" or "line"
   edgeHighlightDirection: string,
   filterJobtitle: string
+  showTimeline: boolean,
+  timeRange: [any, any],
 };
 
 type NodeData = {
@@ -239,6 +241,10 @@ export default defineComponent({
           this.highlight();
           return;
         }
+        if (changedKey === "showTimeline") {
+          this.showTimeline = diagram.settings.showTimeline;
+          return;
+        }
 
         this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
         this.unhighlight();
@@ -299,6 +305,7 @@ export default defineComponent({
       }),
       diagram: null as GlobalStorage.Diagram | null,
       canvas: null as null | HTMLCanvasElement,
+      showTimeline: false,
     };
   },
 
