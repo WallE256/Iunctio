@@ -1,10 +1,8 @@
 <template>
   <div class="diagram-panel">
-    <div class="diagram-panel__canvas">
-      <component :is="componentName" :diagramid="diagram_id" />
-    </div>
+    <component :is="componentName" :diagramid="diagram_id" />
     <transition name="slide-fade">
-      <div class="diagram-panel__settings" v-show="showSettings">
+      <div class="diagram-panel__settings" v-if="showSettings">
         <diagram-settings :diagramid="diagram_id" @setting-changed="onSettingChanged" />
       </div>
     </transition>
@@ -87,6 +85,12 @@ export default defineComponent({
   overflow: hidden;
   @include font-face("Poppins", "Regular");
   @include font-sans("Poppins", 0.75rem, "Regular", $BLACK_DDD);
+
+  &__canvas {
+    display: block;
+    @include setSize(100%, 100%);
+    outline: 1px solid black;
+  }
 
   &__settings {
     background-color: darken($WHITE_D, 5%);
