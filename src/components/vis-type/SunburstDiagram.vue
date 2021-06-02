@@ -1,5 +1,5 @@
 <template>
-  <div id="canvas-parent" ref="canvas-parent" style="margin: 0; padding: 0; height: 100%; width: 100%;">
+  <div id="canvas-parent" ref="canvas-parent" style="height: 100%; width: 100%;">
     <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
   </div>
   <p id="graph-tooltip" ref="graph-tooltip" style="position: fixed; user-select: none;"></p>
@@ -184,7 +184,7 @@ export default defineComponent({
   ) {
 
     // Only draw if the node is rendered wide enough
-    if (sizePerc >= settings.minRenderSize) {
+    if (sizePerc >= 1 / settings.minRenderSize) {
 
       // If no node is given (so no root was selected)
       if (!node) {
