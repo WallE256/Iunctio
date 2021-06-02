@@ -55,6 +55,7 @@ type Settings = {
   variety: string,
   edgeType: string,
   widthType: string,
+  diagramColour: number,
   minRenderSize: number,
 };
 
@@ -104,10 +105,11 @@ export default defineComponent({
 
         const settings = diagram.settings;
         const root = settings.root === "[no root]" ? null : settings.root;
-        this.draw(graph, app, root, settings, bothConnections, outConnections, 0x4287f5);
+
+        this.draw(graph, app, root, settings, bothConnections, outConnections);
       };
 
-      this.draw(graph, app, settings.root, settings, bothConnections, outConnections, 0x4287f5);
+      this.draw(graph, app, settings.root, settings, bothConnections, outConnections);
     });
   },
 
@@ -144,7 +146,6 @@ export default defineComponent({
       settings: Settings,
       bothConnections: any,
       outConnections: any,
-      nodeColour: any,
     ) {
       const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
 
@@ -167,14 +168,14 @@ export default defineComponent({
         maxHeight = maxWidth;
         levelHeight = maxHeight / (2 * settings.height);
 
-        this.drawDiagram(graph, app, settings, root, bothConnections, outConnections, predecessors, 0, maxWidth, levelHeight, 0, 1, centerX, centerY, nodeColour);
+        this.drawDiagram(graph, app, settings, root, bothConnections, outConnections, predecessors, 0, maxWidth, levelHeight, 0, 1, centerX, centerY, settings.diagramColour);
       } else {
         var borderSize = Math.min(canvas.width, canvas.height) * .2;
         maxWidth = canvas.width - borderSize;
         maxHeight = canvas.height - borderSize;
         levelHeight = maxHeight / (settings.height + 1);
 
-        this.drawDiagram(graph, app, settings, root, bothConnections, outConnections, predecessors, 0, maxWidth, levelHeight, 0, 1, centerX, centerY, nodeColour);
+        this.drawDiagram(graph, app, settings, root, bothConnections, outConnections, predecessors, 0, maxWidth, levelHeight, 0, 1, centerX, centerY, settings.diagramColour);
       }
     },
 
@@ -376,9 +377,9 @@ export default defineComponent({
 
         // Reset graph is the user presses the node in the middle
         if (level == 0) {
-          this.draw(graph, app, false, settings, bothConnections, outConnections, nodeColour);
+          GlobalStorage.changeSetting(diagram, "root", null, "diagramColour", nodeColour)
         } else {
-          this.draw(graph, app, node, settings, bothConnections, outConnections, nodeColour);
+          GlobalStorage.changeSetting(diagram, "root", node, "diagramColour", nodeColour)
         }
 
         clickedNode = false;
@@ -447,9 +448,9 @@ export default defineComponent({
 
         // Reset graph is the user presses the node in the middle
         if ((level == 0) && (sizePerc == 1)) {
-          this.draw(graph, app, false, settings, bothConnections, outConnections, nodeColour);
+          GlobalStorage.changeSetting(diagram, "root", null, "diagramColour", nodeColour)
         } else {
-          this.draw(graph, app, node, settings, bothConnections, outConnections, nodeColour);
+          GlobalStorage.changeSetting(diagram, "root", node, "diagramColour", nodeColour)
         }
 
         clickedNode = false;

@@ -55,6 +55,7 @@ export default defineComponent({
               edgeType: "outgoing",
               height: 4,
               widthType: "connections",
+              diagramColour: 0x4287f5,
               minRenderSize: 0.001,
             };
             break;

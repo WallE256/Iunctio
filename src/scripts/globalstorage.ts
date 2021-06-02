@@ -150,12 +150,15 @@ export function removeDiagram(diagram: Diagram): void {
   localforage.removeItem(storageKey);
 }
 
-/// `changeSetting` updates a diagram's setting and will call the `onChange`
+/// `changeSetting` updates a diagram's setting(s) and will call the `onChange`
 /// handler so visualizations can be redrawn.
-export function changeSetting(diagram: Diagram, key: string, value: any): void {
-  diagram.settings[key] = value;
+/// updates multiple settings if multiple are provided
+export function changeSetting(diagram: Diagram, ...values: any[]): void {
+  for (let index = 0; index < values.length; index += 2) {
+    diagram.settings[values[index]] = values[index + 1];
+  }
   if (diagram.onChange) {
-    diagram.onChange(diagram, key);
+    diagram.onChange(diagram, values[0]);
   }
   const storageKey = "dia-" + diagram.id;
 
