@@ -1,5 +1,7 @@
 <template>
-  <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
+  <div id="canvas-parent" ref="canvas-parent" style="margin: 0; padding: 0; height: 100%; width: 100%;">
+    <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
+  </div>
   <p id="graph-tooltip" ref="graph-tooltip" style="position: fixed; user-select: none;"></p>
 </template>
 
@@ -10,7 +12,7 @@ import * as d3 from "d3";
 import * as PIXI from "pixi.js";
 import * as GlobalStorage from "@/scripts/globalstorage";
 
-var graph = new Graph();
+var graph = null as any;
 var diagram = null as any;
 var app;
 let tooltip = document.createElement('null');
@@ -21,15 +23,6 @@ var outConnections = new Map();
 
 var clickedNode = false;
 var double = 0;
-
-const input = {
-  root: false, // false or root index
-  height: 5, // >= 0
-  graphType: "sunburst", // sunburst or flame or inverse-flame
-  edgeType: "all", // all or incoming or outgoing
-  widthType: "connections", // connections or subtree-size TODO
-  minRenderSize: 0.001, // minimum render size
-};
 
 // stolen from https://pixijs.download/dev/docs/packages_graphics-extras_src_drawTorus.ts.html
 function drawTorus(graphics: PIXI.Graphics,
@@ -56,6 +49,15 @@ function drawTorus(graphics: PIXI.Graphics,
   return graphics;
 }
 
+type Settings = {
+  root: string | null,
+  height: number,
+  variety: string,
+  edgeType: string,
+  widthType: string,
+  minRenderSize: number,
+};
+
 export default defineComponent({
   props: {
     diagramid: {
@@ -64,45 +66,55 @@ export default defineComponent({
     },
   },
 
-  mounted() {
-    diagram = GlobalStorage.getDiagram(this.diagramid);
+  async mounted() {
+    diagram = await GlobalStorage.getDiagram(this.diagramid);
     if (!diagram) {
       console.warn("Non-existent diagram:", this.diagramid);
       return;
     }
-    graph = (GlobalStorage.getDataset(diagram.graphID) as Graph);
+    graph = await GlobalStorage.getDataset(diagram.graphID);
     if (!graph) {
       console.warn("Non-existent dataset:", diagram.graphID);
       return;
     }
 
     const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
+    const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
     tooltip = this.$refs["graph-tooltip"] as HTMLElement;
 
     const app = new PIXI.Application({
       view: canvas,
-      width: window.innerWidth,
-      height: window.innerHeight,
       antialias: true,
-      transparent: true,
+      backgroundAlpha: 0,
+      resizeTo: canvasParent,
     });
 
-    const defaultStyle = new PIXI.TextStyle({
-      fill: "#000000",
-    });
+    const settings = diagram.settings as Settings;
 
-    if (input.widthType == "connections") {
+    if (settings.widthType == "connections") {
       [bothConnections, outConnections] = this.mapConnections(graph);
     }
 
-    // Draw the diagram
-    this.draw(graph, app, input.root, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections, 0x4287f5);
+    // this has to happen next tick because otherwise the element sizes are not
+    // correct yet (because they've not been rendered yet)
+    this.$nextTick(() => {
+      app.resize();
+      diagram.onChange = (diagram: any, changedKey: any) => {
+        app.stage.removeChildren();
+
+        const settings = diagram.settings;
+        const root = settings.root === "[no root]" ? null : settings.root;
+        this.draw(graph, app, root, settings, bothConnections, outConnections, 0x4287f5);
+      };
+
+      this.draw(graph, app, settings.root, settings, bothConnections, outConnections, 0x4287f5);
+    });
   },
 
   data() {
     return {
       // the node that you're currently hovering over
-      selectedIndex: null as number | null,
+      hoverNode: null as string | null,
     };
   },
 
@@ -110,8 +122,8 @@ export default defineComponent({
 
     // Create map of connections between nodes
     mapConnections(graph: Graph) {
-      var map_both = new Map();
-      var map_out = new Map();
+      const map_both = new Map();
+      const map_out = new Map();
 
       // Count edges between two nodes
       graph.forEachNode((node_1) => {
@@ -125,9 +137,16 @@ export default defineComponent({
     },
 
     // Draw the diagram
-    draw(graph: Graph, app: PIXI.Application, root: any, height:any, graphType: any, edgeType: any, minRenderSize: any, bothConnections: any, outConnections: any, nodeColour: any) {
+    draw(
+      graph: Graph,
+      app: PIXI.Application,
+      root: any,
+      settings: Settings,
+      bothConnections: any,
+      outConnections: any,
+      nodeColour: any,
+    ) {
       const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
-      const tooltip = this.$refs["graph-tooltip"] as HTMLElement;
 
       app.stage.removeChildren();
 
@@ -136,34 +155,50 @@ export default defineComponent({
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
 
-      let predecessors = [] as any[];
+      const predecessors = [] as any[];
 
       var maxWidth;
       var maxHeight;
       var levelHeight;
 
       // Calculate height based on graph type
-      if (graphType == "sunburst") {
+      if (settings.variety === "sunburst") {
         maxWidth = Math.min(canvas.width, canvas.height) * .7;
         maxHeight = maxWidth;
-        levelHeight = maxHeight / (2 * height);
+        levelHeight = maxHeight / (2 * settings.height);
 
-        this.drawDiagram(graph, app, root, height, graphType, edgeType, minRenderSize, bothConnections, outConnections, predecessors, 0, maxWidth, levelHeight, 0, 1, centerX, centerY, nodeColour);
+        this.drawDiagram(graph, app, root, settings, bothConnections, outConnections, predecessors, 0, maxWidth, levelHeight, 0, 1, centerX, centerY, nodeColour);
       } else {
         var borderSize = Math.min(canvas.width, canvas.height) * .2;
         maxWidth = canvas.width - borderSize;
         maxHeight = canvas.height - borderSize;
-        levelHeight = maxHeight / (height + 1);
+        levelHeight = maxHeight / (settings.height + 1);
 
-        this.drawDiagram(graph, app, root, height, graphType, edgeType, minRenderSize, bothConnections, outConnections, predecessors, 0, maxWidth, levelHeight, 0, 1, centerX, centerY, nodeColour);
+        this.drawDiagram(graph, app, root, settings, bothConnections, outConnections, predecessors, 0, maxWidth, levelHeight, 0, 1, centerX, centerY, nodeColour);
       }
     },
 
   // Draw the subtree of given diagram
-  drawDiagram(graph: Graph, app: PIXI.Application, node: any, height: any, graphType: any, edgeType: any, minRenderSize: any, bothConnections: any, outConnections: any, newPredecessors: any, level: any, maxWidth: any, levelHeight: any, drawStart: any, sizePerc: any, centerX: any, centerY: any, subtreeColour: any) {
+  drawDiagram(
+    graph: Graph,
+    app: PIXI.Application,
+    node: any,
+    settings: Settings,
+    bothConnections: any,
+    outConnections: any,
+    newPredecessors: any,
+    level: number,
+    maxWidth: number,
+    levelHeight: number,
+    drawStart: number,
+    sizePerc: number,
+    centerX: number,
+    centerY: number,
+    subtreeColour: any,
+  ) {
 
     // Only draw if the node is rendered wide enough
-    if (sizePerc >= minRenderSize) {
+    if (sizePerc >= settings.minRenderSize) {
 
       // If no node is given (so no root was selected)
       if (!node) {
@@ -172,12 +207,12 @@ export default defineComponent({
 
         // Calculate total degree for all nodes
         graph.forEachNode((node, attributes) => {
-          if (edgeType == 'incoming') {
+          if (settings.edgeType == 'incoming') {
             if (graph.inDegree(node) > 0) {
               nodesWithDegree += 1;
               totalDegree += graph.inDegree(node);
             }
-          } else if (edgeType == 'outgoing') {
+          } else if (settings.edgeType == 'outgoing') {
             if (graph.outDegree(node) > 0) {
               nodesWithDegree += 1;
               totalDegree += graph.outDegree(node);
@@ -200,9 +235,9 @@ export default defineComponent({
 
           var newSizePerc = 0;
 
-          if (edgeType == 'incoming') {
+          if (settings.edgeType == "incoming") {
             newSizePerc = graph.inDegree(node);
-          } else if (edgeType == 'outgoing') {
+          } else if (settings.edgeType == "outgoing") {
             newSizePerc = graph.outDegree(node);
           } else {
             newSizePerc = graph.degree(node);
@@ -218,11 +253,11 @@ export default defineComponent({
             predecessors = [];
 
             // Start at level 1 for sunburst diagram if no node is given
-            if (graphType == "sunburst") {
-              level = 1
+            if (settings.variety === "sunburst") {
+              level = 1;
             }
 
-            this.drawDiagram(graph, app, node, height, graphType, edgeType, minRenderSize, bothConnections, outConnections, predecessors, level, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, convertedColour);
+            this.drawDiagram(graph, app, node, settings, bothConnections, outConnections, predecessors, level, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, convertedColour);
             drawStart += newSizePerc;
             index += 1;
           }
@@ -230,10 +265,10 @@ export default defineComponent({
       } else {
 
         // Draw node
-        if (graphType == "sunburst") {
-          this.drawNodeSunburst(app, node, centerX, centerY, level, levelHeight, drawStart, sizePerc, subtreeColour);
+        if (settings.variety === "sunburst") {
+          this.drawNodeSunburst(app, settings, node, centerX, centerY, level, levelHeight, drawStart, sizePerc, subtreeColour);
         } else {
-          this.drawNodeFlame(app, graphType, node, centerX, centerY, maxWidth, drawStart, sizePerc, height, level, levelHeight, subtreeColour);
+          this.drawNodeFlame(app, settings, node, centerX, centerY, maxWidth, drawStart, sizePerc, settings.height, level, levelHeight, subtreeColour);
         }
 
         // Add this node to copy of predecessors
@@ -241,7 +276,7 @@ export default defineComponent({
         predecessors.push(node);
 
         // Next layer
-        if (level < height) {
+        if (level < settings.height) {
 
           var downstreamConnections = 0;
 
@@ -250,9 +285,9 @@ export default defineComponent({
 
             if (!this.isPredecessor(predecessors, neighbour)) {
 
-              if (edgeType == 'incoming') {
+              if (settings.edgeType == "incoming") {
                 downstreamConnections += outConnections.get(neighbour + ">" + node);
-              } else if (edgeType == 'outgoing') {
+              } else if (settings.edgeType == "outgoing") {
                 downstreamConnections += outConnections.get(node + ">" + neighbour);
               } else {
                 downstreamConnections += bothConnections.get(node + "_" + neighbour);
@@ -268,22 +303,22 @@ export default defineComponent({
 
               var newSizePerc = 0;
 
-              if ((edgeType == 'incoming') && (outConnections.get(neighbour + ">" + node) > 0)) {
+              if ((settings.edgeType === "incoming") && (outConnections.get(neighbour + ">" + node) > 0)) {
                 newSizePerc = sizePerc * outConnections.get(neighbour + ">" + node) / downstreamConnections;
 
-                this.drawDiagram(graph, app, neighbour, height, graphType, edgeType, minRenderSize, bothConnections, outConnections, predecessors, level + 1, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, subtreeColour);
+                this.drawDiagram(graph, app, neighbour, settings, bothConnections, outConnections, predecessors, level + 1, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, subtreeColour);
                 drawStart += newSizePerc;
 
-              } else if ((edgeType == 'outgoing') && (outConnections.get(node + ">" + neighbour) > 0)) {
+              } else if ((settings.edgeType === "outgoing") && (outConnections.get(node + ">" + neighbour) > 0)) {
                 newSizePerc = sizePerc * outConnections.get(node + ">" + neighbour) / downstreamConnections;
 
-                this.drawDiagram(graph, app, neighbour, height, graphType, edgeType, minRenderSize, bothConnections, outConnections, predecessors, level + 1, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, subtreeColour);
+                this.drawDiagram(graph, app, neighbour, settings, bothConnections, outConnections, predecessors, level + 1, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, subtreeColour);
                 drawStart += newSizePerc;
 
-              } else if ((edgeType != 'incoming') && (edgeType != 'outgoing') && (bothConnections.get(node + "_" + neighbour) > 0)) {
+              } else if ((settings.edgeType !== "incoming") && (settings.edgeType !== "outgoing") && (bothConnections.get(node + "_" + neighbour) > 0)) {
                 newSizePerc = sizePerc * bothConnections.get(node + "_" + neighbour) / downstreamConnections;
 
-                this.drawDiagram(graph, app, neighbour, height, graphType, edgeType, minRenderSize, bothConnections, outConnections, predecessors, level + 1, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, subtreeColour);
+                this.drawDiagram(graph, app, neighbour, settings, bothConnections, outConnections, predecessors, level + 1, maxWidth, levelHeight, drawStart, newSizePerc, centerX, centerY, subtreeColour);
                 drawStart += newSizePerc;
 
               }
@@ -307,7 +342,7 @@ export default defineComponent({
   },
 
   // Draw node for sunburst graph
-  drawNodeSunburst(app: PIXI.Application, node: any, centerX: any, centerY: any, level: any, levelHeight: any, drawStart: any, sizePerc: any, nodeColour: any) {
+  drawNodeSunburst(app: PIXI.Application, settings: Settings, node: any, centerX: any, centerY: any, level: any, levelHeight: any, drawStart: any, sizePerc: any, nodeColour: any) {
 
     var startAngle = 2 * Math.PI * drawStart;
     var endAngle = 2 * Math.PI * (drawStart + sizePerc);
@@ -341,9 +376,9 @@ export default defineComponent({
 
         // Reset graph is the user presses the node in the middle
         if (level == 0) {
-          this.draw(graph, app, false, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections, nodeColour);
+          this.draw(graph, app, false, settings, bothConnections, outConnections, nodeColour);
         } else {
-          this.draw(graph, app, node, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections, nodeColour);
+          this.draw(graph, app, node, settings, bothConnections, outConnections, nodeColour);
         }
 
         clickedNode = false;
@@ -375,10 +410,10 @@ export default defineComponent({
   },
 
   // Draw node for flame graph
-  drawNodeFlame(app: PIXI.Application, graphType: any, node: any, centerX: any, centerY: any, maxWidth: any, drawStart: any, sizePerc: any, height: any, level: any, levelHeight: any, nodeColour: any) {
+  drawNodeFlame(app: PIXI.Application, settings: Settings, node: any, centerX: any, centerY: any, maxWidth: any, drawStart: any, sizePerc: any, height: any, level: any, levelHeight: any, nodeColour: any) {
     var posX = centerX - (maxWidth / 2) + (maxWidth * drawStart);
     var posY = 0;
-    if (graphType == "flame") {
+    if (settings.variety == "flame") {
       posY = centerY + ((levelHeight * (height + 1)) / 2) - (levelHeight * (level + 1));
     } else {
       posY = centerY - ((levelHeight * (height + 1)) / 2) + (levelHeight * (level + 1));
@@ -389,14 +424,14 @@ export default defineComponent({
 
     flameNode.beginFill(nodeColour);
     flameNode.lineStyle(1, 0xFFFFFF);
-    if (graphType == "flame") {
-      flameNode.drawRect(0, 0, levelWidth, levelHeight);
-    } else {
-      flameNode.drawRect(0, 0, levelWidth, levelHeight);
-    }
+    flameNode.drawRect(0, 0, levelWidth, levelHeight);
     flameNode.endFill();
     flameNode.x = posX;
-    flameNode.y = posY;
+    if (settings.variety === "flame") {
+      flameNode.y = posY;
+    } else {
+      flameNode.y = posY - levelHeight;
+    }
     app.stage.addChild(flameNode);
 
     // Interactivity
@@ -412,9 +447,9 @@ export default defineComponent({
 
         // Reset graph is the user presses the node in the middle
         if ((level == 0) && (sizePerc == 1)) {
-          this.draw(graph, app, false, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections, nodeColour);
+          this.draw(graph, app, false, settings, bothConnections, outConnections, nodeColour);
         } else {
-          this.draw(graph, app, node, input.height, input.graphType, input.edgeType, input.minRenderSize, bothConnections, outConnections, nodeColour);
+          this.draw(graph, app, node, settings, bothConnections, outConnections, nodeColour);
         }
 
         clickedNode = false;

@@ -4,6 +4,7 @@
 // uploaded datasets and the created visualizations/diagrams.
 
 import Graph from "graphology";
+import localforage from "localforage";
 
 export class Diagram {
   /// This diagram's unique identifier
@@ -69,13 +70,13 @@ function diagramToJSON(diagram: Diagram): string {
 export function addDataset(id: string, graph: Graph): void {
   datasets.set(id, graph);
   const storageKey = "dataset-" + id;
-  window.localStorage.setItem(storageKey, JSON.stringify(graph.export()));
+  localforage.setItem(storageKey, JSON.stringify(graph.export()));
 }
 
 /// `getDataset` returns the graph that corresponds to the given id, or
 /// `null` if it does not exist.
 /// It will be fetched from memory, or localStorage if that is not available.
-export function getDataset(id: string): Graph | null {
+export async function getDataset(id: string): Promise<Graph | null> {
   // if it's in the memory, use that (so parsing JSON is not necessary)
   const inMemory = datasets.get(id);
   if (inMemory) {
@@ -83,12 +84,15 @@ export function getDataset(id: string): Graph | null {
   }
 
   // otherwise, look for the dataset in localStorage
-  const storageKey = "dataset-" + id;
-  const storageItem = window.localStorage.getItem(storageKey);
-  if (storageItem) {
+  try {
+    const storageKey = "dataset-" + id;
+    const storageItem = (await localforage.getItem(storageKey)) as string;
     const graph = Graph.from(JSON.parse(storageItem));
     datasets.set(id, graph);
     return graph;
+  } catch (error) {
+    console.log(error);
+    return null;
   }
 
   return null;
@@ -98,13 +102,13 @@ export function getDataset(id: string): Graph | null {
 export function removeDataset(id: string): void {
   datasets.delete(id);
   const storageKey = "dataset-" + id;
-  window.localStorage.removeItem(storageKey);
+  localforage.removeItem(storageKey);
 }
 
 /// `addDiagram` will add a new diagram to local storage.
 export function addDiagram(diagram: Diagram): void {
   const storageKey = "dia-" + diagram.id;
-  window.localStorage.setItem(storageKey, diagramToJSON(diagram));
+  localforage.setItem(storageKey, diagramToJSON(diagram));
   diagrams.set(diagram.id, diagram);
 }
 
@@ -112,7 +116,7 @@ export function addDiagram(diagram: Diagram): void {
 /// exists with the key `id`, or `null` if it does not exist.
 /// It will look in the in-memory storage, and in the local storage if that
 /// is not available.
-export function getDiagram(id: string): Diagram | null {
+export async function getDiagram(id: string): Promise<Diagram | null> {
   // first try it in memory so deserialization is not necessary
   const inMemory = diagrams.get(id);
   if (inMemory) {
@@ -120,9 +124,9 @@ export function getDiagram(id: string): Diagram | null {
   }
 
   // otherwise, try to get it from localStorage
-  const storageKey = "dia-" + id;
-  const storageItem = window.localStorage.getItem(storageKey);
-  if (storageItem) {
+  try {
+    const storageKey = "dia-" + id;
+    const storageItem = (await localforage.getItem(storageKey)) as string;
     const deserialized = JSON.parse(storageItem);
     const diagram = new Diagram(
       deserialized.id,
@@ -132,9 +136,10 @@ export function getDiagram(id: string): Diagram | null {
     );
     diagrams.set(id, diagram);
     return diagram;
+  } catch (error) {
+    console.log(error);
+    return null;
   }
-
-  return null;
 }
 
 /// `removeDiagram` deletes a diagram/visualization from the memory AND from
@@ -142,7 +147,7 @@ export function getDiagram(id: string): Diagram | null {
 export function removeDiagram(diagram: Diagram): void {
   diagrams.delete(diagram.id);
   const storageKey = "dia-" + diagram.id;
-  window.localStorage.removeItem(storageKey);
+  localforage.removeItem(storageKey);
 }
 
 /// `changeSetting` updates a diagram's setting and will call the `onChange`
@@ -157,5 +162,5 @@ export function changeSetting(diagram: Diagram, key: string, value: any): void {
   // local storage needs to be updated (which is still pretty cheap,
   // considering that the diagram's dataset is stored separately and is
   // never updated)
-  window.localStorage.setItem(storageKey, diagramToJSON(diagram));
+  localforage.setItem(storageKey, diagramToJSON(diagram));
 }
