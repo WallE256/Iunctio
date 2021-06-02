@@ -49,7 +49,7 @@ export default defineComponent({
     this.app = new PIXI.Application({
       view: canvas,
       antialias: true,
-      transparent: true,
+      backgroundAlpha: 0,
       resizeTo: canvasParent,
     });
     
