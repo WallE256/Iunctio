@@ -56,7 +56,7 @@ export default defineComponent({
               height: 4,
               widthType: "connections",
               diagramColour: 0x4287f5,
-              minRenderSize: 0.001,
+              minRenderSize: 10000,
             };
             break;
 
