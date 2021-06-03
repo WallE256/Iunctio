@@ -8,6 +8,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import Graph from "graphology";
+import { debounce } from "lodash";
 import * as d3 from "d3";
 import * as PIXI from "pixi.js";
 import * as GlobalStorage from "@/scripts/globalstorage";
@@ -90,22 +91,34 @@ export default defineComponent({
       [this.bothConnections, this.outConnections] = this.mapConnections(this.graph);
     }
 
+    const app = this.app as PIXI.Application;
+
     // this has to happen next tick because otherwise the element sizes are not
     // correct yet (because they've not been rendered yet)
     this.$nextTick(() => {
-      const app = this.app as PIXI.Application;
       app.resize();
       this.diagram.onChange = (diagram: any, changedKey: any) => {
-        app.stage.removeChildren();
 
         const settings = diagram.settings;
         const root = settings.root === "[no root]" ? null : settings.root;
 
-        this.draw(this.graph, app, settings, this.bothConnections, this.outConnections);
+        this.draw(app, settings);
       };
-
-      this.draw(this.graph, app, settings, this.bothConnections, this.outConnections);
     });
+
+    this.draw(app, settings);
+  },
+
+  created(){
+    window.addEventListener(
+      "resize",
+      debounce((event) => {
+        if (!this.diagram) {
+          return;
+        }
+        this.handleResize(event, this.graph, this.app as PIXI.Application, this.diagram.settings as Settings);
+      }, 250)
+    )
   },
 
   data() {
@@ -130,6 +143,9 @@ export default defineComponent({
   },
 
   methods: {
+    handleResize(e: any, graph: Graph, app: PIXI.Application, settings: Settings) {
+      this.draw(app, settings);
+    },
 
     // Create map of connections between nodes
     mapConnections(graph: Graph) {
@@ -149,12 +165,11 @@ export default defineComponent({
 
     // Draw the diagram
     draw(
-      graph: Graph,
       app: PIXI.Application,
       settings: Settings,
-      bothConnections: any,
-      outConnections: any,
     ) {
+      app.stage.removeChildren();
+
       const canvas = this.canvas as HTMLCanvasElement;
 
       this.centerX = canvas.width / 2;
@@ -168,14 +183,14 @@ export default defineComponent({
         this.maxHeight = this.maxWidth;
         this.levelHeight = this.maxHeight / (1.75 * settings.height);
 
-        this.drawDiagram(graph, app, settings, settings.root, predecessors, 0, 0, 1, settings.diagramColour);
+        this.drawDiagram(this.graph, app, settings, settings.root, predecessors, 0, 0, 1, settings.diagramColour);
       } else {
         var borderSize = Math.min(canvas.width, canvas.height) * .2;
         this.maxWidth = canvas.width - borderSize;
         this.maxHeight = canvas.height - borderSize;
         this.levelHeight = this.maxHeight / settings.height;
 
-        this.drawDiagram(graph, app, settings, settings.root, predecessors, 0, 0, 1, settings.diagramColour);
+        this.drawDiagram(this.graph, app, settings, settings.root, predecessors, 0, 0, 1, settings.diagramColour);
       }
     },
 
