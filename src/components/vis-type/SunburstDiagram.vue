@@ -43,7 +43,7 @@ type Settings = {
   height: number,
   variety: string,
   edgeType: string,
-  widthType: string,
+  colourType: string,
   diagramColour: number,
   minRenderSize: number,
 };
@@ -81,15 +81,20 @@ export default defineComponent({
       resizeTo: canvasParent,
     });
 
+    // TEMP REMOVE UNDEFINED NODES
+    this.graph.forEachNode((node: any, attributes: any) => {
+      if (node === "undefined") {
+        this.graph.dropNode(node);
+      }
+    });
+
     const settings = this.diagram.settings as Settings;
 
     // Create map for number of connections between nodes
     this.bothConnections = new Map();
     this.outConnections = new Map();
 
-    if (settings.widthType == "connections") {
-      [this.bothConnections, this.outConnections] = this.mapConnections(this.graph);
-    }
+    [this.bothConnections, this.outConnections] = this.mapConnections(this.graph);
 
     const app = this.app as PIXI.Application;
 
@@ -139,6 +144,8 @@ export default defineComponent({
       maxHeight: 0,
       bothConnections: new Map(),
       outConnections: new Map(),
+      attributesColourMap: new Map(),
+      colours: null as any,
     };
   },
 
@@ -236,7 +243,22 @@ export default defineComponent({
         });
 
         // Create colour pattern
-        const colours = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, nodesWithDegree + 1));
+        if (settings.colourType === "rainbow") {
+          this.colours = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, nodesWithDegree + 1));
+        } else {
+
+          let indexNumber = 0;
+          this.attributesColourMap = new Map();
+
+          graph.forEachNode((node, attributes) => {
+            if (attributes[settings.colourType]) {
+              this.attributesColourMap.set(attributes[settings.colourType], indexNumber);
+              indexNumber += 1;
+            }
+          });
+
+          this.colours = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, this.attributesColourMap.size + 1));
+        }
 
         let index = 0;
 
@@ -257,8 +279,16 @@ export default defineComponent({
 
             newSizePerc /= totalDegree;
 
-            const c = d3.color(colours(index.toString()));
-            const convertedColour = c?.formatHex().replace("#", "0x") || "0xffffff";
+            var c;
+            var convertedColour;
+
+            if ((settings.colourType === "rainbow")) {
+              c = d3.color(this.colours(index.toString()));
+              convertedColour = c?.formatHex().replace("#", "0x") || "0xffffff";
+            } else {
+              c = d3.color(this.colours(this.attributesColourMap.get(attributes[settings.colourType]).toString()));
+              convertedColour = c?.formatHex().replace("#", "0x") || "0xffffff";
+            }
 
             predecessors = [];
 
@@ -306,6 +336,12 @@ export default defineComponent({
           graph.forEachNeighbor(node, (neighbour, attributes) => {
 
             if (!this.isPredecessor(predecessors, neighbour)) {
+
+              if ((settings.colourType !== "rainbow")) {
+
+                const c = d3.color(this.colours(this.attributesColourMap.get(attributes[settings.colourType]).toString()));
+                subtreeColour = c?.formatHex().replace("#", "0x") || "0xffffff";
+              }
 
               var newSizePerc = 0;
 
