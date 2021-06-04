@@ -25,6 +25,7 @@ function processData(data: string): Graph {
   const graph = new Graph({ multi: true, type: "directed" });
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].split(",");
+    if (line.length != options.length) continue;
     graph.mergeNode(line[1], { email: line[2], jobtitle: line[3] });
     graph.mergeNode(line[4], { email: line[5], jobtitle: line[6] });
     graph.addDirectedEdge(line[1], line[4], {
