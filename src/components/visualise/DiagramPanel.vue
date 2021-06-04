@@ -53,10 +53,6 @@ export default defineComponent({
     this.componentName = diagram.type;
   },
 
-  mounted() {
-    console.log(this.componentName);
-  },
-
   methods: {
     async onSettingChanged(id: string, value: any) {
       const diagram = await GlobalStorage.getDiagram(this.diagram_id);

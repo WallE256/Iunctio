@@ -36,7 +36,7 @@ export default defineComponent({
       const graphID = createID(filename);
       const diagramID = createID(filename);
 
-      const onFinish = (_: Graph) => {
+      const onFinish = async (_: Graph) => {
         if (!this.diagram_component) {
           console.warn("The diagram component is not passed");
           return;
@@ -70,7 +70,7 @@ export default defineComponent({
             break;
         }
 
-        GlobalStorage.addDiagram(new GlobalStorage.Diagram(
+        await GlobalStorage.addDiagram(new GlobalStorage.Diagram(
           diagramID,
           graphID,
           this.diagram_component.name,
