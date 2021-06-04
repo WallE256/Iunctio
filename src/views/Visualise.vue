@@ -68,19 +68,16 @@ export default defineComponent({
       this.togglePanels(false);
     },
     requestUpload(component: DefineComponent) {
-      console.log(component);
       this.toggleHome(false);
       this.toggleUpload(true);
       this.togglePanels(false);
       this.selectedDiagram = component;
     },
-
-    onUpload(diagramID: string) {
+    async onUpload(diagramID: string) {
       this.toggleHome(false);
       this.toggleUpload(false);
       this.togglePanels(true);
-      console.log(diagramID);
-      this.shownDiagrams.push(diagramID);
+      this.shownDiagrams = await GlobalStorage.getDiagrams();
     },
 
     // brush-and-link interactivity: update GlobalStorage and each diagram if
