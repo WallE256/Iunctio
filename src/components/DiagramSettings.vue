@@ -93,7 +93,7 @@ export default defineComponent({
             value: diagram.settings.edgeType,
           } },
           { id: "height", component: "NumberSetting", name: "Layer Count", properties: {
-            min: 1,
+            min: 2,
             max: 10,
             value: diagram.settings.height,
           } },
