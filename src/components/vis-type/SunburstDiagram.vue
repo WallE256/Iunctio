@@ -81,13 +81,6 @@ export default defineComponent({
       resizeTo: canvasParent,
     });
 
-    // TEMP REMOVE UNDEFINED NODES
-    this.graph.forEachNode((node: any, attributes: any) => {
-      if (node === "undefined") {
-        this.graph.dropNode(node);
-      }
-    });
-
     const settings = this.diagram.settings as Settings;
 
     // Create map for number of connections between nodes
