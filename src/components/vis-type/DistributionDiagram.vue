@@ -13,6 +13,7 @@ import * as GlobalStorage from "@/scripts/globalstorage";
 
 type Settings = {
   variety: string,
+  logarithmic: boolean,
 };
 
 export default defineComponent({
@@ -141,6 +142,12 @@ export default defineComponent({
           dateMap.set(edgeDate, mapValue + 1);
         }
       });
+
+      if (settings.logarithmic) {
+        for (let [key, value] of dateMap) {
+          dateMap.set(key, Math.log(value));
+        }
+      }
 
       if (settings.variety === "distribution") {
 

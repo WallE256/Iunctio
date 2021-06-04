@@ -114,6 +114,9 @@ export default defineComponent({
             options: [ "distribution", "histogram"],
             value: diagram.settings.variety,
           } },
+          { id: "logarithmic", component: "CheckboxSetting", name: "Logarithmic", properties: {
+            value: diagram.settings.logarithmic,
+          } },
         ];
         break;
 

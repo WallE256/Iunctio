@@ -62,6 +62,7 @@ export default defineComponent({
           case "DistributionDiagram":
             defaultSettings = {
               variety: "distribution",
+              logarithmic: false,
             };
             break;
 
