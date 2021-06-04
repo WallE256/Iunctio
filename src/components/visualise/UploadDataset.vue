@@ -1,7 +1,7 @@
 <template>
   <div class="upload-panel">
-    <label tabindex="0" class="upload-panel__btn" @change="parseDataset">
-      <input type="file" accept="text/csv" />
+    <label tabindex="0" class="upload-panel__btn">
+      <input type="file" accept="text/csv" @change="parseDataset" />
       UPLOAD
     </label>
     <h5 class="upload-panel__hint">Upload your dataset here.</h5>
@@ -25,13 +25,13 @@ export default defineComponent({
     },
   },
   methods: {
-    parseDataset(event: { target: { files: File[] } }): void {
+    parseDataset(event: { target: HTMLInputElement }): void {
       function createID(id: string): string {
         // this is unique enough and not too long
         return String(Math.floor(Date.now() % 1e5)) + "-" + id;
       }
       
-      const file = event.target.files[0];
+      const file = (event.target.files as FileList)[0];
       const filename = file.name.replace(/\.[^/.]+$/, ""); 
       const graphID = createID(filename);
       const diagramID = createID(filename);
@@ -77,6 +77,9 @@ export default defineComponent({
         ));
 
         this.$emit("dataset-upload", diagramID);
+
+        // because Chrome/Safari weird, so we need to reset the <input>
+        event.target.value = "";
       };
 
       csvParse(file, diagramID, onFinish);
