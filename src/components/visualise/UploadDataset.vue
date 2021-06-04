@@ -58,7 +58,8 @@ export default defineComponent({
               root: null,
               edgeType: "outgoing",
               height: 4,
-              widthType: "connections",
+              colourType: "rainbow",
+              diagramColour: 0x4287f5,
               minRenderSize: 10000,
             };
             break;
