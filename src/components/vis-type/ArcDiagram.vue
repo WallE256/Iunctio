@@ -225,6 +225,7 @@ export default defineComponent({
       const direction = settings.hoverEdgeDirection;
       const drawOutgoing = direction === "outgoing" || direction === "both";
       const drawIncoming = direction === "incoming" || direction === "both";
+      const alpha = (drawOutgoing && drawIncoming) ? 0.1 : 0.2;
 
       viewport.removeChildren();
       
@@ -265,27 +266,24 @@ export default defineComponent({
           const fromY = centerY + vertexRadius * Math.sin(sourceData.index * angle);
 
           // draw outgoing edges
-          graph.forEachOutboundNeighbor(source,
-          (target: any, attributes) => {
+          const callback = (target: any, attributes: any) => {
             const targetData = this.nodeMap.get(target);
             if (typeof targetData === "undefined") return;
 
             const toX = centerX + vertexRadius * Math.cos(targetData.index * angle);
             const toY = centerY + vertexRadius * Math.sin(targetData.index * angle);
 
-            if (drawOutgoing) {
-              edgeGraphics
-                .lineStyle(2, 0xE06776, 0.2)
-                .moveTo(fromX, fromY)
-                .quadraticCurveTo(centerX, centerY, toX, toY);
-            }
-            if (drawIncoming) {
-              targetData.edgeGraphics
-                .lineStyle(2, 0xE06776, 0.2)
-                .moveTo(toX, toY)
-                .quadraticCurveTo(centerX, centerY, fromX, fromY);
-            }
-          });
+            edgeGraphics
+              .lineStyle(2, 0xE06776, alpha)
+              .moveTo(fromX, fromY)
+              .quadraticCurveTo(centerX, centerY, toX, toY);
+          };
+          if (drawOutgoing) {
+            graph.forEachOutboundNeighbor(source, callback);
+          }
+          if (drawIncoming) {
+            graph.forEachInboundNeighbor(source, callback);
+          }
 
           viewport.addChild(edgeGraphics);
         });
@@ -336,7 +334,7 @@ export default defineComponent({
             const xArcCenter = (sourceX + targetX) / 2;
 
             edgeGraphics
-              .lineStyle(2, 0xE06776, 0.2)
+              .lineStyle(2, 0xE06776, alpha)
               .arc(xArcCenter, sourceY, radius, Math.PI, 2 * Math.PI);
           };
           if (drawOutgoing) {
