@@ -40,22 +40,6 @@ export default defineComponent({
 <style lang="scss" src="@/assets/styles/global.scss"></style>
 
 <style>
-  /*.route-enter-from {
-    opacity: 0;
-  }
-
-  .route-enter-active {
-    transition: opacity 0.5s ease-in;
-  }
-
-  .route-leave-to {
-    opacity: 0;
-  }
-
-  .route-leave-active {
-    transition: opacity 0.5s ease-out;
-  }*/
-
   .route-enter-active,
   .route-leave-active {
     transition-property: opacity, transform;
