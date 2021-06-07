@@ -49,7 +49,7 @@ export default defineComponent({
             defaultSettings = {
               name: "Arc Diagram",
               variety: "circle",
-              hoverEdgeDirection: "outgoing",
+              edgeHighlightDirection: "outgoing",
             };
             break;
 

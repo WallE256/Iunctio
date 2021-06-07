@@ -74,7 +74,7 @@ export default defineComponent({
             options: [ "circle", "line" ],
             value: diagram.settings.variety,
           } },
-          { id: "hoverEdgeDirection", component: "SelectSetting", name: "Edge Direction", properties: {
+          { id: "edgeHighlightDirection", component: "SelectSetting", name: "Edge Highlight Direction", properties: {
             options: [ "incoming", "outgoing", "both" ],
             value: diagram.settings.hoverEdgeDirection,
           } },
