@@ -47,6 +47,7 @@ export default defineComponent({
         switch (this.diagram_component.name) {
           case "ArcDiagram":
             defaultSettings = {
+              name: "Arc Diagram",
               variety: "circle",
               hoverEdgeDirection: "outgoing",
             };
@@ -54,6 +55,7 @@ export default defineComponent({
 
           case "SunburstDiagram":
             defaultSettings = {
+              name: "Sunburst Diagram",
               variety: "sunburst",
               root: null,
               edgeType: "outgoing",

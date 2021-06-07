@@ -15,8 +15,9 @@ import { Viewport } from 'pixi-viewport';
 
 // see also DiagramSettings.vue and UploadDataset.vue
 type Settings = {
-  variety?: string, // "circle" or "line"
-  hoverEdgeDirection?: string,
+  name: string,
+  variety: string, // "circle" or "line"
+  hoverEdgeDirection: string,
 };
 
 export default defineComponent({

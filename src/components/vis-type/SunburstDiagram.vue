@@ -39,6 +39,7 @@ function drawTorus(graphics: PIXI.Graphics,
 }
 
 type Settings = {
+  name: string,
   root: string | null,
   height: number,
   variety: string,
