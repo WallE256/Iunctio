@@ -26,6 +26,8 @@ type NodeData = {
   circle: PIXI.Graphics,
   index: number,
   edgeGraphics: PIXI.Graphics,
+  inboundDegree: number,
+  outboundDegree: number,
 };
 
 export default defineComponent({
@@ -137,6 +139,8 @@ export default defineComponent({
         circle: circle,
         index: i,
         edgeGraphics: edgeGraphics,
+        inboundDegree: this.graph.inDegree(source),
+        outboundDegree: this.graph.outDegree(source)
       });
       i++;
     });
@@ -239,22 +243,6 @@ export default defineComponent({
             nodeGFX.visible = zoomingStep > 0;
           })
 
-          graph.forEachEdge((edge:any) => {
-            const nodes = graph.extremities(edge);
-            const edgeKey = nodes[0]+'->'+nodes[1];
-            const edgeObj = this.edgeMap.get(edgeKey);
-           
-            if(!edgeObj) {console.log("edge does not exist"); return;}
-
-            if(edgeObj.cord) {
-              const edgeGFX = edgeObj.cord;
-              edgeGFX.visible = zoomingStep>1;
-            } else if(edgeObj.arc) {
-              const edgeGFX = edgeObj.arc;
-              edgeGFX.visible = zoomingStep>1;
-            }
-            
-          })
         }
       })
     })
@@ -279,7 +267,7 @@ export default defineComponent({
       
       //node radius has to be fixed size otherwise they become very small when adding too many nodes
       //const nodeRadius = graph.order == 0 ? 200 : Math.floor(500 / graph.order);
-      const nodeRadius = 10;
+      let nodeRadius = 10;
       //---------------------------------------------
       
       const textStyle = new PIXI.TextStyle({
@@ -312,7 +300,12 @@ export default defineComponent({
           text.y = centerY + (vertexRadius + textDistance) * Math.sin(sourceData.index * angle);
 
           viewport.addChild(text);
-
+          
+          if(drawOutgoing) {
+            nodeRadius = Math.min(30, Math.max(5 * Math.log(sourceData.outboundDegree), 5));
+          } else {
+            nodeRadius = Math.min(30, Math.max(5 * Math.log(sourceData.inboundDegree), 5));
+          }
           const circle = sourceData.circle;
           circle.clear();
           circle.lineStyle(1);
@@ -355,13 +348,19 @@ export default defineComponent({
         const nodeLineY = canvas.height * 5/6;
         const nodeLineX = canvas.width * 1/10;
         //let gap = Math.floor(canvas.width/(1.2 * graph.order));
-        let gap = 30;
+        let gap = 35;
 
         // draw every node
         graph.forEachNode((source: any, sourceAttr) => {
           const sourceData = this.nodeMap.get(source);
           if (!sourceData) return; // not supposed to happen
 
+
+          if(drawOutgoing) {
+            nodeRadius = Math.min(30, Math.max(5 * Math.log(sourceData.outboundDegree), 5));
+          } else {
+            nodeRadius = Math.min(30, Math.max(5 * Math.log(sourceData.inboundDegree), 5));
+          }
           const circle = sourceData.circle;
           circle.clear();
           circle.lineStyle(1);
