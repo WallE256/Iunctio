@@ -33,6 +33,8 @@
 
   &__container{
     @include rel();
+    margin-left: auto;
+    margin-right: 0;
 
     .num__input {
       -webkit-appearance: textfield;
@@ -45,7 +47,7 @@
       box-shadow: 1px 1px 2px rgba($BLACK_DDD, 0.2);
       text-align: center;
       border-radius: 2rem;
-      max-width: 100px;
+      max-width: 190px;
 
       // Hide default spin-arrows.
       &::-webkit-inner-spin-button,
