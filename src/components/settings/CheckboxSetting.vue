@@ -35,7 +35,7 @@ export default defineComponent({
 
 <style scoped lang="scss">
   @import "../../assets/styles/config";
-  $toggleWidth: 30px;
+  $toggleWidth: 40px;
   $toggleHeight: $toggleWidth/2;
 
   .switch{
@@ -57,6 +57,8 @@ export default defineComponent({
       cursor: pointer;
       @include transition(background, 0.25s, $ease1);
       box-shadow: 1px 1px 2px rgba($BLACK_DDD, 0.2);
+      margin-left: auto;
+      margin-right: 0;
 
       &::after{
         @include pseudo($height: $toggleHeight, $width: $toggleHeight);
