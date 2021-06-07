@@ -85,7 +85,7 @@ export default defineComponent({
 
     // brush-and-link interactivity: update GlobalStorage and each diagram if
     // needed
-    onSelectedNodeChange(datasetID: string, nodeID: string, append: boolean) {
+    async onSelectedNodeChange(datasetID: string, nodeID: string, append: boolean) {
       const nodes = GlobalStorage.selectedNodes;
 
       // remove it if already present, add it if not present yet (so toggle)
