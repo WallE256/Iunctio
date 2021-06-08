@@ -101,6 +101,21 @@ export default defineComponent({
       return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
     },
 
+    utcToDate(date: number) {
+      return new Date(date);
+    },
+
+    drawDate(graph: Graph, app: PIXI.Application, date: any, posX: number, posY: number) {
+      const dateISO = this.utcToDate(date).toISOString();
+
+      const dateText = new PIXI.Text(dateISO.substr(0, dateISO.indexOf('T')), {align: 'center'});
+      dateText.x = posX;
+      dateText.y = posY;
+      dateText.anchor.set(0.5, 0);
+
+      app.stage.addChild(dateText);
+    },
+
     // Draw the diagram
     draw(
       graph: Graph,
@@ -217,6 +232,16 @@ export default defineComponent({
           }
         }
       }
+
+      const stepSize = intervalTimeUTC / 5;
+
+      this.drawDate(graph, app, intervalUTC[0], minX, maxY);
+
+      for (let time = intervalUTC[0] + stepSize; time <= intervalUTC[1] - stepSize; time += stepSize) {
+        this.drawDate(graph, app, time, (time - intervalUTC[0]) / intervalTimeUTC * (maxX - minX) + minX, maxY);
+      }
+
+      this.drawDate(graph, app, intervalUTC[1], maxX, maxY);
     }
 },
 });
