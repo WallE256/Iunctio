@@ -96,12 +96,34 @@ export default defineComponent({
     // correct yet (because they've not been rendered yet)
     this.$nextTick(() => {
       app.resize();
-      this.diagram.onChange = (diagram: any, changedKey: any) => {
+      this.diagram.onChange = (diagram: GlobalStorage.Diagram, changedKey: string) => {
+        if (changedKey === "selectedNode") {
+          // un-highlight old nodes
+          const clearTint = 0xffffff;
+          for (const node of this.selectedNodes) {
+            const graphicsList = this.graphicsMap.get(node) || [];
+            for (const graphics of graphicsList) {
+              graphics.tint = clearTint;
+            }
+          }
 
-        const settings = diagram.settings;
-        const root = settings.root === "[no root]" ? null : settings.root;
+          this.selectedNodes = GlobalStorage.selectedNodes
+            .filter((node) => node.datasetID === diagram.graphID)
+            .map((node) => node.nodeID);
 
-        this.draw(app, settings);
+          // highlight new nodes
+          const highlightTint = 0x00D737;
+          for (const node of this.selectedNodes) {
+            const graphicsList = this.graphicsMap.get(node) || [];
+            for (const graphics of graphicsList) {
+              graphics.tint = highlightTint;
+            }
+          }
+
+          return;
+        }
+
+        this.draw(app, diagram.settings);
       };
     });
 
@@ -140,6 +162,8 @@ export default defineComponent({
       outConnections: new Map(),
       attributesColourMap: new Map(),
       colours: null as any,
+      selectedNodes: [] as string[],
+      graphicsMap: new Map<string, PIXI.Graphics[]>(),
     };
   },
 
@@ -170,6 +194,10 @@ export default defineComponent({
       settings: Settings,
     ) {
       app.stage.removeChildren();
+      for (const [node, graphicsList] of this.graphicsMap) {
+        for (const graphics of graphicsList) graphics.clear();
+        graphicsList.length = 0;
+      }
 
       const canvas = this.canvas as HTMLCanvasElement;
 
@@ -381,6 +409,13 @@ export default defineComponent({
 
     // Create graphics
     const drawnNode = new PIXI.Graphics();
+    const graphicsList = this.graphicsMap.get(node);
+    if (graphicsList) {
+      graphicsList.push(drawnNode);
+    } else {
+      this.graphicsMap.set(node, [drawnNode]);
+    }
+
     drawnNode.beginFill(nodeColour);
     drawnNode.lineStyle(1, 0xFFFFFF);
 
@@ -445,7 +480,14 @@ export default defineComponent({
       } else {
         clearTimeout(this.double);
         this.clickedNode = node;
-        this.double = setTimeout(() => { this.clickedNode = false; }, 600); // Set timeout at 600 ms for double click detection
+        this.double = setTimeout(() => {
+          this.clickedNode = false;
+
+          // single click means selecting --> brush-and-link interactivity
+          const append = (event.data.originalEvent as MouseEvent).ctrlKey;
+          this.$emit("selected-node-change", this.diagram.graphID, node, append);
+        }, 600); // Set timeout at 600 ms for double click detection
+
       }
     });
 

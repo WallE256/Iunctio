@@ -1,6 +1,10 @@
 <template>
   <div class="diagram-panel">
-    <component :is="componentName" :diagramid="diagram_id" />
+    <component
+      :is="componentName"
+      :diagramid="diagram_id"
+      @selected-node-change="onSelectedNodeChange"
+    />
     <transition name="slide-fade">
       <div class="diagram-panel__settings" v-if="showSettings">
         <diagram-settings :diagramid="diagram_id" @setting-changed="onSettingChanged" />
@@ -65,8 +69,12 @@ export default defineComponent({
 
     toggleSettings() {
       this.showSettings = !this.showSettings;
-    }
+    },
 
+    onSelectedNodeChange(datasetID: string, nodeID: string, append: boolean) {
+      // just pass event to parent
+      this.$emit("selected-node-change", datasetID, nodeID, append);
+    },
   },
 });
 </script>

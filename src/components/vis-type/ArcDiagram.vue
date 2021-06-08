@@ -20,6 +20,13 @@ type Settings = {
   edgeHighlightDirection: string,
 };
 
+type NodeData = {
+  text: PIXI.Text,
+  circle: PIXI.Graphics,
+  index: number,
+  edgeGraphics: PIXI.Graphics,
+};
+
 export default defineComponent({
   props: {
     diagramid: {
@@ -99,28 +106,9 @@ export default defineComponent({
         tooltip.innerText = "Node: " + sourceString;
         tooltip.style.left = (circle.x + 20) + "px";
         tooltip.style.top = (circle.y + 40) + "px";
-
-        const color = 0x00D737;
-
-        edgeGraphics.tint = color;
-        edgeGraphics.alpha = 5;
-        edgeGraphics.zIndex = 1;
-        
-        const callback = (target: any, targetAttributes: any) => {
-          const targetData = this.nodeMap.get(target);
-          if (!targetData) return;
-          targetData.circle.tint = color;
-          targetData.edgeGraphics.zIndex = 1;
-        };
-        const direction = diagram.settings.edgeHighlightDirection;
-        if (direction === "outgoing" || direction === "both") {
-          this.graph.forEachOutboundNeighbor(source, callback);
-        }
-        if (direction === "incoming" || direction === "both") {
-          this.graph.forEachInboundNeighbor(source, callback);
-        }
-
-        circle.tint = 0xFE00EF;
+        this.unhighlight();
+        this.hoverNode = source;
+        this.highlight();
       });
 
       circle.on("mouseout", (event) => {
@@ -128,26 +116,18 @@ export default defineComponent({
 
         tooltip.style.display = "none";
 
-        const color = 0xffffff;
-        circle.tint = color;
-
-        edgeGraphics.tint = color;
-        edgeGraphics.alpha = 1;
-        edgeGraphics.zIndex = 0;
-
-        const callback = (target: any, targetAttributes: any) => {
-          const targetData = this.nodeMap.get(target);
-          if (!targetData) return;
-          targetData.circle.tint = color;
-          targetData.edgeGraphics.zIndex = 0;
-        };
-        const direction = diagram.settings.edgeHighlightDirection;
-        if (direction === "outgoing" || direction === "both") {
-          this.graph.forEachOutboundNeighbor(source, callback);
+        this.unhighlight();
+        this.hoverNode = null;
+        this.highlight();
+      });
+      
+      // select/brush-and-linking interactivity
+      circle.on("click", (event) => {
+        if (!this.diagram) {
+          return;
         }
-        if (direction === "incoming" || direction === "both") {
-          this.graph.forEachInboundNeighbor(source, callback);
-        }
+        const append = (event.data.originalEvent as MouseEvent).ctrlKey;
+        this.$emit("selected-node-change", this.diagram.graphID, source, append);
       });
 
       this.nodeMap.set(source, {
@@ -166,6 +146,24 @@ export default defineComponent({
       app.resize();
 
       diagram.onChange = (diagram, changedKey) => {
+        if (changedKey === "selectedNode") {
+          // no need to redraw the entire diagram, just highlight some
+          this.unhighlight();
+
+          this.selectedNodes = GlobalStorage.selectedNodes
+            .filter((node) => node.datasetID === diagram.graphID)
+            .map((node) => node.nodeID);
+          for (const node of this.selectedNodes) {
+            const nodeData = this.nodeMap.get(node);
+            if (nodeData) {
+              nodeData.circle.tint = 0xffffff;
+            }
+          }
+
+          this.highlight();
+          return;
+        }
+
         this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
       };
       this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
@@ -187,15 +185,11 @@ export default defineComponent({
   data() {
     return {
       // node map
-      nodeMap: new Map<number, {
-        text: PIXI.Text,
-        circle: PIXI.Graphics,
-        index: number,
-        edgeGraphics: PIXI.Graphics,
-      }>(),
+      nodeMap: new Map<string, NodeData>(),
 
       // the node that you're currently hovering over
-      selectedIndex: null as number | null,
+      selectedNodes: [] as string[],
+      hoverNode: null as string | null,
       app: null as null | PIXI.Application,
       viewport: null as null | Viewport,
       graph: new Graph({
@@ -350,7 +344,82 @@ export default defineComponent({
       } else {
         console.warn("Unrecognized shape", settings.variety);
       }
-    }
+    },
+
+    highlight() {
+      const diagram = this.diagram;
+      if (!diagram) return;
+
+      const highlightNode = (node: string) => {
+        const nodeData = this.nodeMap.get(node);
+        if (!nodeData) return;
+        const color = 0x00D737;
+
+        nodeData.edgeGraphics.tint = color;
+        nodeData.edgeGraphics.alpha = 5;
+        nodeData.edgeGraphics.zIndex = 1;
+        
+        const callback = (target: any, targetAttributes: any) => {
+          const targetData = this.nodeMap.get(target);
+          if (!targetData) return;
+          targetData.circle.tint = color;
+          targetData.edgeGraphics.zIndex = 1;
+        };
+        const direction = diagram.settings.edgeHighlightDirection;
+        if (direction === "outgoing" || direction === "both") {
+          this.graph.forEachOutboundNeighbor(node, callback);
+        }
+        if (direction === "incoming" || direction === "both") {
+          this.graph.forEachInboundNeighbor(node, callback);
+        }
+
+        nodeData.circle.tint = 0xFE00EF;
+      };
+
+      for (const node of this.selectedNodes) {
+        highlightNode(node);
+      }
+      if (this.hoverNode) {
+        highlightNode(this.hoverNode);
+      }
+    },
+
+    unhighlight() {
+      const diagram = this.diagram;
+      if (!diagram) return;
+
+      const unhighlightNode = (node: string) => {
+        const nodeData = this.nodeMap.get(node);
+        if (!nodeData) return;
+
+        const color = 0xffffff;
+        nodeData.circle.tint = color;
+
+        nodeData.edgeGraphics.tint = color;
+        nodeData.edgeGraphics.alpha = 1;
+        nodeData.edgeGraphics.zIndex = 0;
+
+        const callback = (target: any, targetAttributes: any) => {
+          const targetData = this.nodeMap.get(target);
+          if (!targetData) return;
+          targetData.circle.tint = color;
+          targetData.edgeGraphics.zIndex = 0;
+        };
+        const direction = diagram.settings.edgeHighlightDirection;
+        if (direction === "outgoing" || direction === "both") {
+          this.graph.forEachOutboundNeighbor(node, callback);
+        }
+        if (direction === "incoming" || direction === "both") {
+          this.graph.forEachInboundNeighbor(node, callback);
+        }
+      };
+      for (const node of this.selectedNodes) {
+        unhighlightNode(node);
+      }
+      if (this.hoverNode) {
+        unhighlightNode(this.hoverNode);
+      }
+    },
   },
 });
 </script>

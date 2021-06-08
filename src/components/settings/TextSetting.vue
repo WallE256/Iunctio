@@ -24,6 +24,9 @@
     @include font-sans("Poppins", 0.75rem, "Regular", inherit);
     padding: 0.5rem;
     box-shadow: 1px 1px 2px rgba($BLACK_DDD, 0.2);
+    margin-left: auto;
+    margin-right: 0;
+    width: 190px;
   }
 }
 </style>
