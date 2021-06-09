@@ -39,6 +39,7 @@ import { defineComponent } from "vue";
 import ArcDiagram from "@/components/vis-type/ArcDiagram.vue";
 import SunburstDiagram from "@/components/vis-type/SunburstDiagram.vue";
 import DistributionDiagram from "@/components/vis-type/DistributionDiagram.vue";
+import AdjacencyMatrix from "@/components/vis-type/AdjacencyMatrix.vue";
 import DiagramSettings from "@/components/DiagramSettings.vue";
 import SelectSetting from "@/components/settings/SelectSetting.vue";
 import * as GlobalStorage from "@/scripts/globalstorage";
@@ -47,10 +48,11 @@ export default defineComponent({
   name: "DiagramPanel",
   components: {
     DiagramSettings,
+    SelectSetting,
     ArcDiagram,
     SunburstDiagram,
-    SelectSetting,
     DistributionDiagram,
+    AdjacencyMatrix,
   },
   props: {
     diagram_id: {
