@@ -1,7 +1,7 @@
 <template>
   <div class="upload-panel">
-    <label tabindex="0" class="upload-panel__btn" @change="parseDataset">
-      <input type="file" accept="text/csv" />
+    <label tabindex="0" class="upload-panel__btn">
+      <input type="file" accept="text/csv" @change="parseDataset" />
       UPLOAD
     </label>
     <h5 class="upload-panel__hint">Upload your dataset here.</h5>
@@ -15,7 +15,6 @@
 import { defineComponent } from "vue";
 import * as GlobalStorage from "@/scripts/globalstorage";
 import { csvParse } from "@/scripts/parser";
-import { uniqueId } from "lodash";
 import Graph from "graphology";
 
 export default defineComponent({
@@ -26,13 +25,18 @@ export default defineComponent({
     },
   },
   methods: {
-    async parseDataset(event: { target: { files: File[] } }): Promise<void> {
-      const file = event.target.files[0];
-      const graphID = file.name.replace(/\.[^/.]+$/, "");
-      const diagramID = uniqueId(graphID);
-      const graph = await GlobalStorage.getDataset(graphID);
+    parseDataset(event: { target: HTMLInputElement }): void {
+      function createID(id: string): string {
+        // this is unique enough and not too long
+        return String(Math.floor(Date.now() % 1e5)) + "-" + id;
+      }
+      
+      const file = (event.target.files as FileList)[0];
+      const filename = file.name.replace(/\.[^/.]+$/, ""); 
+      const graphID = createID(filename);
+      const diagramID = createID(filename);
 
-      const onFinish = (_: Graph) => {
+      const onFinish = async (_: Graph) => {
         if (!this.diagram_component) {
           console.warn("The diagram component is not passed");
           return;
@@ -54,7 +58,8 @@ export default defineComponent({
               root: null,
               edgeType: "outgoing",
               height: 4,
-              widthType: "connections",
+              colourType: "rainbow",
+              diagramColour: 0x4287f5,
               minRenderSize: 10000,
             };
             break;
@@ -72,7 +77,7 @@ export default defineComponent({
             break;
         }
 
-        GlobalStorage.addDiagram(new GlobalStorage.Diagram(
+        await GlobalStorage.addDiagram(new GlobalStorage.Diagram(
           diagramID,
           graphID,
           this.diagram_component.name,
@@ -80,13 +85,12 @@ export default defineComponent({
         ));
 
         this.$emit("dataset-upload", diagramID);
+
+        // because Chrome/Safari weird, so we need to reset the <input>
+        event.target.value = "";
       };
 
-      if (graph) {
-        onFinish(graph);
-      } else {
-        csvParse(file, onFinish);
-      }
+      csvParse(file, diagramID, onFinish);
     },
   },
 });

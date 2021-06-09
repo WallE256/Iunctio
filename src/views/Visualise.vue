@@ -9,8 +9,12 @@
     />
     <current-visualisations v-show="show_vis_home" />
     <div class="visualise__panels" v-show="show_panels">
-      <diagram-panel v-for="diagram in shownDiagrams" :key="diagram" :diagram_id="diagram">
-      </diagram-panel>
+      <diagram-panel
+        v-for="diagram in shownDiagrams"
+        :key="diagram"
+        :diagram_id="diagram"
+        @selected-node-change="onSelectedNodeChange"
+      />
     </div>
     <span class="visualise__back" v-show="!show_vis_home" @click="returnToHome">BACK</span>
   </main>
@@ -22,6 +26,7 @@ import CreateVisualisations from "@/components/visualise/CreateVisualisations.vu
 import UploadDataset from "@/components/visualise/UploadDataset.vue";
 import DiagramPanel from "@/components/visualise/DiagramPanel.vue";
 import CurrentVisualisations from "@/components/visualise/CurrentVisualisations.vue";
+import * as GlobalStorage from "@/scripts/globalstorage";
 
 export default defineComponent({
   name: "Visualise",
@@ -63,18 +68,54 @@ export default defineComponent({
       this.togglePanels(false);
     },
     requestUpload(component: DefineComponent) {
-      console.log(component);
       this.toggleHome(false);
       this.toggleUpload(true);
       this.togglePanels(false);
       this.selectedDiagram = component;
     },
-    onUpload(diagramID: string) {
+    async onUpload(diagramID: string) {
       this.toggleHome(false);
       this.toggleUpload(false);
       this.togglePanels(true);
-      console.log(diagramID);
-      this.shownDiagrams.push(diagramID);
+      this.shownDiagrams = await GlobalStorage.getDiagrams();
+    },
+
+    // brush-and-link interactivity: update GlobalStorage and each diagram if
+    // needed
+    async onSelectedNodeChange(datasetID: string, nodeID: string, append: boolean) {
+      const nodes = GlobalStorage.selectedNodes;
+
+      // remove it if already present, add it if not present yet (so toggle)
+      let present = false;
+      for (let i = 0; i < nodes.length; i++) {
+        if (nodes[i].datasetID === datasetID && nodes[i].nodeID === nodeID) {
+          nodes.splice(i);
+          present = true;
+          break;
+        }
+      }
+      if (!present) {
+        if (!append) {
+          nodes.length = 0;
+        }
+        nodes.push({
+          datasetID,
+          nodeID,
+        });
+      }
+
+      // update every diagram that could have this node in it
+      for (let i = 0; i < this.shownDiagrams.length; i++) {
+        GlobalStorage.getDiagram(this.shownDiagrams[i])
+        .then((diagram) => {
+          if (!diagram) return;
+          if (diagram.graphID !== datasetID) return;
+
+          if (diagram.onChange) {
+            diagram.onChange(diagram, "selectedNode");
+          }
+        });
+      }
     },
   },
 });

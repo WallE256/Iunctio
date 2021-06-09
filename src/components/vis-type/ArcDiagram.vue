@@ -19,6 +19,13 @@ type Settings = {
   hoverEdgeDirection?: string,
 };
 
+type NodeData = {
+  text: PIXI.Text,
+  circle: PIXI.Graphics,
+  index: number,
+  edgeGraphics: PIXI.Graphics,
+};
+
 export default defineComponent({
   props: {
     diagramid: {
@@ -82,12 +89,10 @@ export default defineComponent({
     let i = 0;
     this.graph.forEachNode((source: any, sourceAttr) => {
       const sourceString = source.toString();
-      const text = new PIXI.Text(
-        sourceString,
-        defaultStyle,
-      );
+      const text = new PIXI.Text(sourceString, defaultStyle);
       text.anchor.set(0.5, 0.5);
 
+      const edgeGraphics = new PIXI.Graphics();
       const circle = new PIXI.Graphics();
 
       // tooltip display
@@ -101,27 +106,9 @@ export default defineComponent({
         tooltip.style.left = (circle.x + 20) + "px";
         tooltip.style.top = (circle.y + 40) + "px";
 
-        const color = 0x00D737;
-        circle.tint = 0xFE00EF;
-
-        this.graph.forEachOutboundEdge(source,
-        (edge, attributes, source: any, target: any, sourceAttributes, targetAttributes) => {
-          const edgeKey = source + '->' + target;
-          const targetData = this.nodeMap.get(target);
-          const edgeData = this.edgeMap.get(edgeKey);
-          
-          if (typeof targetData === "undefined" || typeof edgeData === "undefined") return;
-          targetData.circle.tint = color;
-          if (edgeData.arc) { 
-            edgeData.arc.tint = color;
-            edgeData.arc.alpha = 5;
-            edgeData.arc.zIndex = 1;
-          } else if (edgeData.cord){
-            edgeData.cord.tint = color;
-            edgeData.cord.alpha = 5
-            edgeData.cord.zIndex = 1;
-          }
-        });
+        this.unhighlight();
+        this.hoverNode = source;
+        this.highlight();
       });
 
       circle.on("mouseout", (event) => {
@@ -129,36 +116,25 @@ export default defineComponent({
 
         tooltip.style.display = "none";
 
-        const color = 0xffffff;
-        circle.tint = color;
+        this.unhighlight();
+        this.hoverNode = null;
+        this.highlight();
+      });
 
-        this.graph.forEachOutboundEdge(source, 
-        (edge, attributes, source, target: any, sourceAttributes, targetAttributes) => {
-          //console.log(`Edge from ${source} to ${target}`);
-          const edgeKey = source + '->' + target;
-          const targetData = this.nodeMap.get(target);
-          const edgeData = this.edgeMap.get(edgeKey);
-
-
-          if (typeof targetData === "undefined" || typeof edgeData === "undefined") return;
-          targetData.circle.tint = color;
-          if (edgeData.arc) {
-            edgeData.arc.tint = color;
-            edgeData.arc.alpha = 1;
-            edgeData.arc.zIndex = 0;
-          } else if (edgeData.cord) {
-            edgeData.cord.tint = color;
-            edgeData.cord.alpha = 1;
-            edgeData.cord.zIndex = 0;
-          }
-          
-        });
+      // select/brush-and-linking interactivity
+      circle.on("click", (event) => {
+        if (!this.diagram) {
+          return;
+        }
+        const append = (event.data.originalEvent as MouseEvent).ctrlKey;
+        this.$emit("selected-node-change", this.diagram.graphID, source, append);
       });
 
       this.nodeMap.set(source, {
         text: text,
         circle: circle,
         index: i,
+        edgeGraphics: edgeGraphics,
       });
       i++;
     });
@@ -170,6 +146,24 @@ export default defineComponent({
       app.resize();
 
       diagram.onChange = (diagram, changedKey) => {
+        if (changedKey === "selectedNode") {
+          // no need to redraw the entire diagram, just highlight some
+          this.unhighlight();
+
+          this.selectedNodes = GlobalStorage.selectedNodes
+            .filter((node) => node.datasetID === diagram.graphID)
+            .map((node) => node.nodeID);
+          for (const node of this.selectedNodes) {
+            const nodeData = this.nodeMap.get(node);
+            if (nodeData) {
+              nodeData.circle.tint = 0xffffff;
+            }
+          }
+
+          this.highlight();
+          return;
+        }
+
         this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
       };
       this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
@@ -191,27 +185,16 @@ export default defineComponent({
   data() {
     return {
       // node map
-      nodeMap: new Map<number, {
-        text: PIXI.Text,
-        circle: PIXI.Graphics,
-        index: number,
-      }>(),
-      
-      //edge map
-      //the key is smth like '2->3'
-      edgeMap: new Map<string,{
-        id: number,
-        cord?: PIXI.Graphics,
-        arc?: PIXI.Graphics
-      }>(),
+      nodeMap: new Map<string, NodeData>(),
 
       // the node that you're currently hovering over
-      selectedIndex: null as number | null,
+      selectedNodes: [] as string[],
+      hoverNode: null as string | null,
       app: null as null | PIXI.Application,
       viewport: null as null | Viewport,
       graph: new Graph({
-    //options
-    }),
+        //options
+      }),
       diagram: null as GlobalStorage.Diagram | null,
       canvas: null as null | HTMLCanvasElement,
     };
@@ -229,32 +212,18 @@ export default defineComponent({
       //const nodeRadius = graph.order == 0 ? 200 : Math.floor(500 / graph.order);
       const nodeRadius = 10;
       //---------------------------------------------
-
-      //TESTING
-      //settings.shape = 'line'
       
       const textStyle = new PIXI.TextStyle({
         fill: "#000000",
         fontSize: nodeRadius + 4,
       });
+      const direction = settings.hoverEdgeDirection;
+      const drawOutgoing = direction === "outgoing" || direction === "both";
+      const drawIncoming = direction === "incoming" || direction === "both";
+      const alpha = (drawOutgoing && drawIncoming) ? 0.1 : 0.2;
 
-      //app.stage.removeChildren();
       viewport.removeChildren();
-
-      type Attr = {
-        obj: PIXI.Graphics,
-        x: number,
-        y: number,
-        radius: number,
-        style: number,
-        startAngle?: number|undefined,
-        endAngle?: number|undefined,
-        value?: number|string,
-        clicked?: boolean,
-      }
       
-      
-      let edgeId = 0;
       // NOTE: some forEach* callbacks have ": any", because graphology lies
       // about its types :(
       if (!settings.variety || settings.variety === "circle") {
@@ -283,55 +252,46 @@ export default defineComponent({
           circle.endFill();
           circle.x = centerX + vertexRadius * Math.cos(sourceData.index * angle);
           circle.y = centerY + vertexRadius * Math.sin(sourceData.index * angle);
-
           viewport.addChild(circle);
 
+          const edgeGraphics = sourceData.edgeGraphics;
+          edgeGraphics.clear();
+
+          const fromX = centerX + vertexRadius * Math.cos(sourceData.index * angle);
+          const fromY = centerY + vertexRadius * Math.sin(sourceData.index * angle);
+
           // draw outgoing edges
-          graph.forEachOutboundEdge(source,
-          (edge: any, edgeAttr, source, target: any, sourceAttr, targetAttr, undirected, generatedKey) => {
+          const callback = (target: any, attributes: any) => {
             const targetData = this.nodeMap.get(target);
             if (typeof targetData === "undefined") return;
 
-            if(this.edgeMap.has(target+'->'+source)) {
-              const existentEdge = this.edgeMap.get(target+'->'+source);
-              if(typeof existentEdge === "undefined") return; //should never happen
-              this.edgeMap.set((source+'->'+target), {id: existentEdge.id, cord: existentEdge.cord})
-            } else {
-              const fromX = centerX + vertexRadius * Math.cos(sourceData.index * angle);
-              const fromY = centerY + vertexRadius * Math.sin(sourceData.index * angle);
-              const toX = centerX + vertexRadius * Math.cos(targetData.index * angle);
-              const toY = centerY + vertexRadius * Math.sin(targetData.index * angle);
-              const edgeGraphics = new PIXI.Graphics()
-                .lineStyle(2, 0xE06776, 0.2)
-                .moveTo(fromX, fromY)
-                .quadraticCurveTo(centerX, centerY, toX, toY);
+            const toX = centerX + vertexRadius * Math.cos(targetData.index * angle);
+            const toY = centerY + vertexRadius * Math.sin(targetData.index * angle);
 
-              viewport.addChild(edgeGraphics);
+            edgeGraphics
+              .lineStyle(2, 0xE06776, alpha)
+              .moveTo(fromX, fromY)
+              .quadraticCurveTo(centerX, centerY, toX, toY);
+          };
+          if (drawOutgoing) {
+            graph.forEachOutboundNeighbor(source, callback);
+          }
+          if (drawIncoming) {
+            graph.forEachInboundNeighbor(source, callback);
+          }
 
-              const arcAttr:Attr = {
-                obj: edgeGraphics,
-                x: centerX,
-                y: centerY,
-                radius: 1, //?
-                style: 0x0,
-              }
-              graph.setEdgeAttribute(edge, "arc", arcAttr);
-              this.edgeMap.set((source+'->'+target), {id: edgeId++, cord: edgeGraphics});
-            }
-            
-          });
+          viewport.addChild(edgeGraphics);
         });
       } else if (settings.variety === "line"){
         const nodeLineY = canvas.height * 5/6;
-        let nodeLineX = canvas.width * 1/10;
+        const nodeLineX = canvas.width * 1/10;
         //let gap = Math.floor(canvas.width/(1.2 * graph.order));
         let gap = 30;
-        let largestRadius = 0;
 
+        // draw every node
         graph.forEachNode((source: any, sourceAttr) => {
           const sourceData = this.nodeMap.get(source);
-          if (typeof sourceData === "undefined") return; // not supposed to happen
-          const text = sourceData.text;
+          if (!sourceData) return; // not supposed to happen
 
           const circle = sourceData.circle;
           circle.clear();
@@ -343,73 +303,123 @@ export default defineComponent({
           circle.y = nodeLineY;
 
           // node's value
+          const text = sourceData.text;
           text.style = textStyle;
           text.x = circle.x;
           text.y = circle.y + nodeRadius + text.height;
-          
-          const circleAttr:Attr = {
-            obj: circle,
-            x: circle.x,
-            y: circle.y,
-            radius: nodeRadius,
-            style: 0xDE3249,
-            value: source,
-            clicked: false,
-          }
 
-          //adding interactivity to button
-          circle.interactive = true;
-          circle.buttonMode = true;
-
-          graph.setNodeAttribute(source, "circle", circleAttr);
           viewport.addChild(circle, text);
         });
+        // draw every edge
+        graph.forEachNode((source: any, sourceAttr) => {
+          const sourceData = this.nodeMap.get(source);
+          if (!sourceData) return;
 
-        //add edges as arcs
-        graph.forEachEdge(
-        (edge, attributes, source: any, target: any, sourceAttributes, targetAttributes) => {
-          //gets rid of redundant arcs
-          if(this.edgeMap.has(target+'->'+source)) {
-            const existentEdge = this.edgeMap.get(target+'->'+source);
-            if(typeof existentEdge === "undefined") return; //should never happen
-            this.edgeMap.set((source+'->'+target), {id: existentEdge.id, arc: existentEdge.arc})
-          } else {
-            const arcEdge = new PIXI.Graphics();
-            const sourceData = this.nodeMap.get(source);
+          const edgeGraphics = sourceData.edgeGraphics;
+          edgeGraphics.clear();
+
+          const sourceX = sourceData.circle.x;
+          const sourceY = sourceData.circle.y;
+          const callback = (target: any, targetAttributes: any) => {
             const targetData = this.nodeMap.get(target);
-            if (typeof sourceData === "undefined" || typeof targetData === "undefined") return; // shouldn't happen
-          
-            const distanceBetweenNodes = Math.abs(sourceAttributes.circle.x - targetAttributes.circle.x)
-            largestRadius = Math.max(distanceBetweenNodes/2, largestRadius);
+            if (!targetData) return; // shouldn't happen
 
-            let xArcCenter: number;
-            if (sourceData.index > targetData.index) {
-              xArcCenter = targetAttributes.circle.x + distanceBetweenNodes/2;
-            } else {
-              xArcCenter = sourceAttributes.circle.x + distanceBetweenNodes/2;
-            }
-            
-            const arcAttr:Attr = {
-              obj: arcEdge,
-              x: xArcCenter,
-              y: sourceData.circle.y,
-              radius: distanceBetweenNodes/2,
-              startAngle: Math.PI,
-              endAngle: 2 * Math.PI,
-              style: 0x0,
-            }
-            graph.setEdgeAttribute(edge, 'arc', arcAttr);
-            arcEdge.lineStyle(2, 0xE06776, 0.2); 
-            arcEdge.arc(arcAttr.x, arcAttr.y, arcAttr.radius, arcAttr.startAngle as number, arcAttr.endAngle as number)
-            this.edgeMap.set((source+'->'+target), {id: edgeId++, arc: arcEdge});
-            viewport.addChild(arcEdge);
+            const targetX = targetData.circle.x;
+            const radius = Math.abs(sourceX - targetX) / 2;
+            const xArcCenter = (sourceX + targetX) / 2;
+
+            edgeGraphics
+              .lineStyle(2, 0xE06776, alpha)
+              .arc(xArcCenter, sourceY, radius, Math.PI, 2 * Math.PI);
+          };
+          if (drawOutgoing) {
+            graph.forEachOutboundNeighbor(source, callback);
           }
-        
+          if (drawIncoming) {
+            graph.forEachInboundNeighbor(source, callback);
+          }
+
+          viewport.addChild(edgeGraphics);
         });
       } else {
         console.warn("Unrecognized shape", settings.variety);
       }
-    }
+    },
+
+    highlight() {
+      const diagram = this.diagram;
+      if (!diagram) return;
+
+      const highlightNode = (node: string) => {
+        const nodeData = this.nodeMap.get(node);
+        if (!nodeData) return;
+        const color = 0x00D737;
+
+        nodeData.edgeGraphics.tint = color;
+        nodeData.edgeGraphics.alpha = 5;
+        nodeData.edgeGraphics.zIndex = 1;
+        
+        const callback = (target: any, targetAttributes: any) => {
+          const targetData = this.nodeMap.get(target);
+          if (!targetData) return;
+          targetData.circle.tint = color;
+          targetData.edgeGraphics.zIndex = 1;
+        };
+        const direction = diagram.settings.hoverEdgeDirection;
+        if (direction === "outgoing" || direction === "both") {
+          this.graph.forEachOutboundNeighbor(node, callback);
+        }
+        if (direction === "incoming" || direction === "both") {
+          this.graph.forEachInboundNeighbor(node, callback);
+        }
+
+        nodeData.circle.tint = 0xFE00EF;
+      };
+
+      for (const node of this.selectedNodes) {
+        highlightNode(node);
+      }
+      if (this.hoverNode) {
+        highlightNode(this.hoverNode);
+      }
+    },
+
+    unhighlight() {
+      const diagram = this.diagram;
+      if (!diagram) return;
+
+      const unhighlightNode = (node: string) => {
+        const nodeData = this.nodeMap.get(node);
+        if (!nodeData) return;
+
+        const color = 0xffffff;
+        nodeData.circle.tint = color;
+
+        nodeData.edgeGraphics.tint = color;
+        nodeData.edgeGraphics.alpha = 1;
+        nodeData.edgeGraphics.zIndex = 0;
+
+        const callback = (target: any, targetAttributes: any) => {
+          const targetData = this.nodeMap.get(target);
+          if (!targetData) return;
+          targetData.circle.tint = color;
+          targetData.edgeGraphics.zIndex = 0;
+        };
+        const direction = diagram.settings.hoverEdgeDirection;
+        if (direction === "outgoing" || direction === "both") {
+          this.graph.forEachOutboundNeighbor(node, callback);
+        }
+        if (direction === "incoming" || direction === "both") {
+          this.graph.forEachInboundNeighbor(node, callback);
+        }
+      };
+      for (const node of this.selectedNodes) {
+        unhighlightNode(node);
+      }
+      if (this.hoverNode) {
+        unhighlightNode(this.hoverNode);
+      }
+    },
   },
 });
 </script>
