@@ -64,6 +64,13 @@ export default defineComponent({
             };
             break;
 
+          case "DistributionDiagram":
+            defaultSettings = {
+              variety: "distribution",
+              logarithmic: false,
+            };
+            break;
+
           default:
             console.warn("Non-existent diagram type:", this.diagram_component.name);
             defaultSettings = {};

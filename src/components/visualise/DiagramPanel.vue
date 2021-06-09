@@ -22,13 +22,14 @@
 import { defineComponent } from "vue";
 import ArcDiagram from "@/components/vis-type/ArcDiagram.vue";
 import SunburstDiagram from "@/components/vis-type/SunburstDiagram.vue";
+import DistributionDiagram from "@/components/vis-type/DistributionDiagram.vue";
 import DiagramSettings from "@/components/DiagramSettings.vue";
 import * as GlobalStorage from "@/scripts/globalstorage";
 
 export default defineComponent({
   name: "DiagramPanel",
 
-  components: { DiagramSettings, ArcDiagram, SunburstDiagram },
+  components: { DiagramSettings, ArcDiagram, SunburstDiagram, DistributionDiagram },
 
   props: {
     diagram_id: {

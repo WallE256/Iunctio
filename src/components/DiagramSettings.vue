@@ -108,6 +108,18 @@ export default defineComponent({
         ];
         break;
 
+      case "DistributionDiagram":
+        this.settings = [
+          { id: "variety", component: "SelectSetting", name: "Diagram Variety", properties: {
+            options: [ "distribution", "histogram"],
+            value: diagram.settings.variety,
+          } },
+          { id: "logarithmic", component: "CheckboxSetting", name: "Logarithmic", properties: {
+            value: diagram.settings.logarithmic,
+          } },
+        ];
+        break;
+
       default:
         console.warn("Non-existent diagram type:", diagram.type);
         this.settings = [];
