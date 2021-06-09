@@ -10,6 +10,9 @@ export class Diagram {
   /// This diagram's unique identifier
   id: string;
 
+  /// This diagram's name
+  name: string;
+
   /// The graph that this diagram is drawing (the id refers to the graph's
   /// unique id, which can be used in `getDataset()`).
   graphID: string;
@@ -37,6 +40,7 @@ export class Diagram {
     onChange?: (diagram: Diagram, changedKey: string) => void
   ) {
     this.id = id;
+    this.name = type + "_" + id;
     this.graphID = graphID;
     this.type = type;
     if (settings) {
@@ -56,6 +60,7 @@ function diagramToJSON(diagram: Diagram): string {
   // onChange field as well
   return `{
     "id": ${JSON.stringify(diagram.id)},
+    "name": ${JSON.stringify(diagram.name)},
     "graphID": ${JSON.stringify(diagram.graphID)},
     "type": ${JSON.stringify(diagram.type)},
     "settings": ${JSON.stringify(diagram.settings)}
@@ -126,6 +131,7 @@ export async function getDiagram(id: string): Promise<Diagram | null> {
     const deserialized = JSON.parse(storageItem);
     const diagram = new Diagram(
       deserialized.id,
+      deserialized.name,
       deserialized.graphID,
       deserialized.type,
       deserialized.settings

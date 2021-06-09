@@ -67,9 +67,6 @@ export default defineComponent({
     switch (diagram.type) {
       case "ArcDiagram":
         this.settings = [
-          { id: "name", component: "TextSetting", name: "Diagram Name", properties: {
-            value: diagram.settings.name,
-          } },
           { id: "variety", component: "SelectSetting", name: "Node-Link Diagram Variety", properties: {
             options: [ "circle", "line" ],
             value: diagram.settings.variety,
@@ -83,9 +80,6 @@ export default defineComponent({
 
       case "SunburstDiagram":
         this.settings = [
-          { id: "name", component: "TextSetting", name: "Diagram Name", properties: {
-            value: diagram.settings.name,
-          } },
           { id: "variety", component: "SelectSetting", name: "Hierarchical Diagram Variety", properties: {
             options: [ "sunburst", "flame", "inverse-flame" ],
             value: diagram.settings.variety,

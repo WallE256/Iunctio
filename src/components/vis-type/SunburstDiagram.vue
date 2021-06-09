@@ -39,7 +39,6 @@ function drawTorus(graphics: PIXI.Graphics,
 }
 
 type Settings = {
-  name: string,
   root: string | null,
   height: number,
   variety: string,
@@ -97,6 +96,11 @@ export default defineComponent({
     this.$nextTick(() => {
       app.resize();
       this.diagram.onChange = (diagram: GlobalStorage.Diagram, changedKey: string) => {
+
+        if (changedKey === "name") {
+          return;
+        }
+
         if (changedKey === "selectedNode") {
           // un-highlight old nodes
           const clearTint = 0xffffff;

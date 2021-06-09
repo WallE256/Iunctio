@@ -15,7 +15,6 @@ import { Viewport } from 'pixi-viewport';
 
 // see also DiagramSettings.vue and UploadDataset.vue
 type Settings = {
-  name: string,
   variety: string, // "circle" or "line"
   edgeHighlightDirection: string,
 };
