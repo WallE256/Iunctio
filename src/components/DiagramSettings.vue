@@ -1,5 +1,9 @@
 <template>
   <div>
+    <label CLASS="text-input" for="diagramName">
+      <span class="text-input__label">{{ "Diagram Name" }}</span>
+      <input class="text-input__input" type="Diagram Name" name="diagramName" v-on:change="onNameChange" :value="this?.diagram.name" placeholder="Diagram Name Placeholder" />
+    </label>
     <component
       v-for="setting in settings"
       :key="setting.id"
@@ -47,33 +51,34 @@ export default defineComponent({
 
   data() {
     return {
+      diagram: null as GlobalStorage.Diagram | null,
       settings: [] as SettingConfig[],
     };
   },
 
   async mounted() {
-    const diagram = await GlobalStorage.getDiagram(this.diagramid);
-    if (!diagram) {
+    this.diagram = await GlobalStorage.getDiagram(this.diagramid);
+    if (!this.diagram) {
       console.warn("Non-existent diagram:", this.diagramid);
       return;
     }
-    const graph = await GlobalStorage.getDataset(diagram.graphID);
+    const graph = await GlobalStorage.getDataset(this.diagram.graphID);
     if (!graph) {
-      console.warn("Non-existent data set:", diagram.graphID);
+      console.warn("Non-existent data set:", this.diagram.graphID);
       return;
     }
 
     // see UploadDataset.vue for setting default values
-    switch (diagram.type) {
+    switch (this.diagram.type) {
       case "ArcDiagram":
         this.settings = [
           { id: "variety", component: "SelectSetting", name: "Node-Link Diagram Variety", properties: {
             options: [ "circle", "line" ],
-            value: diagram.settings.variety,
+            value: this.diagram.settings.variety,
           } },
           { id: "edgeHighlightDirection", component: "SelectSetting", name: "Edge Highlight Direction", properties: {
             options: [ "incoming", "outgoing", "both" ],
-            value: diagram.settings.hoverEdgeDirection,
+            value: this.diagram.settings.hoverEdgeDirection,
           } },
         ];
         break;
@@ -82,34 +87,34 @@ export default defineComponent({
         this.settings = [
           { id: "variety", component: "SelectSetting", name: "Hierarchical Diagram Variety", properties: {
             options: [ "sunburst", "flame", "inverse-flame" ],
-            value: diagram.settings.variety,
+            value: this.diagram.settings.variety,
           } },
           { id: "root", component: "SelectSetting", name: "Root Node", properties: {
             options: ["[no root]"].concat(graph.nodes()), // TODO this has to show a proper name instead of IDs
-            value: diagram.settings.root,
+            value: this.diagram.settings.root,
           } },
           { id: "edgeType", component: "SelectSetting", name: "Edge Direction", properties: {
             options: [ "incoming", "outgoing", "both" ],
-            value: diagram.settings.edgeType,
+            value: this.diagram.settings.edgeType,
           } },
           { id: "height", component: "NumberSetting", name: "Layer Count", properties: {
             min: 2,
             max: 10,
-            value: diagram.settings.height,
+            value: this.diagram.settings.height,
           } },
           { id: "colourType", component: "SelectSetting", name: "Colour Determined By", properties: {
             options: [ "rainbow" ].concat(Object.keys(graph.getNodeAttributes(graph.nodes()[0]))),
-            value: diagram.settings.colourType,
+            value: this.diagram.settings.colourType,
           } },
           { id: "minRenderSize", component: "NumberSetting", name: "Minimum Node Size 1/x", properties: {
             min: 1,
-            value: diagram.settings.minRenderSize,
+            value: this.diagram.settings.minRenderSize,
           } },
         ];
         break;
 
       default:
-        console.warn("Non-existent diagram type:", diagram.type);
+        console.warn("Non-existent diagram type:", this.diagram.type);
         this.settings = [];
         break;
     }
@@ -119,6 +124,40 @@ export default defineComponent({
     onSettingChanged(id: string, value: any) {
       this.$emit("setting-changed", id, value);
     },
+
+    onNameChange(event: Event, value_name: string) {
+      if (!this.diagram) {
+        console.warn("Non-existent diagram:", this.diagramid);
+        return;
+      }
+      this.diagram.name = value_name;
+    }
   },
 });
 </script>
+
+<style scoped lang="scss">
+@import "../assets/styles/config";
+.text-input {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin: 10px 0;
+
+  &__label {
+    margin: 0 15px 0 5px;
+  }
+
+  &__input {
+    appearance: none;
+    background: $GREY_L;
+    border: 0;
+    @include font-sans("Poppins", 0.75rem, "Regular", inherit);
+    padding: 0.5rem;
+    box-shadow: 1px 1px 2px rgba($BLACK_DDD, 0.2);
+    margin-left: auto;
+    margin-right: 0;
+    width: 190px;
+  }
+}
+</style>
