@@ -11,20 +11,18 @@
 
   background-color: $CREAM ;
 
-  // Document styling:
-  h1, h2, h3 {
-    // Default font:
-    @include font-sans("Poppins", $weight:"Medium");
-    // Default font-colour:
-    color: $BLACK_DDD;
-  }
-  p {
+  p, ol, ul {
     // Default font:
     @include font-sans("Poppins", 1rem, $weight: "Regular");
     // Default font-colour:
     color: $BLACK_L;
-    padding: 0 1rem;
     text-align: justify;
+  }
+  p {
+    padding: 5px 0;
+  }
+  ol, ul {
+    padding: 5px 1rem;
   }
   code {
     // Default font:
@@ -32,9 +30,39 @@
     // Default font-colour:
     color: $BLACK_DDD;
     background-color: $WHITE_D;
+  }
+  code.block {
     display: block;
     padding: 1rem;
-
+  }
+  h1, h2, h3, h4, h5, h6 {
+    // add # and underline on hover so it's clear to the user that they can
+    // click on it to link
+    > a:link {
+      color: black !important;
+      text-decoration: none !important;
+    }
+    > a:hover {
+      color: black !important;
+      text-decoration: underline !important;
+    }
+    > a:hover::before {
+      content: "# ";
+    }
+    
+    // Default font:
+    @include font-sans("Poppins", $weight:"Medium");
+    // Default font-colour:
+    color: $BLACK_DDD;
+    padding-top: 20px;
+    padding-bottom: 10px;
+  }
+  a:link {
+    text-decoration: underline;
+    color: #3c2886;
+  }
+  a:hover {
+    text-decoration: none;
   }
 
   // Diagonal stacked paper effect
