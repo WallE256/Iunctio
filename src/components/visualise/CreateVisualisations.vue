@@ -15,7 +15,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import NewVis from "@/components/visualise/NewVis.vue";
+import NewVis from "@/components/visualise/CreateDiagramTile.vue";
 import ArcDiagram from "@/components/visualise/vis-type/ArcDiagram.vue";
 import SunburstDiagram from "@/components/visualise/vis-type/SunburstDiagram.vue";
 import DistributionDiagram from "@/components/visualise/vis-type/DistributionDiagram.vue";
@@ -45,7 +45,7 @@ export default defineComponent({
 .create-vis {
   padding: 0 40px;
   &__title {
-    @include font-sans("Poppins", 1.25rem, "Medium", $BLACK_DDD);
+
   }
   &__tiles {
     display: flex;

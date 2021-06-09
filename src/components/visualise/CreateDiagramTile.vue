@@ -1,14 +1,14 @@
 <template>
   <div
     tabindex="0"
-    @click="selectDiagram"
-    @keypress.enter="selectDiagram"
-    class="vis-tile"
+    @click="onClick"
+    @keypress.enter="onClick"
+    class="diag-tile"
   >
-    <div class="vis-tile__bg">
-      <img :src="vis_type.icon" :alt="vis_type.name" class="vis-tile__icon" />
+    <div class="diag-tile__bg">
+      <img :src="path" :alt="name" class="diag-tile__icon" />
     </div>
-    <h4 class="vis-tile__title">{{ vis_type.name }}</h4>
+    <h4 class="diag-tile__title">{{ name }}</h4>
   </div>
 </template>
 
@@ -16,13 +16,13 @@
 import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: "NewVis",
   props: {
-    vis_type: { required: true, type: Object },
+    name: { required: true, type: String },
+    path: { required: true, type: String },
   },
   methods: {
-    selectDiagram() {
-      this.$emit("tile-click", this.vis_type);
+    onClick() {
+      this.$emit("tile-click", this.name);
     },
   },
 });
@@ -32,7 +32,7 @@ export default defineComponent({
 @import "../../assets/styles/_config.scss";
 @include font-face("Poppins", "Medium");
 
-.vis-tile {
+.diag-tile {
   text-align: center;
   width: 120px;
   margin: 10px;
@@ -60,7 +60,7 @@ export default defineComponent({
     box-shadow: 2px 2px 4px rgba($BLACK_DDD, 0.25);
     @include transition(transform border, 0.3s, $ease2);
 
-    .vis-tile__icon {
+    .diag-tile__icon {
       max-width: 100%;
       max-height: 100%;
     }

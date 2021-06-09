@@ -6,7 +6,7 @@
       @selected-node-change="onSelectedNodeChange"
     />
     <transition name="slide-fade">
-      <div class="diagram-panel__settings" v-if="showSettings">
+      <div class="diagram-panel__settings" v-show="showSettings">
         <diagram-settings :diagramid="diagram_id" @setting-changed="onSettingChanged" />
       </div>
     </transition>

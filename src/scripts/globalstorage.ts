@@ -1,4 +1,4 @@
-// use as follows:
+ // use as follows:
 // import * as GlobalStorage from "@/scripts/globalstorage";
 // the Visualise.vue page should use these functions to manage the
 // uploaded datasets and the created visualizations/diagrams.
