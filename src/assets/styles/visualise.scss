@@ -8,8 +8,17 @@
   // Occupy entire viewport height.
   height: 100%;
   // Prevent content under nav-bar
-  padding: 50px 25px 25px 25px;
+  padding: 50px 25px;
   position: relative;
+
+  &__back {
+    @include font-sans("Poppins", 0.75rem, "Regular", $BLACK_DDD);
+    cursor: pointer;
+    margin: 0 5px;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 
   .upload-dataset {
     padding: 0 40px;
@@ -47,7 +56,6 @@
       }
 
       // Shift up by 1 character + 5px margin
-      //transform: translateY(-1ch) translateY(-5px);
       @include transition(transform border, 0.25s, $ease1);
       &:hover, &:focus {
         transform: scale(1.1);
@@ -76,21 +84,9 @@
   }
 
   // Panels containing the diagrams to be displayed side-by-side.
-  &__panels {
+  .diagram-panels {
     display: flex;
     flex-direction: row;
     height: 100%;
-  }
-
-  // Back button
-  &__back {
-    @include font-sans("Poppins", 0.75rem, "Regular", $BLACK_DDD);
-    @include abs();
-    cursor: pointer;
-    margin: 2px;
-
-    &:hover {
-      text-decoration: underline;
-    }
   }
 }

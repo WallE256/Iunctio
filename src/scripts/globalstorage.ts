@@ -48,6 +48,11 @@ export class Diagram {
   }
 }
 
+export function createID(id: string): string {
+  // this is unique enough and not too long
+  return String(Math.floor(Date.now() % 1e5)) + "-" + id;
+}
+
 const diagrams = new Map<string, Diagram>();
 const datasets = new Map<string, Graph>();
 

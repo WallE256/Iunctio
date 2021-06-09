@@ -21,31 +21,20 @@ import { csvParse } from "@/scripts/parser";
 import Graph from "graphology";
 
 export default defineComponent({
-  name: "UploadDataset",
-  props: {
-    diagram_component: {
-      type: Object,
-    },
-  },
+  name: "UploadPanel",
   methods: {
     parseDataset(event: { target: HTMLInputElement }): void {
-      function createID(id: string): string {
-        // this is unique enough and not too long
-        return String(Math.floor(Date.now() % 1e5)) + "-" + id;
-      }
-
       const file = (event.target.files as FileList)[0];
       const filename = file.name.replace(/\.[^/.]+$/, "");
-      const graphID = createID(filename);
-      const diagramID = createID(filename);
+      const graphID = GlobalStorage.createID(filename);
 
       const onFinish = async (_: Graph) => {
-        this.$emit("upload", diagramID);
+        this.$emit("upload");
         // because Chrome/Safari weird, so we need to reset the <input>
         event.target.value = "";
       };
 
-      csvParse(file, diagramID, onFinish);
+      csvParse(file, graphID, onFinish);
     },
   },
 });

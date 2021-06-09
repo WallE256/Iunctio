@@ -1,8 +1,15 @@
 <template>
-    <label CLASS="text-input" :for="settingid">
-      <span class="text-input__label">{{ settinglabel }}</span>
-      <input class="text-input__input" type="text" :name="settingid" v-on:change="onChange" :value="value" placeholder="Placeholder Text" />
-    </label>
+  <label CLASS="text-input" :for="settingid">
+    <span class="text-input__label">{{ settinglabel }}</span>
+    <input
+      class="text-input__input"
+      type="text"
+      :name="settingid"
+      v-on:change="onChange"
+      :value="value"
+      placeholder="Placeholder Text"
+    />
+  </label>
 </template>
 
 <style scoped lang="scss">
@@ -30,8 +37,6 @@
   }
 }
 </style>
-
-
 
 <script lang="ts">
 import { defineComponent } from "vue";

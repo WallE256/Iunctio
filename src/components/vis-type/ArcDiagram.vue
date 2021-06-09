@@ -1,8 +1,12 @@
 <template>
-  <div id="canvas-parent" ref="canvas-parent" style="height: 100%; width: 100%;">
+  <div id="canvas-parent" ref="canvas-parent" style="height: 100%; width: 100%">
     <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
   </div>
-  <p id="graph-tooltip" ref="graph-tooltip" style="position: fixed; user-select: none;"></p>
+  <p
+    id="graph-tooltip"
+    ref="graph-tooltip"
+    style="position: fixed; user-select: none"
+  ></p>
 </template>
 
 <script lang="ts">
@@ -11,19 +15,19 @@ import * as PIXI from "pixi.js";
 import Graph from "graphology";
 import { debounce } from "lodash";
 import * as GlobalStorage from "@/scripts/globalstorage";
-import { Viewport } from 'pixi-viewport';
+import { Viewport } from "pixi-viewport";
 
 // see also scripts/settingconfig.ts
 type Settings = {
-  variety?: string, // "circle" or "line"
-  hoverEdgeDirection?: string,
+  variety?: string; // "circle" or "line"
+  hoverEdgeDirection?: string;
 };
 
 type NodeData = {
-  text: PIXI.Text,
-  circle: PIXI.Graphics,
-  index: number,
-  edgeGraphics: PIXI.Graphics,
+  text: PIXI.Text;
+  circle: PIXI.Graphics;
+  index: number;
+  edgeGraphics: PIXI.Graphics;
 };
 
 export default defineComponent({
@@ -59,32 +63,32 @@ export default defineComponent({
       backgroundAlpha: 0,
       resizeTo: canvasParent,
     });
-    
+
     this.viewport = new Viewport({
-        screenWidth: window.innerWidth,
-        screenHeight: window.innerHeight,
-        interaction: this.app.renderer.plugins.interaction // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
-    })
+      screenWidth: window.innerWidth,
+      screenHeight: window.innerHeight,
+      interaction: this.app.renderer.plugins.interaction, // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
+    });
 
     this.viewport.sortableChildren = true;
     // add the viewport to the stage
-    this.app.stage.addChild(this.viewport as Viewport)
+    this.app.stage.addChild(this.viewport as Viewport);
 
     //activate plugins
     this.viewport
-        .drag()
-        .wheel()
-        //.decelerate() //this might lower perfomance a lot
-        .clampZoom({maxScale:1});
+      .drag()
+      .wheel()
+      //.decelerate() //this might lower perfomance a lot
+      .clampZoom({ maxScale: 1 });
 
-    this.viewport.moveCenter(window.innerWidth / 2, window.innerHeight / 2)
-    this.viewport.setZoom(0.5)
+    this.viewport.moveCenter(window.innerWidth / 2, window.innerHeight / 2);
+    this.viewport.setZoom(0.5);
     const tooltip = this.$refs["graph-tooltip"] as HTMLElement;
 
     const defaultStyle = new PIXI.TextStyle({
       fill: "#000000",
     });
-    
+
     // give each node a corresponding index and corresponding text element
     let i = 0;
     this.graph.forEachNode((source: any, sourceAttr) => {
@@ -103,8 +107,8 @@ export default defineComponent({
 
         tooltip.style.display = "inline";
         tooltip.innerText = "Node: " + sourceString;
-        tooltip.style.left = (circle.x + 20) + "px";
-        tooltip.style.top = (circle.y + 40) + "px";
+        tooltip.style.left = circle.x + 20 + "px";
+        tooltip.style.top = circle.y + 40 + "px";
 
         this.unhighlight();
         this.hoverNode = source;
@@ -127,7 +131,12 @@ export default defineComponent({
           return;
         }
         const append = (event.data.originalEvent as MouseEvent).ctrlKey;
-        this.$emit("selected-node-change", this.diagram.graphID, source, append);
+        this.$emit(
+          "selected-node-change",
+          this.diagram.graphID,
+          source,
+          append
+        );
       });
 
       this.nodeMap.set(source, {
@@ -170,18 +179,24 @@ export default defineComponent({
     });
   },
 
-  created(){
+  created() {
     window.addEventListener(
       "resize",
       debounce((event) => {
         if (!this.diagram) {
           return;
         }
-        this.handleResize(event, this.graph, this.app as PIXI.Application, this.diagram.settings as Settings, this.viewport as Viewport);
+        this.handleResize(
+          event,
+          this.graph,
+          this.app as PIXI.Application,
+          this.diagram.settings as Settings,
+          this.viewport as Viewport
+        );
       }, 250)
-    )
+    );
   },
-  
+
   data() {
     return {
       // node map
@@ -201,18 +216,29 @@ export default defineComponent({
   },
 
   methods: {
-    handleResize(e: any, graph: Graph, app: PIXI.Application, settings: Settings, viewport: Viewport) {
+    handleResize(
+      e: any,
+      graph: Graph,
+      app: PIXI.Application,
+      settings: Settings,
+      viewport: Viewport
+    ) {
       this.draw(graph, app, settings, viewport);
     },
 
-    draw(graph: Graph, app: PIXI.Application, settings: Settings, viewport: Viewport) {
+    draw(
+      graph: Graph,
+      app: PIXI.Application,
+      settings: Settings,
+      viewport: Viewport
+    ) {
       const canvas = this.canvas as HTMLCanvasElement;
-      
+
       //node radius has to be fixed size otherwise they become very small when adding too many nodes
       //const nodeRadius = graph.order == 0 ? 200 : Math.floor(500 / graph.order);
       const nodeRadius = 10;
       //---------------------------------------------
-      
+
       const textStyle = new PIXI.TextStyle({
         fill: "#000000",
         fontSize: nodeRadius + 4,
@@ -220,16 +246,17 @@ export default defineComponent({
       const direction = settings.hoverEdgeDirection;
       const drawOutgoing = direction === "outgoing" || direction === "both";
       const drawIncoming = direction === "incoming" || direction === "both";
-      const alpha = (drawOutgoing && drawIncoming) ? 0.1 : 0.2;
+      const alpha = drawOutgoing && drawIncoming ? 0.1 : 0.2;
 
       viewport.removeChildren();
-      
+
       // NOTE: some forEach* callbacks have ": any", because graphology lies
       // about its types :(
       if (!settings.variety || settings.variety === "circle") {
         const textDistance = 40;
-        const vertexRadius = Math.min(canvas.width, canvas.height) - textDistance;
-        const angle = 2 * Math.PI / (graph.order == 0 ? 1 : graph.order);
+        const vertexRadius =
+          Math.min(canvas.width, canvas.height) - textDistance;
+        const angle = (2 * Math.PI) / (graph.order == 0 ? 1 : graph.order);
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
 
@@ -239,37 +266,47 @@ export default defineComponent({
 
           const text = sourceData.text;
           text.style = textStyle;
-          text.x = centerX + (vertexRadius + textDistance) * Math.cos(sourceData.index * angle);
-          text.y = centerY + (vertexRadius + textDistance) * Math.sin(sourceData.index * angle);
+          text.x =
+            centerX +
+            (vertexRadius + textDistance) * Math.cos(sourceData.index * angle);
+          text.y =
+            centerY +
+            (vertexRadius + textDistance) * Math.sin(sourceData.index * angle);
 
           viewport.addChild(text);
 
           const circle = sourceData.circle;
           circle.clear();
           circle.lineStyle(1);
-          circle.beginFill(0x50D5E8, 1);
+          circle.beginFill(0x50d5e8, 1);
           circle.drawCircle(0, 0, nodeRadius);
           circle.endFill();
-          circle.x = centerX + vertexRadius * Math.cos(sourceData.index * angle);
-          circle.y = centerY + vertexRadius * Math.sin(sourceData.index * angle);
+          circle.x =
+            centerX + vertexRadius * Math.cos(sourceData.index * angle);
+          circle.y =
+            centerY + vertexRadius * Math.sin(sourceData.index * angle);
           viewport.addChild(circle);
 
           const edgeGraphics = sourceData.edgeGraphics;
           edgeGraphics.clear();
 
-          const fromX = centerX + vertexRadius * Math.cos(sourceData.index * angle);
-          const fromY = centerY + vertexRadius * Math.sin(sourceData.index * angle);
+          const fromX =
+            centerX + vertexRadius * Math.cos(sourceData.index * angle);
+          const fromY =
+            centerY + vertexRadius * Math.sin(sourceData.index * angle);
 
           // draw outgoing edges
           const callback = (target: any, attributes: any) => {
             const targetData = this.nodeMap.get(target);
             if (typeof targetData === "undefined") return;
 
-            const toX = centerX + vertexRadius * Math.cos(targetData.index * angle);
-            const toY = centerY + vertexRadius * Math.sin(targetData.index * angle);
+            const toX =
+              centerX + vertexRadius * Math.cos(targetData.index * angle);
+            const toY =
+              centerY + vertexRadius * Math.sin(targetData.index * angle);
 
             edgeGraphics
-              .lineStyle(2, 0xE06776, alpha)
+              .lineStyle(2, 0xe06776, alpha)
               .moveTo(fromX, fromY)
               .quadraticCurveTo(centerX, centerY, toX, toY);
           };
@@ -282,9 +319,9 @@ export default defineComponent({
 
           viewport.addChild(edgeGraphics);
         });
-      } else if (settings.variety === "line"){
-        const nodeLineY = canvas.height * 5/6;
-        const nodeLineX = canvas.width * 1/10;
+      } else if (settings.variety === "line") {
+        const nodeLineY = (canvas.height * 5) / 6;
+        const nodeLineX = (canvas.width * 1) / 10;
         //let gap = Math.floor(canvas.width/(1.2 * graph.order));
         let gap = 30;
 
@@ -296,7 +333,7 @@ export default defineComponent({
           const circle = sourceData.circle;
           circle.clear();
           circle.lineStyle(1);
-          circle.beginFill(0x50D5E8, 1);
+          circle.beginFill(0x50d5e8, 1);
           circle.drawCircle(0, 0, nodeRadius);
           circle.endFill();
           circle.x = nodeLineX + gap * sourceData.index;
@@ -329,7 +366,7 @@ export default defineComponent({
             const xArcCenter = (sourceX + targetX) / 2;
 
             edgeGraphics
-              .lineStyle(2, 0xE06776, alpha)
+              .lineStyle(2, 0xe06776, alpha)
               .arc(xArcCenter, sourceY, radius, Math.PI, 2 * Math.PI);
           };
           if (drawOutgoing) {
@@ -353,12 +390,12 @@ export default defineComponent({
       const highlightNode = (node: string) => {
         const nodeData = this.nodeMap.get(node);
         if (!nodeData) return;
-        const color = 0x00D737;
+        const color = 0x00d737;
 
         nodeData.edgeGraphics.tint = color;
         nodeData.edgeGraphics.alpha = 5;
         nodeData.edgeGraphics.zIndex = 1;
-        
+
         const callback = (target: any, targetAttributes: any) => {
           const targetData = this.nodeMap.get(target);
           if (!targetData) return;
@@ -373,7 +410,7 @@ export default defineComponent({
           this.graph.forEachInboundNeighbor(node, callback);
         }
 
-        nodeData.circle.tint = 0xFE00EF;
+        nodeData.circle.tint = 0xfe00ef;
       };
 
       for (const node of this.selectedNodes) {
