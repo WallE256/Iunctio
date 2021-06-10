@@ -38,7 +38,7 @@
   h1, h2, h3, h4, h5, h6 {
     // add # and underline on hover so it's clear to the user that they can
     // click on it to link
-    > a:link {
+    > a {
       color: black !important;
       text-decoration: none !important;
     }
@@ -57,7 +57,7 @@
     padding-top: 20px;
     padding-bottom: 10px;
   }
-  a:link {
+  a:link, a:visited {
     text-decoration: underline;
     color: #3c2886;
   }

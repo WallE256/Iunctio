@@ -172,4 +172,4 @@
   </div>
 </template>
 
-<style lang="scss" src="@/assets/styles/user-manual.scss"></style>
+<style scoped lang="scss" src="@/assets/styles/user-manual.scss"></style>
