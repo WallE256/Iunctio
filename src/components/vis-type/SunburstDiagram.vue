@@ -38,6 +38,7 @@ function drawTorus(graphics: PIXI.Graphics,
   return graphics;
 }
 
+// see also scripts/settingconfig.ts
 type Settings = {
   root: string | null,
   height: number,

@@ -14,6 +14,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import * as GlobalStorage from "@/scripts/globalstorage";
+import { getDefaultSettings } from "@/scripts/settingconfig";
 import { csvParse } from "@/scripts/parser";
 import Graph from "graphology";
 
@@ -42,41 +43,7 @@ export default defineComponent({
           return;
         }
 
-        // see DiagramSettings.vue for the IDs that are used here
-        let defaultSettings;
-        switch (this.diagram_component.name) {
-          case "ArcDiagram":
-            defaultSettings = {
-              variety: "circle",
-              hoverEdgeDirection: "outgoing",
-            };
-            break;
-
-          case "SunburstDiagram":
-            defaultSettings = {
-              variety: "sunburst",
-              root: null,
-              edgeType: "outgoing",
-              height: 4,
-              colourType: "rainbow",
-              diagramColour: 0x4287f5,
-              minRenderSize: 10000,
-            };
-            break;
-
-          case "DistributionDiagram":
-            defaultSettings = {
-              variety: "distribution",
-              logarithmic: false,
-            };
-            break;
-
-          default:
-            console.warn("Non-existent diagram type:", this.diagram_component.name);
-            defaultSettings = {};
-            break;
-        }
-
+        const defaultSettings = getDefaultSettings(this.diagram_component.name);
         await GlobalStorage.addDiagram(new GlobalStorage.Diagram(
           diagramID,
           graphID,
