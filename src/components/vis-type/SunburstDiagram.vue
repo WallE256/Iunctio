@@ -492,14 +492,16 @@ export default defineComponent({
     drawnNode.on('pointerover', (event) => {
       event.stopPropagation();
 
+      const mouseEvent = event.data.originalEvent as MouseEvent;
+
       this.tooltip.style.display = "inline";
-      this.tooltip.innerText = "Node: " + node;
+      this.tooltip.innerText = "Node: " + this.graph.getNodeAttribute(node, "email");
       if (settings.variety === "sunburst") {
-        this.tooltip.style.left = drawnNode.x + "px";
-        this.tooltip.style.top = drawnNode.y + canvas.height * 0.05 + "px";
+        this.tooltip.style.left = (mouseEvent.screenX + 20) + "px";
+        this.tooltip.style.top = mouseEvent.screenY + canvas.height * 0.05 + "px";
       } else {
-        this.tooltip.style.left = drawnNode.x + (this.maxWidth * sizePerc / 2) + "px";
-        this.tooltip.style.top = drawnNode.y + canvas.height * 0.15 + "px";
+        this.tooltip.style.left = mouseEvent.screenX + (this.maxWidth * sizePerc / 2) + "px";
+        this.tooltip.style.top = mouseEvent.screenY + canvas.height * 0.15 + "px";
       }
     });
 
