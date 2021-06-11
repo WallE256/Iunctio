@@ -15,9 +15,9 @@ import * as GlobalStorage from "@/scripts/globalstorage";
 export default defineComponent({
   data() {
     return {
-      id: '',
-      name: '',
-    }
+      id: "",
+      name: "",
+    };
   },
   props: {
     id_name: { required: true, type: String },
@@ -26,16 +26,16 @@ export default defineComponent({
     const re = /^(\d+)-(.*)/g;
     let id_name_split = re.exec(this.id_name);
     if (id_name_split) {
-      this.id = '#' + id_name_split[1];
+      this.id = "#" + id_name_split[1];
       this.name = id_name_split[2];
     } else {
-      console.log('Invalid dataset-id.')
+      console.log("Invalid dataset-id.");
     }
   },
   methods: {
     deleteDataset() {
       GlobalStorage.removeDataset(this.id_name);
-      this.$emit('delete', this.id_name);
+      this.$emit("delete", this.id_name);
     },
   },
 });
@@ -68,22 +68,23 @@ export default defineComponent({
       cursor: pointer;
       @include abs(5px 5px 0 0);
 
-      &::after, &::before {
+      &::after,
+      &::before {
         @include pseudo($height: 75%, $width: 3px);
         top: 50%;
         left: 50%;
         background: $GREY;
         @include transition(background transform, 0.3s, $ease1);
       }
-      &::after{
+      &::after {
         transform: translate(-50%, -50%) rotateZ(-45deg);
       }
-      &::before{
+      &::before {
         transform: translate(-50%, -50%) rotateZ(45deg);
       }
       &:hover.data-del::after {
         background: $RED;
-        transform: translate(-50%, -50%) rotateZ(-45deg) scale(1.1) ;
+        transform: translate(-50%, -50%) rotateZ(-45deg) scale(1.1);
       }
       &:hover.data-del::before {
         background: $RED;

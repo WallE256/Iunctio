@@ -9,7 +9,9 @@
       <router-link class="cta-visualise" :to="{ name: 'Visualise' }"
         >VISUALISE</router-link
       >
-      <router-link class="cta-tour" :to=" {name: 'About' }">...or explore our journey?</router-link>
+      <router-link class="cta-tour" :to="{ name: 'About' }"
+        >...or explore our journey?</router-link
+      >
     </div>
   </main>
 </template>

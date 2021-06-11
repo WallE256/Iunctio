@@ -87,8 +87,6 @@ export default defineComponent({
     }
   }
 
-
-
   &__btn {
     input[type="file"] {
       display: none;

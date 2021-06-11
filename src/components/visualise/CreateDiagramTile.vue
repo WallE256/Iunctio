@@ -22,7 +22,7 @@ export default defineComponent({
   },
   methods: {
     onClick() {
-      this.$emit("tile-click", this.name);
+      this.$emit("tile-click", this.name.replaceAll(" ", ""));
     },
   },
 });
