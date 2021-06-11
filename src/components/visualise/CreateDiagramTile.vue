@@ -41,13 +41,14 @@ export default defineComponent({
   &:hover,
   &:focus {
     outline: none;
-    .vis-tile__bg {
+    .diag-tile__bg {
       transform: scale(1.05);
     }
   }
 
   &:focus &__bg {
     border: 1px solid $WHITE;
+    transform: scale(1.05);
   }
 
   &__bg {

@@ -1,4 +1,4 @@
- // use as follows:
+// use as follows:
 // import * as GlobalStorage from "@/scripts/globalstorage";
 // the Visualise.vue page should use these functions to manage the
 // uploaded datasets and the created visualizations/diagrams.
@@ -69,7 +69,7 @@ function diagramToJSON(diagram: Diagram): string {
 async function mutateStorageList(
   storageID: string,
   listObject: { values: string[] | null },
-  callback: (list: string[]) => void,
+  callback: (list: string[]) => void
 ): Promise<void> {
   if (listObject.values) {
     // if it's in memory, there's no need to fetch if from local storage first
@@ -140,7 +140,7 @@ export function removeDataset(id: string): void {
 
   mutateStorageList("datasets", datasetList, (ids) => {
     const index = ids.indexOf(id);
-    if (index !== -1) ids.splice(index);
+    if (index !== -1) ids.splice(index, 1);
   });
 }
 
@@ -203,7 +203,7 @@ export function removeDiagram(diagram: Diagram): void {
 
   mutateStorageList("diagrams", diagramList, (ids) => {
     const index = ids.indexOf(diagram.id);
-    if (index !== -1) ids.splice(index);
+    if (index !== -1) ids.splice(index, 1);
   });
 }
 
@@ -230,7 +230,7 @@ export function changeSetting(diagram: Diagram, ...values: any[]): void {
 export const selectedNodes = [] as {
   // The ID of the dataset, so `GlobalStorage.getDataset(datasetID)` will give
   // you the graph that the node belongs to.
-  datasetID: string,
+  datasetID: string;
   // The ID of the node in the Graph object
-  nodeID: any,
+  nodeID: any;
 }[];
