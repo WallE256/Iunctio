@@ -80,46 +80,7 @@ export default defineComponent({
     this.graph.forEachNode((source: any, sourceAttr) => {
       const sourceString = source.toString();
       const text = new PIXI.Text(sourceString, defaultStyle);
-      text.anchor.set(0.5, 0.5);
-
       const rectangle = new PIXI.Graphics();
-
-      // tooltip display
-      rectangle.interactive = true;
-      rectangle.buttonMode = true;
-      rectangle.on("mouseover", (event) => {
-        event.stopPropagation();
-
-        tooltip.style.display = "inline";
-        tooltip.innerText = "Node: " + sourceString;
-        tooltip.style.left = (rectangle.x + 20) + "px";
-        tooltip.style.top = (rectangle.y + 40) + "px";
-
-        const color = 0x00D737;
-        
-        const callback = (target: any, targetAttributes: any) => {
-          const targetData = this.nodeMap.get(target);
-          if (!targetData) return;
-          targetData.rectangle.tint = color;
-        };
-
-        rectangle.tint = 0xFE00EF;
-      });
-
-      rectangle.on("mouseout", (event) => {
-        event.stopPropagation();
-
-        tooltip.style.display = "none";
-
-        const color = 0xffffff;
-        rectangle.tint = color;
-
-        const callback = (target: any, targetAttributes: any) => {
-          const targetData = this.nodeMap.get(target);
-          if (!targetData) return;
-          targetData.rectangle.tint = color;
-        };
-      });
 
       this.nodeMap.set(source, {
         text: text,
@@ -128,6 +89,12 @@ export default defineComponent({
       });
       i++;
     });
+
+    this.matrix.length = graph.order;
+
+    for(let i = 0; i < graph.order; i++) {
+      this.matrix[i] = Array.from({ length: graph.order }, () => new PIXI.Graphics())
+    }
 
     // this has to happen next tick, otherwise the elements do not have their
     // size yet (because they've not been renderd yet)
@@ -156,20 +123,18 @@ export default defineComponent({
 
   data() {
     return {
-      // node map
       nodeMap: new Map<number, {
         text: PIXI.Text,
         rectangle: PIXI.Graphics,
         index: number,
       }>(),
 
-      // the node that you're currently hovering over
-      selectedIndex: null as number | null,
       app: null as null | PIXI.Application,
       viewport: null as null | Viewport,
       graph: new Graph({
-        //options
       }),
+
+      matrix: [] as PIXI.Graphics[][],
 
       diagram: null as GlobalStorage.Diagram | null,
       canvas: null as null | HTMLCanvasElement,
@@ -216,7 +181,7 @@ export default defineComponent({
           const sourceData2 = this.nodeMap.get(node_2);
           if (!sourceData2) return; // not supposed to happen
 
-          const rectangle = new PIXI.Graphics;
+          const rectangle = this.matrix[sourceData1.index][sourceData2.index];
           rectangle.lineStyle(1);
 
           if (graph.hasEdge(node_1, node_2)) {
@@ -238,10 +203,10 @@ export default defineComponent({
               } else if (avgSentiment < 0) {
                 rectangle.beginFill(0xAF1A1A, 1);
               } else if (avgSentiment == 0) {
-                rectangle.beginFill(0xFFFFFF, 1);
+                rectangle.beginFill(0xFCFFA5, 1);
               }
 
-              rectangle.alpha = avgSentiment * 0.8 + 0.2;
+              rectangle.alpha = Math.abs(avgSentiment * 0.2 + 0.8);
             }
 
           } else {
@@ -249,13 +214,35 @@ export default defineComponent({
           }
           rectangle.drawRect(0, 0, rectWidth, rectHeight);
           rectangle.endFill();
+
+          rectangle.interactive = true;
+          // rectangle.buttonMode = true;
+          rectangle.on("mouseover", (event) => {
+            event.stopPropagation();
+
+            for(let i = 0; i < graph.order; i++) {
+              this.matrix[sourceData1.index][i].tint = 0xFE00EF;
+              this.matrix[i][sourceData2.index].tint = 0xFE00EF;
+            }
+          });
+
+          rectangle.on("mouseout", (event) => {
+            event.stopPropagation();
+
+            for(let i = 0; i < graph.order; i++) {
+              this.matrix[sourceData1.index][i].tint = 0xFFFFFF;
+              this.matrix[i][sourceData2.index].tint = 0xFFFFFF;
+            }
+          });
+
           rectangle.x = nodeX + (gap * sourceData2.index);
           rectangle.y = nodeY + (gap * sourceData1.index);
 
-          viewport.addChild(rectangle);
+          viewport.addChild(rectangle as PIXI.Graphics);
         });    
       });
 
+      // Display fromId for the row node
       graph.forEachNode((node: any) => {
         const sourceData = this.nodeMap.get(node);
         if (!sourceData) return;
@@ -269,6 +256,7 @@ export default defineComponent({
         viewport.addChild(textX);
       });  
 
+      // Display fromId for the column node
       graph.forEachNode((node: any) => {
         const sourceData = this.nodeMap.get(node);
         if (!sourceData) return;
