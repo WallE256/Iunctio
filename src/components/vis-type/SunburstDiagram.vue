@@ -2,7 +2,7 @@
   <div id="canvas-parent" ref="canvas-parent" style="height: 100%; width: 100%;">
     <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
   </div>
-  <p id="graph-tooltip" ref="graph-tooltip" style="position: fixed; user-select: none;"></p>
+  <div id="graph-tooltip" ref="graph-tooltip" style="position: fixed; user-select: none;"></div>
 </template>
 
 <script lang="ts">
@@ -491,9 +491,33 @@ export default defineComponent({
     // Show node name on hover
     drawnNode.on('pointerover', (event) => {
       event.stopPropagation();
+      //this.tooltip.innerText = "Node: " + node;
 
       this.tooltip.style.display = "inline";
-      this.tooltip.innerText = "Node: " + node;
+      this.tooltip.style.backgroundColor = "white";
+      this.tooltip.style.padding = "10px";
+      this.tooltip.style.borderRadius = "10px";
+      this.tooltip.style.boxShadow = "2px 2px 6px rgba(0, 0, 0, 0.2)";
+
+      // Node ID
+      this.tooltip.innerHTML = "<h2> Node: " + node + "</h2><hr>";
+
+      // Node degree and neighbours
+      this.tooltip.innerHTML += "<p>" + "Incoming Degree: " + this.graph.inDegree(node) + "</p>";
+      this.tooltip.innerHTML += "<p>" + "Incoming Neighbours: " + this.graph.inNeighbors(node).length + "</p>";
+      this.tooltip.innerHTML += "<br>";
+      this.tooltip.innerHTML += "<p>" + "Outgoing Degree: " + this.graph.outDegree(node) + "</p>";
+      this.tooltip.innerHTML += "<p>" + "Outgoing Neighbours: " + this.graph.outNeighbors(node).length + "</p>";
+      this.tooltip.innerHTML += "<br>";
+
+      for (let index = 0; index < Object.keys(this.graph.getNodeAttributes(node)).length; index++) {
+        //this.tooltip.innerText += "<br>" + Object.keys(this.graph.getNodeAttributes(node))[index] + ": " + Object.values(this.graph.getNodeAttributes(node))[index];
+        if (Object.keys(this.graph.getNodeAttributes(node))[index] === settings.colourType) {
+          this.tooltip.innerHTML += "<p style='text-decoration: underline;'>" + Object.keys(this.graph.getNodeAttributes(node))[index] + ": " + Object.values(this.graph.getNodeAttributes(node))[index] + "</p>";
+        } else {
+          this.tooltip.innerHTML += "<p>" + Object.keys(this.graph.getNodeAttributes(node))[index] + ": " + Object.values(this.graph.getNodeAttributes(node))[index] + "</p>";
+        }
+      }
       if (settings.variety === "sunburst") {
         this.tooltip.style.left = drawnNode.x + "px";
         this.tooltip.style.top = drawnNode.y + canvas.height * 0.05 + "px";

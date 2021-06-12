@@ -78,22 +78,18 @@ export function getVisibleSettings(diagram: GlobalStorage.Diagram, graph: Graph)
           options: [ "incoming", "outgoing", "both" ],
           value: diagram.settings.edgeType,
         } },
-        { id: "height", component: "NumberSetting", name: "Layer Count", properties: {
-          min: 0,
-          max: 10,
-          value: diagram.settings.height,
-        } },
-        { id: "widthType", component: "SelectSetting", name: "Width Determined By", properties: {
-          options: [ "connections", "subtree-size" ],
-          value: diagram.settings.widthType,
-        } },
         { id: "colourType", component: "SelectSetting", name: "Colour Determined By", properties: {
           options: [ "rainbow" ].concat(Object.keys(graph.getNodeAttributes(graph.nodes()[0]))),
           value: diagram.settings.colourType,
         } },
-        { id: "minRenderSize", component: "NumberSetting", name: "Minimum Node Size", properties: {
-          min: 0,
+        { id: "minRenderSize", component: "NumberSetting", name: "Minimum Node Size 1/x", properties: {
+          min: 1,
           value: diagram.settings.minRenderSize,
+        } },
+        { id: "height", component: "NumberSetting", name: "Layer Count", properties: {
+          min: 2,
+          max: 10,
+          value: diagram.settings.height,
         } },
       ];
     }
