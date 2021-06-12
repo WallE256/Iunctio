@@ -15,6 +15,7 @@ import { Viewport } from 'pixi-viewport';
 
 type Settings = {
   variety?: string, // "edge-frequency" or "sentiment"
+  hoverEdgeDirection?: string, // "incoming" or "outgoing" or "both"
 };
 
 export default defineComponent({
@@ -75,7 +76,7 @@ export default defineComponent({
       fill: "#000000",
     });
 
-    // give each node a corresponding index and corresponding text element
+    // give each node a corresponding index
     let i = 0;
     this.graph.forEachNode((source: any, sourceAttr) => {
       const sourceString = source.toString();
@@ -90,8 +91,8 @@ export default defineComponent({
       i++;
     });
 
+    // create a matrix that stores graphic objects for each possible edge
     this.matrix.length = graph.order;
-
     for(let i = 0; i < graph.order; i++) {
       this.matrix[i] = Array.from({ length: graph.order }, () => new PIXI.Graphics())
     }
@@ -152,6 +153,11 @@ export default defineComponent({
         fill: "#000000",
         fontSize: 12,
       });
+      const labelStyle = new PIXI.TextStyle({
+        fill: "#000000",
+        fontWeight: "100",
+        fontSize: 25,
+      });
       viewport.removeChildren();
 
       const nodeY = canvas.height * 1/5;
@@ -206,7 +212,7 @@ export default defineComponent({
                 rectangle.beginFill(0xFCFFA5, 1);
               }
 
-              rectangle.alpha = Math.abs(avgSentiment * 0.2 + 0.8);
+              // rectangle.alpha = Math.abs(avgSentiment * 0.2 + 0.8);
             }
 
           } else {
@@ -220,9 +226,19 @@ export default defineComponent({
           rectangle.on("mouseover", (event) => {
             event.stopPropagation();
 
-            for(let i = 0; i < graph.order; i++) {
-              this.matrix[sourceData1.index][i].tint = 0xFE00EF;
-              this.matrix[i][sourceData2.index].tint = 0xFE00EF;
+            if(settings.hoverEdgeDirection === "both") {
+              for(let i = 0; i < graph.order; i++) {
+                this.matrix[sourceData1.index][i].tint = 0xFE00EF;
+                this.matrix[i][sourceData2.index].tint = 0xFE00EF;
+              }
+            } else if(settings.hoverEdgeDirection === "incoming") {
+              for(let i = 0; i < graph.order; i++) {
+                this.matrix[i][sourceData2.index].tint = 0xFE00EF;
+              }
+            } else if(settings.hoverEdgeDirection === "outgoing") {
+              for(let i = 0; i < graph.order; i++) {
+                this.matrix[sourceData1.index][i].tint = 0xFE00EF;
+              }
             }
           });
 
@@ -269,6 +285,19 @@ export default defineComponent({
         textY.anchor.set(0, 0.5);
 
         viewport.addChild(textY);
+
+      const fromId = new PIXI.Text("From ID");
+      fromId.style = labelStyle;
+      fromId.x = nodeX - (rectWidth / 2) - 80;
+      fromId.y = nodeY + (rectHeight / 2) + (gap * (graph.order / 2)) + 20;
+      fromId.angle = 270;
+      viewport.addChild(fromId);
+
+      const toId = new PIXI.Text("To ID");
+      toId.style = labelStyle;
+      toId.x = nodeX + (rectWidth / 2) + (gap * (graph.order / 2)) - 35;
+      toId.y = nodeY - (rectHeight / 2) - 65;
+      viewport.addChild(toId);
       });  
     }  
   },
