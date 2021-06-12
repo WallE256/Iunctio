@@ -9,11 +9,12 @@
 import { defineComponent } from "vue";
 import * as PIXI from "pixi.js";
 import Graph from "graphology";
-import { debounce } from "lodash";
+import { debounce, random } from "lodash";
 import * as GlobalStorage from "@/scripts/globalstorage";
 import { Viewport } from 'pixi-viewport';
 import { Cull } from '@pixi-essentials/cull'; 
 import { Container } from '@pixi/display';
+import * as d3 from "d3";
 
 // see also scripts/settingconfig.ts
 type Settings = {
@@ -104,7 +105,7 @@ export default defineComponent({
       circle.buttonMode = true;
       circle.on("mouseover", (event) => {
         event.stopPropagation();
-
+        console.log(sourceAttr.jobtitle);
         tooltip.style.display = "inline";
         tooltip.innerText = "Node: " + sourceString;
         tooltip.style.left = (circle.x + 20) + "px";
@@ -142,6 +143,15 @@ export default defineComponent({
         inboundDegree: this.graph.inDegree(source),
         outboundDegree: this.graph.outDegree(source)
       });
+
+      if(!this.jobMap.has(sourceAttr.jobtitle)) {
+        const generatedId = random(0,1,true);
+        const stringHex = this.rgbToHex(d3.interpolateRainbow(generatedId));
+        this.jobMap.set(sourceAttr.jobtitle, {
+          id: generatedId,
+          assignedColor: parseInt(stringHex, 16)
+        })
+      }
       i++;
     });
 
@@ -179,8 +189,10 @@ export default defineComponent({
       this.culling(this.app as PIXI.Application, this.viewport as Viewport, this.graph);
     });
 
+    this.jobMap.forEach((value, key, map) => {
+      console.log(key + ' -> ' + value)
+    })
 
-    
   },
 
   created(){
@@ -197,6 +209,10 @@ export default defineComponent({
   
   data() {
     return {
+      jobMap: new Map<string, {
+        id: number,
+        assignedColor: number
+      }>(),
       // node map
       nodeMap: new Map<string, NodeData>(),
 
@@ -214,6 +230,16 @@ export default defineComponent({
   },
 
   methods: {
+    rgbToHex(rgbString: string) {
+      const a = rgbString.split("(")[1].split(")")[0];
+      const b = a.split(",");
+      const c = b.map((x) => {             //For each array element
+        x = parseInt(x).toString(16);      //Convert to a base16 string
+        return (x.length==1) ? "0"+x : x;  //Add zero if we get only one character
+      })
+      return "0x"+c.join("");
+    },
+
     culling(app: PIXI.Application, viewport: Viewport, graph: Graph) {
       const cull = new Cull().addAll(viewport.children);
       app.loader.load(()=> {
@@ -228,7 +254,7 @@ export default defineComponent({
           //the level points can be changed later 
           const zoomingSteps = [0.2, 0.35, 0.5, 1];
           const zoomingStep = zoomingSteps.findIndex(zoomStep => zoom <= zoomStep);
-          console.log(zoomingStep, zoom)
+          //console.log(zoomingStep, zoom)
 
           graph.forEachNode((node:any) => {
             const nodeObj = this.nodeMap.get(node);
@@ -306,10 +332,13 @@ export default defineComponent({
           } else {
             nodeRadius = Math.min(30, Math.max(5 * Math.log(sourceData.inboundDegree), 5));
           }
+
+          const circleColor = this.jobMap.get(sourceAttr.jobtitle)?.assignedColor;
+          
           const circle = sourceData.circle;
           circle.clear();
           circle.lineStyle(1);
-          circle.beginFill(0x50D5E8, 1);
+          circle.beginFill(circleColor, 1);
           circle.drawCircle(0, 0, nodeRadius);
           circle.endFill();
           circle.x = centerX + vertexRadius * Math.cos(sourceData.index * angle);
