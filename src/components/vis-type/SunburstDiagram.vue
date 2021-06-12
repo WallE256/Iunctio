@@ -1,12 +1,8 @@
 <template>
-  <div id="canvas-parent" ref="canvas-parent" style="height: 100%; width: 100%">
+  <div id="canvas-parent" ref="canvas-parent" style="height: 100%; width: 100%;">
     <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
   </div>
-  <div
-    id="graph-tooltip"
-    ref="graph-tooltip"
-    style="position: fixed; user-select: none"
-  ></div>
+  <div id="graph-tooltip" ref="graph-tooltip" style="position: fixed; user-select: none;"></div>
 </template>
 
 <script lang="ts">
@@ -18,16 +14,16 @@ import * as PIXI from "pixi.js";
 import * as GlobalStorage from "@/scripts/globalstorage";
 
 // stolen from https://pixijs.download/dev/docs/packages_graphics-extras_src_drawTorus.ts.html
-function drawTorus(
-  graphics: PIXI.Graphics,
-  x: number,
-  y: number,
-  innerRadius: number,
-  outerRadius: number,
-  startArc = 0,
-  endArc: number = Math.PI * 2
+function drawTorus(graphics: PIXI.Graphics,
+    x: number,
+    y: number,
+    innerRadius: number,
+    outerRadius: number,
+    startArc = 0,
+    endArc: number = Math.PI * 2,
 ): PIXI.Graphics {
-  if (Math.abs(endArc - startArc) >= Math.PI * 2) {
+  if (Math.abs(endArc - startArc) >= Math.PI * 2)
+  {
     return graphics
       .drawCircle(x, y, outerRadius)
       .beginHole()
@@ -44,13 +40,13 @@ function drawTorus(
 
 // see also scripts/settingconfig.ts
 type Settings = {
-  root: string | null;
-  height: number;
-  variety: string;
-  edgeType: string;
-  colourType: string;
-  diagramColour: number;
-  minRenderSize: number;
+  root: string | null,
+  height: number,
+  variety: string,
+  edgeType: string,
+  colourType: string,
+  diagramColour: number,
+  minRenderSize: number,
 };
 
 export default defineComponent({
@@ -89,9 +85,7 @@ export default defineComponent({
     this.bothConnections = new Map();
     this.outConnections = new Map();
 
-    [this.bothConnections, this.outConnections] = this.mapConnections(
-      this.graph
-    );
+    [this.bothConnections, this.outConnections] = this.mapConnections(this.graph);
 
     const app = this.app as PIXI.Application;
 
@@ -99,10 +93,7 @@ export default defineComponent({
     // correct yet (because they've not been rendered yet)
     this.$nextTick(() => {
       app.resize();
-      this.diagram.onChange = (
-        diagram: GlobalStorage.Diagram,
-        changedKey: string
-      ) => {
+      this.diagram.onChange = (diagram: GlobalStorage.Diagram, changedKey: string) => {
         if (changedKey === "selectedNode") {
           // un-highlight old nodes
           const clearTint = 0xffffff;
@@ -118,7 +109,7 @@ export default defineComponent({
             .map((node) => node.nodeID);
 
           // highlight new nodes
-          const highlightTint = 0x00d737;
+          const highlightTint = 0x00D737;
           for (const node of this.selectedNodes) {
             const graphicsList = this.graphicsMap.get(node) || [];
             for (const graphics of graphicsList) {
@@ -136,21 +127,16 @@ export default defineComponent({
     this.draw(app, this.diagram.settings);
   },
 
-  created() {
+  created(){
     window.addEventListener(
       "resize",
       debounce((event) => {
         if (!this.diagram) {
           return;
         }
-        this.handleResize(
-          event,
-          this.graph,
-          this.app as PIXI.Application,
-          this.diagram.settings as Settings
-        );
+        this.handleResize(event, this.graph, this.app as PIXI.Application, this.diagram.settings as Settings);
       }, 250)
-    );
+    )
   },
 
   data() {
@@ -160,7 +146,7 @@ export default defineComponent({
       graph: null as any,
       diagram: null as any,
       app: null as null | PIXI.Application,
-      tooltip: document.createElement("null"),
+      tooltip: document.createElement('null'),
       canvas: null as null | HTMLCanvasElement,
       clickedNode: false,
       double: 0,
@@ -179,12 +165,7 @@ export default defineComponent({
   },
 
   methods: {
-    handleResize(
-      e: any,
-      graph: Graph,
-      app: PIXI.Application,
-      settings: Settings
-    ) {
+    handleResize(e: any, graph: Graph, app: PIXI.Application, settings: Settings) {
       this.draw(app, settings);
     },
 
@@ -196,14 +177,8 @@ export default defineComponent({
       // Count edges between two nodes
       graph.forEachNode((node_1) => {
         graph.forEachNode((node_2) => {
-          map_both.set(
-            node_1 + "_" + node_2,
-            graph.edges(node_1, node_2).length
-          );
-          map_out.set(
-            node_1 + ">" + node_2,
-            graph.outEdges(node_1, node_2).length
-          );
+          map_both.set(node_1 + "_" + node_2, graph.edges(node_1, node_2).length);
+          map_out.set(node_1 + ">" + node_2, graph.outEdges(node_1, node_2).length);
         });
       });
 
@@ -211,7 +186,10 @@ export default defineComponent({
     },
 
     // Draw the diagram
-    draw(app: PIXI.Application, settings: Settings) {
+    draw(
+      app: PIXI.Application,
+      settings: Settings,
+    ) {
       app.stage.removeChildren();
       for (const [node, graphicsList] of this.graphicsMap) {
         for (const graphics of graphicsList) graphics.clear();
@@ -227,493 +205,335 @@ export default defineComponent({
 
       // Calculate height based on graph type
       if (settings.variety === "sunburst") {
-        this.maxWidth = Math.min(canvas.width, canvas.height) * 0.7;
+        this.maxWidth = Math.min(canvas.width, canvas.height) * .7;
         this.maxHeight = this.maxWidth;
         this.levelHeight = this.maxHeight / (1.75 * settings.height);
 
-        this.drawDiagram(
-          this.graph,
-          app,
-          settings,
-          settings.root,
-          predecessors,
-          0,
-          0,
-          1,
-          settings.diagramColour
-        );
+        this.drawDiagram(this.graph, app, settings, settings.root, predecessors, 0, 0, 1, settings.diagramColour);
       } else {
-        var borderSize = Math.min(canvas.width, canvas.height) * 0.2;
+        var borderSize = Math.min(canvas.width, canvas.height) * .2;
         this.maxWidth = canvas.width - borderSize;
         this.maxHeight = canvas.height - borderSize;
         this.levelHeight = this.maxHeight / settings.height;
 
-        this.drawDiagram(
-          this.graph,
-          app,
-          settings,
-          settings.root,
-          predecessors,
-          0,
-          0,
-          1,
-          settings.diagramColour
-        );
+        this.drawDiagram(this.graph, app, settings, settings.root, predecessors, 0, 0, 1, settings.diagramColour);
       }
     },
 
-    // Draw the subtree of given diagram
-    drawDiagram(
-      graph: Graph,
-      app: PIXI.Application,
-      settings: Settings,
-      node: any,
-      newPredecessors: any,
-      level: number,
-      drawStart: number,
-      sizePerc: number,
-      subtreeColour: any
-    ) {
-      // Only draw if the node is rendered wide enough
-      if (sizePerc >= 1 / settings.minRenderSize) {
-        // If no node is given (so no root was selected)
-        if (!node) {
-          var totalDegree = 0;
-          var nodesWithDegree = 0;
+  // Draw the subtree of given diagram
+  drawDiagram(
+    graph: Graph,
+    app: PIXI.Application,
+    settings: Settings,
+    node: any,
+    newPredecessors: any,
+    level: number,
+    drawStart: number,
+    sizePerc: number,
+    subtreeColour: any,
+  ) {
 
-          // Calculate total degree for all nodes
+    // Only draw if the node is rendered wide enough
+    if (sizePerc >= 1 / settings.minRenderSize) {
+
+      // If no node is given (so no root was selected)
+      if (!node) {
+        var totalDegree = 0;
+        var nodesWithDegree = 0;
+
+        // Calculate total degree for all nodes
+        graph.forEachNode((node, attributes) => {
+          if (settings.edgeType == 'incoming') {
+            if (graph.inDegree(node) > 0) {
+              nodesWithDegree += 1;
+              totalDegree += graph.inDegree(node);
+            }
+          } else if (settings.edgeType == 'outgoing') {
+            if (graph.outDegree(node) > 0) {
+              nodesWithDegree += 1;
+              totalDegree += graph.outDegree(node);
+            }
+          } else {
+            if (graph.degree(node) > 0) {
+              nodesWithDegree += 1;
+              totalDegree += graph.degree(node);
+            }
+          }
+        });
+
+        // Create colour pattern
+        if (settings.colourType === "rainbow") {
+          this.colours = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, nodesWithDegree + 1));
+        } else {
+
+          let indexNumber = 0;
+          this.attributesColourMap = new Map();
+
           graph.forEachNode((node, attributes) => {
-            if (settings.edgeType == "incoming") {
-              if (graph.inDegree(node) > 0) {
-                nodesWithDegree += 1;
-                totalDegree += graph.inDegree(node);
-              }
-            } else if (settings.edgeType == "outgoing") {
-              if (graph.outDegree(node) > 0) {
-                nodesWithDegree += 1;
-                totalDegree += graph.outDegree(node);
-              }
-            } else {
-              if (graph.degree(node) > 0) {
-                nodesWithDegree += 1;
-                totalDegree += graph.degree(node);
-              }
+            if (attributes[settings.colourType]) {
+              this.attributesColourMap.set(attributes[settings.colourType], indexNumber);
+              indexNumber += 1;
             }
           });
 
-          // Create colour pattern
-          if (settings.colourType === "rainbow") {
-            this.colours = d3.scaleOrdinal(
-              d3.quantize(d3.interpolateRainbow, nodesWithDegree + 1)
-            );
+          this.colours = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, this.attributesColourMap.size + 1));
+        }
+
+        let index = 0;
+
+        // Draw subtrees
+        graph.forEachNode((node, attributes) => {
+
+          var newSizePerc = 0;
+
+          if (settings.edgeType == "incoming") {
+            newSizePerc = graph.inDegree(node);
+          } else if (settings.edgeType == "outgoing") {
+            newSizePerc = graph.outDegree(node);
           } else {
-            let indexNumber = 0;
-            this.attributesColourMap = new Map();
-
-            graph.forEachNode((node, attributes) => {
-              if (attributes[settings.colourType]) {
-                this.attributesColourMap.set(
-                  attributes[settings.colourType],
-                  indexNumber
-                );
-                indexNumber += 1;
-              }
-            });
-
-            this.colours = d3.scaleOrdinal(
-              d3.quantize(
-                d3.interpolateRainbow,
-                this.attributesColourMap.size + 1
-              )
-            );
+            newSizePerc = graph.degree(node);
           }
 
-          let index = 0;
+          if (newSizePerc > 0) {
 
-          // Draw subtrees
-          graph.forEachNode((node, attributes) => {
-            var newSizePerc = 0;
+            newSizePerc /= totalDegree;
 
-            if (settings.edgeType == "incoming") {
-              newSizePerc = graph.inDegree(node);
-            } else if (settings.edgeType == "outgoing") {
-              newSizePerc = graph.outDegree(node);
+            var c;
+            var convertedColour;
+
+            if ((settings.colourType === "rainbow")) {
+              c = d3.color(this.colours(index.toString()));
+              convertedColour = c?.formatHex().replace("#", "0x") || "0xffffff";
             } else {
-              newSizePerc = graph.degree(node);
+              c = d3.color(this.colours(this.attributesColourMap.get(attributes[settings.colourType]).toString()));
+              convertedColour = c?.formatHex().replace("#", "0x") || "0xffffff";
             }
 
-            if (newSizePerc > 0) {
-              newSizePerc /= totalDegree;
+            predecessors = [];
 
-              var c;
-              var convertedColour;
+            // Start at level 1 for sunburst diagram if no node is given
+            if (settings.variety === "sunburst") {
+              level = 1;
+            }
 
-              if (settings.colourType === "rainbow") {
-                c = d3.color(this.colours(index.toString()));
-                convertedColour =
-                  c?.formatHex().replace("#", "0x") || "0xffffff";
+            this.drawDiagram(graph, app, settings, node, predecessors, level, drawStart, newSizePerc, convertedColour);
+            drawStart += newSizePerc;
+            index += 1;
+          }
+        });
+      } else {
+
+        // Draw node
+        this.drawNode(app, settings, node, level, drawStart, sizePerc, subtreeColour);
+
+        // Add this node to copy of predecessors
+        var predecessors = [...newPredecessors];
+        predecessors.push(node);
+
+        // Next layer
+        if (level < settings.height - 1) {
+
+          var downstreamConnections = 0;
+
+          // Count downstream connections
+          graph.forEachNeighbor(node, (neighbour, attributes) => {
+
+            if (!this.isPredecessor(predecessors, neighbour)) {
+
+              if (settings.edgeType == "incoming") {
+                downstreamConnections += this.outConnections.get(neighbour + ">" + node);
+              } else if (settings.edgeType == "outgoing") {
+                downstreamConnections += this.outConnections.get(node + ">" + neighbour);
               } else {
-                c = d3.color(
-                  this.colours(
-                    this.attributesColourMap
-                      .get(attributes[settings.colourType])
-                      .toString()
-                  )
-                );
-                convertedColour =
-                  c?.formatHex().replace("#", "0x") || "0xffffff";
+                downstreamConnections += this.bothConnections.get(node + "_" + neighbour);
               }
 
-              predecessors = [];
-
-              // Start at level 1 for sunburst diagram if no node is given
-              if (settings.variety === "sunburst") {
-                level = 1;
-              }
-
-              this.drawDiagram(
-                graph,
-                app,
-                settings,
-                node,
-                predecessors,
-                level,
-                drawStart,
-                newSizePerc,
-                convertedColour
-              );
-              drawStart += newSizePerc;
-              index += 1;
             }
           });
-        } else {
-          // Draw node
-          this.drawNode(
-            app,
-            settings,
-            node,
-            level,
-            drawStart,
-            sizePerc,
-            subtreeColour
-          );
 
-          // Add this node to copy of predecessors
-          var predecessors = [...newPredecessors];
-          predecessors.push(node);
+          // Calculate child size and draw
+          graph.forEachNeighbor(node, (neighbour, attributes) => {
 
-          // Next layer
-          if (level < settings.height - 1) {
-            var downstreamConnections = 0;
+            if (!this.isPredecessor(predecessors, neighbour)) {
 
-            // Count downstream connections
-            graph.forEachNeighbor(node, (neighbour, attributes) => {
-              if (!this.isPredecessor(predecessors, neighbour)) {
-                if (settings.edgeType == "incoming") {
-                  downstreamConnections += this.outConnections.get(
-                    neighbour + ">" + node
-                  );
-                } else if (settings.edgeType == "outgoing") {
-                  downstreamConnections += this.outConnections.get(
-                    node + ">" + neighbour
-                  );
-                } else {
-                  downstreamConnections += this.bothConnections.get(
-                    node + "_" + neighbour
-                  );
-                }
+              if ((settings.colourType !== "rainbow")) {
+
+                const c = d3.color(this.colours(this.attributesColourMap.get(attributes[settings.colourType]).toString()));
+                subtreeColour = c?.formatHex().replace("#", "0x") || "0xffffff";
               }
-            });
 
-            // Calculate child size and draw
-            graph.forEachNeighbor(node, (neighbour, attributes) => {
-              if (!this.isPredecessor(predecessors, neighbour)) {
-                if (settings.colourType !== "rainbow") {
-                  const c = d3.color(
-                    this.colours(
-                      this.attributesColourMap
-                        .get(attributes[settings.colourType])
-                        .toString()
-                    )
-                  );
-                  subtreeColour =
-                    c?.formatHex().replace("#", "0x") || "0xffffff";
-                }
+              var newSizePerc = 0;
 
-                var newSizePerc = 0;
+              if ((settings.edgeType === "incoming") && (this.outConnections.get(neighbour + ">" + node) > 0)) {
+                newSizePerc = sizePerc * this.outConnections.get(neighbour + ">" + node) / downstreamConnections;
 
-                if (
-                  settings.edgeType === "incoming" &&
-                  this.outConnections.get(neighbour + ">" + node) > 0
-                ) {
-                  newSizePerc =
-                    (sizePerc *
-                      this.outConnections.get(neighbour + ">" + node)) /
-                    downstreamConnections;
+                this.drawDiagram(graph, app, settings, neighbour, predecessors, level + 1, drawStart, newSizePerc, subtreeColour);
+                drawStart += newSizePerc;
 
-                  this.drawDiagram(
-                    graph,
-                    app,
-                    settings,
-                    neighbour,
-                    predecessors,
-                    level + 1,
-                    drawStart,
-                    newSizePerc,
-                    subtreeColour
-                  );
-                  drawStart += newSizePerc;
-                } else if (
-                  settings.edgeType === "outgoing" &&
-                  this.outConnections.get(node + ">" + neighbour) > 0
-                ) {
-                  newSizePerc =
-                    (sizePerc *
-                      this.outConnections.get(node + ">" + neighbour)) /
-                    downstreamConnections;
+              } else if ((settings.edgeType === "outgoing") && (this.outConnections.get(node + ">" + neighbour) > 0)) {
+                newSizePerc = sizePerc * this.outConnections.get(node + ">" + neighbour) / downstreamConnections;
 
-                  this.drawDiagram(
-                    graph,
-                    app,
-                    settings,
-                    neighbour,
-                    predecessors,
-                    level + 1,
-                    drawStart,
-                    newSizePerc,
-                    subtreeColour
-                  );
-                  drawStart += newSizePerc;
-                } else if (
-                  settings.edgeType !== "incoming" &&
-                  settings.edgeType !== "outgoing" &&
-                  this.bothConnections.get(node + "_" + neighbour) > 0
-                ) {
-                  newSizePerc =
-                    (sizePerc *
-                      this.bothConnections.get(node + "_" + neighbour)) /
-                    downstreamConnections;
+                this.drawDiagram(graph, app, settings, neighbour, predecessors, level + 1, drawStart, newSizePerc, subtreeColour);
+                drawStart += newSizePerc;
 
-                  this.drawDiagram(
-                    graph,
-                    app,
-                    settings,
-                    neighbour,
-                    predecessors,
-                    level + 1,
-                    drawStart,
-                    newSizePerc,
-                    subtreeColour
-                  );
-                  drawStart += newSizePerc;
-                }
+              } else if ((settings.edgeType !== "incoming") && (settings.edgeType !== "outgoing") && (this.bothConnections.get(node + "_" + neighbour) > 0)) {
+                newSizePerc = sizePerc * this.bothConnections.get(node + "_" + neighbour) / downstreamConnections;
+
+                this.drawDiagram(graph, app, settings, neighbour, predecessors, level + 1, drawStart, newSizePerc, subtreeColour);
+                drawStart += newSizePerc;
               }
-            });
-          }
+            }
+          });
         }
       }
-    },
-
-    // Check if node is in the list of predecessors
-    isPredecessor(predecessors: any, neighbour: any) {
-      var predecessor = false;
-
-      for (let index = 0; index < predecessors.length; index++) {
-        if (predecessors[index] == neighbour) {
-          predecessor = true;
-        }
-      }
-      return predecessor;
-    },
-
-    // Draw node
-    drawNode(
-      app: PIXI.Application,
-      settings: Settings,
-      node: any,
-      level: any,
-      drawStart: any,
-      sizePerc: any,
-      nodeColour: any
-    ) {
-      // Create graphics
-      const drawnNode = new PIXI.Graphics();
-      const graphicsList = this.graphicsMap.get(node);
-      if (graphicsList) {
-        graphicsList.push(drawnNode);
-      } else {
-        this.graphicsMap.set(node, [drawnNode]);
-      }
-
-      drawnNode.beginFill(nodeColour);
-      drawnNode.lineStyle(1, 0xffffff);
-
-      const canvas = this.canvas as HTMLCanvasElement;
-
-      if (settings.variety === "sunburst") {
-        var startAngle = 2 * Math.PI * drawStart;
-        var endAngle = 2 * Math.PI * (drawStart + sizePerc);
-        var minRadius = level * this.levelHeight;
-        var maxRadius = minRadius + this.levelHeight;
-
-        if (level == 0) {
-          drawnNode.drawCircle(0, 0, maxRadius);
-        } else {
-          drawTorus(
-            drawnNode,
-            0,
-            0,
-            minRadius,
-            maxRadius,
-            startAngle,
-            endAngle
-          );
-        }
-
-        drawnNode.x = this.centerX;
-        drawnNode.y = this.centerY;
-      } else if (settings.variety === "flame") {
-        drawnNode.drawRect(0, 0, this.maxWidth * sizePerc, this.levelHeight);
-
-        drawnNode.x =
-          this.centerX - this.maxWidth / 2 + this.maxWidth * drawStart;
-        drawnNode.y =
-          this.centerY + this.maxHeight / 2 - this.levelHeight * (level + 1);
-      } else {
-        drawnNode.drawRect(0, 0, this.maxWidth * sizePerc, this.levelHeight);
-
-        drawnNode.x =
-          this.centerX - this.maxWidth / 2 + this.maxWidth * drawStart;
-        drawnNode.y =
-          this.centerY - this.maxHeight / 2 + this.levelHeight * level;
-      }
-
-      drawnNode.endFill();
-      app.stage.addChild(drawnNode);
-
-      // Interactivity
-      drawnNode.interactive = true;
-      drawnNode.buttonMode = true;
-
-      // Set root on click
-      drawnNode.on("click", (event) => {
-        event.stopPropagation();
-
-        // If another click has been detected in the past 600 ms.
-        if (this.clickedNode && this.clickedNode == node) {
-          // Reset graph is the user presses the node in the middle
-          if (level == 0 && sizePerc == 1) {
-            GlobalStorage.changeSetting(
-              this.diagram,
-              "root",
-              null,
-              "diagramColour",
-              nodeColour
-            );
-          } else {
-            GlobalStorage.changeSetting(
-              this.diagram,
-              "root",
-              node,
-              "diagramColour",
-              nodeColour
-            );
-          }
-
-          this.clickedNode = false;
-          clearTimeout(this.double);
-        } else {
-          clearTimeout(this.double);
-          this.clickedNode = node;
-          this.double = setTimeout(() => {
-            this.clickedNode = false;
-
-            // single click means selecting --> brush-and-link interactivity
-            const append = (event.data.originalEvent as MouseEvent).ctrlKey;
-            this.$emit(
-              "selected-node-change",
-              this.diagram.graphID,
-              node,
-              append
-            );
-          }, 600); // Set timeout at 600 ms for double click detection
-        }
-      });
-
-      // Show node name on hover
-      drawnNode.on("pointerover", (event) => {
-        event.stopPropagation();
-
-        this.tooltip.style.display = "inline";
-        this.tooltip.style.backgroundColor = "white";
-        this.tooltip.style.padding = "10px";
-        this.tooltip.style.borderRadius = "10px";
-        this.tooltip.style.boxShadow = "2px 2px 6px rgba(0, 0, 0, 0.2)";
-
-        // Node ID
-        this.tooltip.innerHTML = "<h2> Node: " + node + "</h2><hr>";
-
-        // Node degree and neighbours
-        this.tooltip.innerHTML +=
-          "<p>" + "Incoming Degree: " + this.graph.inDegree(node) + "</p>";
-        this.tooltip.innerHTML +=
-          "<p>" +
-          "Incoming Neighbours: " +
-          this.graph.inNeighbors(node).length +
-          "</p>";
-        this.tooltip.innerHTML += "<br>";
-        this.tooltip.innerHTML +=
-          "<p>" + "Outgoing Degree: " + this.graph.outDegree(node) + "</p>";
-        this.tooltip.innerHTML +=
-          "<p>" +
-          "Outgoing Neighbours: " +
-          this.graph.outNeighbors(node).length +
-          "</p>";
-        this.tooltip.innerHTML += "<br>";
-
-        // Attributes
-        for (
-          let index = 0;
-          index < Object.keys(this.graph.getNodeAttributes(node)).length;
-          index++
-        ) {
-          if (
-            Object.keys(this.graph.getNodeAttributes(node))[index] ===
-            settings.colourType
-          ) {
-            this.tooltip.innerHTML +=
-              "<p style='text-decoration: underline;'>" +
-              Object.keys(this.graph.getNodeAttributes(node))[index] +
-              ": " +
-              Object.values(this.graph.getNodeAttributes(node))[index] +
-              "</p>";
-          } else {
-            this.tooltip.innerHTML +=
-              "<p>" +
-              Object.keys(this.graph.getNodeAttributes(node))[index] +
-              ": " +
-              Object.values(this.graph.getNodeAttributes(node))[index] +
-              "</p>";
-          }
-        }
-
-        if (settings.variety === "sunburst") {
-          this.tooltip.style.left = drawnNode.x + "px";
-          this.tooltip.style.top = drawnNode.y + canvas.height * 0.05 + "px";
-        } else {
-          this.tooltip.style.left =
-            drawnNode.x + (this.maxWidth * sizePerc) / 2 + "px";
-          this.tooltip.style.top = drawnNode.y + canvas.height * 0.15 + "px";
-        }
-      });
-
-      // Hide node name after hover
-      drawnNode.on("pointerout", (event) => {
-        event.stopPropagation();
-
-        this.tooltip.style.display = "none";
-      });
-    },
+    }
   },
+
+  // Check if node is in the list of predecessors
+  isPredecessor(predecessors: any, neighbour: any) {
+    var predecessor = false;
+
+    for (let index = 0; index < predecessors.length; index++) {
+      if (predecessors[index] == neighbour) {
+        predecessor = true;
+      }
+    }
+    return predecessor;
+  },
+
+  // Draw node
+  drawNode(app: PIXI.Application, settings: Settings, node: any, level: any, drawStart: any, sizePerc: any, nodeColour: any) {
+
+    // Create graphics
+    const drawnNode = new PIXI.Graphics();
+    const graphicsList = this.graphicsMap.get(node);
+    if (graphicsList) {
+      graphicsList.push(drawnNode);
+    } else {
+      this.graphicsMap.set(node, [drawnNode]);
+    }
+
+    drawnNode.beginFill(nodeColour);
+    drawnNode.lineStyle(1, 0xFFFFFF);
+
+    const canvas = this.canvas as HTMLCanvasElement;
+
+    if (settings.variety === "sunburst") {
+
+      var startAngle = 2 * Math.PI * drawStart;
+      var endAngle = 2 * Math.PI * (drawStart + sizePerc);
+      var minRadius = level * this.levelHeight;
+      var maxRadius = minRadius + this.levelHeight;
+
+      if (level == 0) {
+        drawnNode.drawCircle(0, 0, maxRadius);
+      } else {
+        drawTorus(drawnNode, 0, 0, minRadius, maxRadius, startAngle, endAngle);
+      }
+
+      drawnNode.x = this.centerX;
+      drawnNode.y = this.centerY;
+
+    } else if (settings.variety === "flame") {
+
+      drawnNode.drawRect(0, 0, this.maxWidth * sizePerc, this.levelHeight);
+
+      drawnNode.x = this.centerX - (this.maxWidth / 2) + (this.maxWidth * drawStart);
+      drawnNode.y = this.centerY + (this.maxHeight / 2) - (this.levelHeight * (level + 1));
+
+    } else {
+
+      drawnNode.drawRect(0, 0, this.maxWidth * sizePerc, this.levelHeight);
+
+      drawnNode.x = this.centerX - (this.maxWidth / 2) + (this.maxWidth * drawStart);
+      drawnNode.y = this.centerY - (this.maxHeight / 2) + (this.levelHeight * level);
+
+    }
+
+    drawnNode.endFill();
+    app.stage.addChild(drawnNode);
+
+    // Interactivity
+    drawnNode.interactive = true;
+    drawnNode.buttonMode = true;
+
+    // Set root on click
+    drawnNode.on('click', (event) => {
+      event.stopPropagation();
+
+      // If another click has been detected in the past 600 ms.
+      if ((this.clickedNode) && (this.clickedNode == node)) {
+
+        // Reset graph is the user presses the node in the middle
+        if ((level == 0) && (sizePerc == 1)) {
+          GlobalStorage.changeSetting(this.diagram, "root", null, "diagramColour", nodeColour)
+        } else {
+          GlobalStorage.changeSetting(this.diagram, "root", node, "diagramColour", nodeColour)
+        }
+
+        this.clickedNode = false;
+        clearTimeout(this.double);
+
+      } else {
+        clearTimeout(this.double);
+        this.clickedNode = node;
+        this.double = setTimeout(() => {
+          this.clickedNode = false;
+
+          // single click means selecting --> brush-and-link interactivity
+          const append = (event.data.originalEvent as MouseEvent).ctrlKey;
+          this.$emit("selected-node-change", this.diagram.graphID, node, append);
+        }, 600); // Set timeout at 600 ms for double click detection
+
+      }
+    });
+
+    // Show node name on hover
+    drawnNode.on('pointerover', (event) => {
+      event.stopPropagation();
+      //this.tooltip.innerText = "Node: " + node;
+
+      this.tooltip.style.display = "inline";
+      this.tooltip.style.backgroundColor = "white";
+      this.tooltip.style.padding = "10px";
+      this.tooltip.style.borderRadius = "10px";
+      this.tooltip.style.boxShadow = "2px 2px 6px rgba(0, 0, 0, 0.2)";
+
+      // Node ID
+      this.tooltip.innerHTML = "<h2> Node: " + node + "</h2><hr>";
+
+      // Node degree and neighbours
+      this.tooltip.innerHTML += "<p>" + "Incoming Degree: " + this.graph.inDegree(node) + "</p>";
+      this.tooltip.innerHTML += "<p>" + "Incoming Neighbours: " + this.graph.inNeighbors(node).length + "</p>";
+      this.tooltip.innerHTML += "<br>";
+      this.tooltip.innerHTML += "<p>" + "Outgoing Degree: " + this.graph.outDegree(node) + "</p>";
+      this.tooltip.innerHTML += "<p>" + "Outgoing Neighbours: " + this.graph.outNeighbors(node).length + "</p>";
+      this.tooltip.innerHTML += "<br>";
+
+      for (let index = 0; index < Object.keys(this.graph.getNodeAttributes(node)).length; index++) {
+        //this.tooltip.innerText += "<br>" + Object.keys(this.graph.getNodeAttributes(node))[index] + ": " + Object.values(this.graph.getNodeAttributes(node))[index];
+        if (Object.keys(this.graph.getNodeAttributes(node))[index] === settings.colourType) {
+          this.tooltip.innerHTML += "<p style='text-decoration: underline;'>" + Object.keys(this.graph.getNodeAttributes(node))[index] + ": " + Object.values(this.graph.getNodeAttributes(node))[index] + "</p>";
+        } else {
+          this.tooltip.innerHTML += "<p>" + Object.keys(this.graph.getNodeAttributes(node))[index] + ": " + Object.values(this.graph.getNodeAttributes(node))[index] + "</p>";
+        }
+      }
+      if (settings.variety === "sunburst") {
+        this.tooltip.style.left = drawnNode.x + "px";
+        this.tooltip.style.top = drawnNode.y + canvas.height * 0.05 + "px";
+      } else {
+        this.tooltip.style.left = drawnNode.x + (this.maxWidth * sizePerc / 2) + "px";
+        this.tooltip.style.top = drawnNode.y + canvas.height * 0.15 + "px";
+      }
+    });
+
+    // Hide node name after hover
+    drawnNode.on('pointerout', (event) => {
+      event.stopPropagation();
+
+      this.tooltip.style.display = "none";
+    });
+  }
+},
 });
 </script>

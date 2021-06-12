@@ -16,9 +16,7 @@
         @selected-node-change="onSelectedNodeChange"
       />
     </div>
-    <span class="visualise__back" v-show="!show_vis_home" @click="returnToHome"
-      >BACK</span
-    >
+    <span class="visualise__back" v-show="!show_vis_home" @click="returnToHome">BACK</span>
   </main>
 </template>
 
@@ -32,12 +30,7 @@ import * as GlobalStorage from "@/scripts/globalstorage";
 
 export default defineComponent({
   name: "Visualise",
-  components: {
-    UploadDataset,
-    CurrentVisualisations,
-    DiagramPanel,
-    CreateVisualisations,
-  },
+  components: { UploadDataset, CurrentVisualisations, DiagramPanel, CreateVisualisations },
   data() {
     return {
       show_vis_home: true,
@@ -49,21 +42,21 @@ export default defineComponent({
   },
   methods: {
     toggleHome(visibility?: boolean) {
-      if (!(visibility === undefined)) {
+      if(!(visibility === undefined)) {
         this.show_vis_home = visibility;
       } else {
         this.show_vis_home = !this.show_vis_home;
       }
     },
     toggleUpload(visibility?: boolean) {
-      if (!(visibility === undefined)) {
+      if(!(visibility === undefined)) {
         this.show_upload = visibility;
       } else {
         this.show_upload = !this.show_vis_home;
       }
     },
     togglePanels(visibility?: boolean) {
-      if (!(visibility === undefined)) {
+      if(!(visibility === undefined)) {
         this.show_panels = visibility;
       } else {
         this.show_panels = !this.show_vis_home;
@@ -89,11 +82,7 @@ export default defineComponent({
 
     // brush-and-link interactivity: update GlobalStorage and each diagram if
     // needed
-    async onSelectedNodeChange(
-      datasetID: string,
-      nodeID: string,
-      append: boolean
-    ) {
+    async onSelectedNodeChange(datasetID: string, nodeID: string, append: boolean) {
       const nodes = GlobalStorage.selectedNodes;
 
       // remove it if already present, add it if not present yet (so toggle)
@@ -117,7 +106,8 @@ export default defineComponent({
 
       // update every diagram that could have this node in it
       for (let i = 0; i < this.shownDiagrams.length; i++) {
-        GlobalStorage.getDiagram(this.shownDiagrams[i]).then((diagram) => {
+        GlobalStorage.getDiagram(this.shownDiagrams[i])
+        .then((diagram) => {
           if (!diagram) return;
           if (diagram.graphID !== datasetID) return;
 
