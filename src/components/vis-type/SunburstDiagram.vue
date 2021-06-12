@@ -492,17 +492,20 @@ export default defineComponent({
     drawnNode.on('pointerover', (event) => {
       event.stopPropagation();
 
+      const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
+      const rectangle = canvasParent.getBoundingClientRect();
       const mouseEvent = event.data.originalEvent as MouseEvent;
 
       this.tooltip.style.display = "inline";
       this.tooltip.innerText = "Node: " + this.graph.getNodeAttribute(node, "email");
-      if (settings.variety === "sunburst") {
-        this.tooltip.style.left = (mouseEvent.screenX + 20) + "px";
-        this.tooltip.style.top = mouseEvent.screenY + canvas.height * 0.05 + "px";
-      } else {
-        this.tooltip.style.left = mouseEvent.screenX + (this.maxWidth * sizePerc / 2) + "px";
-        this.tooltip.style.top = mouseEvent.screenY + canvas.height * 0.15 + "px";
-      }
+      this.tooltip.style.left = Math.min(
+        mouseEvent.screenX + 20,
+        rectangle.left + canvasParent.clientWidth - this.tooltip.clientWidth,
+      ) + "px";
+      this.tooltip.style.top = Math.min(
+        mouseEvent.screenY,
+        rectangle.top + canvasParent.clientHeight - this.tooltip.clientHeight,
+      ) + "px";
     });
 
     // Hide node name after hover
