@@ -26,13 +26,7 @@ import CheckboxSetting from "@/components/settings/CheckboxSetting.vue";
 import NumberSetting from "@/components/settings/NumberSetting.vue";
 import SelectSetting from "@/components/settings/SelectSetting.vue";
 import TextSetting from "@/components/settings/TextSetting.vue";
-
-type SettingConfig = {
-  id: string,
-  component: string,
-  name: string,
-  properties?: any,
-};
+import { Setting, getVisibleSettings } from "@/scripts/settingconfig";
 
 export default defineComponent({
   components: {
@@ -51,8 +45,7 @@ export default defineComponent({
 
   data() {
     return {
-      diagram: null as GlobalStorage.Diagram | null,
-      settings: [] as SettingConfig[],
+      settings: [] as Setting[],
     };
   },
 
@@ -68,56 +61,7 @@ export default defineComponent({
       return;
     }
 
-    // see UploadDataset.vue for setting default values
-    switch (this.diagram.type) {
-      case "ArcDiagram":
-        this.settings = [
-          { id: "variety", component: "SelectSetting", name: "Node-Link Diagram Variety", properties: {
-            options: [ "circle", "line" ],
-            value: this.diagram.settings.variety,
-          } },
-          { id: "edgeHighlightDirection", component: "SelectSetting", name: "Edge Highlight Direction", properties: {
-            options: [ "incoming", "outgoing", "both" ],
-            value: this.diagram.settings.hoverEdgeDirection,
-          } },
-        ];
-        break;
-
-      case "SunburstDiagram":
-        this.settings = [
-          { id: "variety", component: "SelectSetting", name: "Hierarchical Diagram Variety", properties: {
-            options: [ "sunburst", "flame", "inverse-flame" ],
-            value: this.diagram.settings.variety,
-          } },
-          { id: "root", component: "SelectSetting", name: "Root Node", properties: {
-            options: ["[no root]"].concat(graph.nodes()), // TODO this has to show a proper name instead of IDs
-            value: this.diagram.settings.root,
-          } },
-          { id: "edgeType", component: "SelectSetting", name: "Edge Direction", properties: {
-            options: [ "incoming", "outgoing", "both" ],
-            value: this.diagram.settings.edgeType,
-          } },
-          { id: "height", component: "NumberSetting", name: "Layer Count", properties: {
-            min: 2,
-            max: 10,
-            value: this.diagram.settings.height,
-          } },
-          { id: "colourType", component: "SelectSetting", name: "Colour Determined By", properties: {
-            options: [ "rainbow" ].concat(Object.keys(graph.getNodeAttributes(graph.nodes()[0]))),
-            value: this.diagram.settings.colourType,
-          } },
-          { id: "minRenderSize", component: "NumberSetting", name: "Minimum Node Size 1/x", properties: {
-            min: 1,
-            value: this.diagram.settings.minRenderSize,
-          } },
-        ];
-        break;
-
-      default:
-        console.warn("Non-existent diagram type:", this.diagram.type);
-        this.settings = [];
-        break;
-    }
+    this.settings = getVisibleSettings(diagram, graph);
   },
 
   methods: {

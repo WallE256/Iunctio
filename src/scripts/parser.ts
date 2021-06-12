@@ -6,10 +6,10 @@ import * as GlobalStorage from "@/scripts/globalstorage";
 export function csvParse(file: File, id: string, onFinish: (graph: Graph) => void): void {
   const reader = new FileReader();
   reader.readAsText(file);
-  reader.onload = () => {
+  reader.onload = async () => {
     const graph = processData(reader.result as string);
     // file name variable stores the name without the extension
-    GlobalStorage.addDataset(id, graph);
+    await GlobalStorage.addDataset(id, graph);
     onFinish(graph);
   };
 }

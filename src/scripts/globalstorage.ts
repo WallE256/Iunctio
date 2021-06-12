@@ -55,6 +55,10 @@ export class Diagram {
 const diagrams = new Map<string, Diagram>();
 const datasets = new Map<string, Graph>();
 
+// has to be a { value } object, because otherwise it cannot be reassigned
+const datasetList = { values: null as string[] | null };
+const diagramList = { values: null as string[] | null };
+
 function diagramToJSON(diagram: Diagram): string {
   // unfortunately this function is necessary, or it will try to serialize the
   // onChange field as well
@@ -67,11 +71,47 @@ function diagramToJSON(diagram: Diagram): string {
   }`;
 }
 
-/// `addDataset` adds a dataset to the global storage
-export function addDataset(id: string, graph: Graph): void {
+async function mutateStorageList(
+  storageID: string,
+  listObject: { values: string[] | null },
+  callback: (list: string[]) => void,
+): Promise<void> {
+  if (listObject.values) {
+    // if it's in memory, there's no need to fetch if from local storage first
+    callback(listObject.values);
+  } else {
+    // otherwise, get it from local storage & pass it to the callback there
+    const local = await localforage.getItem(storageID);
+    const result = (local ? local : []) as string[];
+    listObject.values = result;
+    callback(listObject.values);
+  }
+  // update to local storage so the change is still there for the next time
+  await localforage.setItem(storageID, listObject.values);
+}
+
+/// `getDatasets` gives the list of IDs of all uploaded datasets (looking for
+/// them, both in memory and in the localstorage).
+export async function getDatasets(): Promise<string[]> {
+  if (!datasetList.values) {
+    datasetList.values = (await localforage.getItem("datasets")) as string[];
+  }
+  return datasetList.values;
+}
+
+/// `addDataset` adds a dataset to the global storage.
+export async function addDataset(id: string, graph: Graph): Promise<void> {
   datasets.set(id, graph);
   const storageKey = "dataset-" + id;
-  localforage.setItem(storageKey, JSON.stringify(graph.export()));
+
+  // ...these could probably be updated in parallel, using Promise.all but that
+  // doesn't seem to work
+  await localforage.setItem(storageKey, JSON.stringify(graph.export()));
+
+  await mutateStorageList("datasets", datasetList, (ids) => {
+    ids.push(id);
+  });
+  console.log("Finally:", datasetList);
 }
 
 /// `getDataset` returns the graph that corresponds to the given id, or
@@ -95,8 +135,6 @@ export async function getDataset(id: string): Promise<Graph | null> {
     console.log(error);
     return null;
   }
-
-  return null;
 }
 
 /// `removeDataset` deletes a dataset from the memory AND from the local storage.
@@ -104,13 +142,31 @@ export function removeDataset(id: string): void {
   datasets.delete(id);
   const storageKey = "dataset-" + id;
   localforage.removeItem(storageKey);
+
+  mutateStorageList("datasets", datasetList, (ids) => {
+    const index = ids.indexOf(id);
+    if (index !== -1) ids.splice(index);
+  });
+}
+
+/// `getDiagrams` returns a list of all diagram IDs and will look for these
+/// both in memory and in local storage.
+export async function getDiagrams(): Promise<string[]> {
+  if (!diagramList.values) {
+    diagramList.values = (await localforage.getItem("diagrams")) as string[];
+  }
+  return diagramList.values;
 }
 
 /// `addDiagram` will add a new diagram to local storage.
-export function addDiagram(diagram: Diagram): void {
-  const storageKey = "dia-" + diagram.id;
-  localforage.setItem(storageKey, diagramToJSON(diagram));
+export async function addDiagram(diagram: Diagram): Promise<void> {
   diagrams.set(diagram.id, diagram);
+  const storageKey = "dia-" + diagram.id;
+  await localforage.setItem(storageKey, diagramToJSON(diagram));
+
+  await mutateStorageList("diagrams", diagramList, (ids) => {
+    ids.push(diagram.id);
+  });
 }
 
 /// `getDiagram` returns a Diagram's settings and properties if a diagram
@@ -150,6 +206,11 @@ export function removeDiagram(diagram: Diagram): void {
   diagrams.delete(diagram.id);
   const storageKey = "dia-" + diagram.id;
   localforage.removeItem(storageKey);
+
+  mutateStorageList("diagrams", diagramList, (ids) => {
+    const index = ids.indexOf(diagram.id);
+    if (index !== -1) ids.splice(index);
+  });
 }
 
 /// `changeSetting` updates a diagram's setting(s) and will call the `onChange`

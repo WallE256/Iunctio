@@ -13,7 +13,7 @@ import { debounce } from "lodash";
 import * as GlobalStorage from "@/scripts/globalstorage";
 import { Viewport } from 'pixi-viewport';
 
-// see also DiagramSettings.vue and UploadDataset.vue
+// see also scripts/settingconfig.ts
 type Settings = {
   variety: string, // "circle" or "line"
   edgeHighlightDirection: string,

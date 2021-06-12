@@ -38,6 +38,7 @@ function drawTorus(graphics: PIXI.Graphics,
   return graphics;
 }
 
+// see also scripts/settingconfig.ts
 type Settings = {
   root: string | null,
   height: number,
@@ -57,8 +58,7 @@ export default defineComponent({
   },
 
   async mounted() {
-    const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
-    this.canvas = canvas;
+    this.canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
     const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
 
     this.diagram = await GlobalStorage.getDiagram(this.diagramid);
@@ -75,13 +75,11 @@ export default defineComponent({
     this.tooltip = this.$refs["graph-tooltip"] as HTMLElement;
 
     this.app = new PIXI.Application({
-      view: canvas,
+      view: this.canvas,
       antialias: true,
       backgroundAlpha: 0,
       resizeTo: canvasParent,
     });
-
-    const settings = this.diagram.settings as Settings;
 
     // Create map for number of connections between nodes
     this.bothConnections = new Map();
@@ -127,11 +125,11 @@ export default defineComponent({
           return;
         }
 
-        this.draw(app, diagram.settings);
+        this.draw(app, this.diagram.settings);
       };
     });
 
-    this.draw(app, settings);
+    this.draw(app, this.diagram.settings);
   },
 
   created(){
