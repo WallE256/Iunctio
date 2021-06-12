@@ -2,8 +2,12 @@ import Graph from "graphology";
 import * as GlobalStorage from "@/scripts/globalstorage";
 
 /// Parses the CSV file `file` describing a graph.
-/// When done reading and parsing, it returns the 
-export function csvParse(file: File, id: string, onFinish: (graph: Graph) => void): void {
+/// When done reading and parsing, it returns the
+export function csvParse(
+  file: File,
+  id: string,
+  onFinish: (graph: Graph) => void
+): void {
   const reader = new FileReader();
   reader.readAsText(file);
   reader.onload = async () => {

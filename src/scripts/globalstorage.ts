@@ -69,7 +69,7 @@ function diagramToJSON(diagram: Diagram): string {
 async function mutateStorageList(
   storageID: string,
   listObject: { values: string[] | null },
-  callback: (list: string[]) => void,
+  callback: (list: string[]) => void
 ): Promise<void> {
   if (listObject.values) {
     // if it's in memory, there's no need to fetch if from local storage first
@@ -230,7 +230,7 @@ export function changeSetting(diagram: Diagram, ...values: any[]): void {
 export const selectedNodes = [] as {
   // The ID of the dataset, so `GlobalStorage.getDataset(datasetID)` will give
   // you the graph that the node belongs to.
-  datasetID: string,
+  datasetID: string;
   // The ID of the node in the Graph object
-  nodeID: any,
+  nodeID: any;
 }[];

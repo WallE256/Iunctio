@@ -24,11 +24,7 @@ export default defineComponent({
   components: { NewVis },
   data() {
     return {
-      vis_types: [
-        ArcDiagram,
-        SunburstDiagram,
-        DistributionDiagram
-      ],
+      vis_types: [ArcDiagram, SunburstDiagram, DistributionDiagram],
     };
   },
   methods: {

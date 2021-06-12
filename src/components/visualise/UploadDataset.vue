@@ -31,9 +31,9 @@ export default defineComponent({
         // this is unique enough and not too long
         return String(Math.floor(Date.now() % 1e5)) + "-" + id;
       }
-      
+
       const file = (event.target.files as FileList)[0];
-      const filename = file.name.replace(/\.[^/.]+$/, ""); 
+      const filename = file.name.replace(/\.[^/.]+$/, "");
       const graphID = createID(filename);
       const diagramID = createID(filename);
 
@@ -44,12 +44,14 @@ export default defineComponent({
         }
 
         const defaultSettings = getDefaultSettings(this.diagram_component.name);
-        await GlobalStorage.addDiagram(new GlobalStorage.Diagram(
-          diagramID,
-          graphID,
-          this.diagram_component.name,
-          defaultSettings,
-        ));
+        await GlobalStorage.addDiagram(
+          new GlobalStorage.Diagram(
+            diagramID,
+            graphID,
+            this.diagram_component.name,
+            defaultSettings
+          )
+        );
 
         this.$emit("dataset-upload", diagramID);
 
