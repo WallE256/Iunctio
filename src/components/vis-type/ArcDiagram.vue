@@ -2,11 +2,7 @@
   <div id="canvas-parent" ref="canvas-parent" style="height: 100%; width: 100%">
     <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
   </div>
-  <div
-    id="graph-tooltip"
-    ref="graph-tooltip"
-    style="position: fixed; user-select: none"
-  ></div>
+  <div id="graph-tooltip" ref="graph-tooltip" style="position: fixed; user-select: none"></div>
 </template>
 
 <script lang="ts">
@@ -65,24 +61,24 @@ export default defineComponent({
     });
 
     this.viewport = new Viewport({
-      screenWidth: window.innerWidth,
-      screenHeight: window.innerHeight,
-      interaction: this.app.renderer.plugins.interaction, // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
-    });
+        screenWidth: window.innerWidth,
+        screenHeight: window.innerHeight,
+        interaction: this.app.renderer.plugins.interaction // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
+    })
 
     this.viewport.sortableChildren = true;
     // add the viewport to the stage
-    this.app.stage.addChild(this.viewport as Viewport);
+    this.app.stage.addChild(this.viewport as Viewport)
 
     //activate plugins
     this.viewport
-      .drag()
-      .wheel()
-      //.decelerate() //this might lower perfomance a lot
-      .clampZoom({ maxScale: 1 });
+        .drag()
+        .wheel()
+        //.decelerate() //this might lower perfomance a lot
+        .clampZoom({maxScale:1});
 
-    this.viewport.moveCenter(window.innerWidth / 2, window.innerHeight / 2);
-    this.viewport.setZoom(0.5);
+    this.viewport.moveCenter(window.innerWidth / 2, window.innerHeight / 2)
+    this.viewport.setZoom(0.5)
 
     this.tooltip = this.$refs["graph-tooltip"] as HTMLElement;
 
