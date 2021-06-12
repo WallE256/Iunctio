@@ -92,6 +92,7 @@ export default defineComponent({
     
     // give each node a corresponding index and corresponding text element
     let i = 0;
+    let colorIndex = 0;
     this.graph.forEachNode((source: any, sourceAttr) => {
       const sourceString = source.toString();
       const text = new PIXI.Text(sourceString, defaultStyle);
@@ -145,11 +146,10 @@ export default defineComponent({
       });
 
       if(!this.jobMap.has(sourceAttr.jobtitle)) {
-        const generatedId = random(0,1,true);
-        const stringHex = this.rgbToHex(d3.interpolateRainbow(generatedId));
+        const color = d3.schemeSet3[colorIndex++];
         this.jobMap.set(sourceAttr.jobtitle, {
-          id: generatedId,
-          assignedColor: parseInt(stringHex, 16)
+          id: colorIndex,
+          assignedColor: parseInt(this.cssToHex(color), 16)
         })
       }
       i++;
@@ -189,9 +189,6 @@ export default defineComponent({
       this.culling(this.app as PIXI.Application, this.viewport as Viewport, this.graph);
     });
 
-    this.jobMap.forEach((value, key, map) => {
-      console.log(key + ' -> ' + value)
-    })
 
   },
 
@@ -238,6 +235,10 @@ export default defineComponent({
         return (x.length==1) ? "0"+x : x;  //Add zero if we get only one character
       })
       return "0x"+c.join("");
+    },
+
+    cssToHex(cssString: string): string {
+      return "0x"+ cssString.substring(1);
     },
 
     culling(app: PIXI.Application, viewport: Viewport, graph: Graph) {
