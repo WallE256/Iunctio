@@ -391,10 +391,12 @@ export default defineComponent({
           } else {
             nodeRadius = Math.min(30, Math.max(5 * Math.log(sourceData.inboundDegree), 5));
           }
+
+          const circleColor = this.jobMap.get(sourceAttr.jobtitle)?.assignedColor;
           const circle = sourceData.circle;
           circle.clear();
           circle.lineStyle(1);
-          circle.beginFill(0x50D5E8, 1);
+          circle.beginFill(circleColor, 1);
           circle.drawCircle(0, 0, nodeRadius);
           circle.endFill();
           circle.x = nodeLineX + gap * sourceData.index;
