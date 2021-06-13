@@ -59,7 +59,7 @@ export default defineComponent({
       backgroundAlpha: 0,
       resizeTo: canvasParent,
     });
-    
+
     this.viewport = new Viewport({
         screenWidth: window.innerWidth,
         screenHeight: window.innerHeight,
@@ -84,7 +84,7 @@ export default defineComponent({
     const defaultStyle = new PIXI.TextStyle({
       fill: "#000000",
     });
-    
+
     // give each node a corresponding index and corresponding text element
     let i = 0;
     this.graph.forEachNode((source: any, sourceAttr) => {
@@ -114,7 +114,7 @@ export default defineComponent({
           mouseEvent.screenY,
           rectangle.top + canvasParent.clientHeight - tooltip.clientHeight,
         ) + "px";
-        
+
         this.unhighlight();
         this.hoverNode = source;
         this.highlight();
@@ -129,7 +129,7 @@ export default defineComponent({
         this.hoverNode = null;
         this.highlight();
       });
-      
+
       // select/brush-and-linking interactivity
       circle.on("click", (event) => {
         if (!this.diagram) {
@@ -190,7 +190,7 @@ export default defineComponent({
       }, 250)
     )
   },
-  
+
   data() {
     return {
       // node map
@@ -216,12 +216,12 @@ export default defineComponent({
 
     draw(graph: Graph, app: PIXI.Application, settings: Settings, viewport: Viewport) {
       const canvas = this.canvas as HTMLCanvasElement;
-      
+
       //node radius has to be fixed size otherwise they become very small when adding too many nodes
       //const nodeRadius = graph.order == 0 ? 200 : Math.floor(500 / graph.order);
       const nodeRadius = 10;
       //---------------------------------------------
-      
+
       const textStyle = new PIXI.TextStyle({
         fill: "#000000",
         fontSize: nodeRadius + 4,
@@ -232,7 +232,7 @@ export default defineComponent({
       const alpha = (drawOutgoing && drawIncoming) ? 0.1 : 0.2;
 
       viewport.removeChildren();
-      
+
       // NOTE: some forEach* callbacks have ": any", because graphology lies
       // about its types :(
       if (!settings.variety || settings.variety === "circle") {
@@ -367,7 +367,7 @@ export default defineComponent({
         nodeData.edgeGraphics.tint = color;
         nodeData.edgeGraphics.alpha = 5;
         nodeData.edgeGraphics.zIndex = 1;
-        
+
         const callback = (target: any, targetAttributes: any) => {
           const targetData = this.nodeMap.get(target);
           if (!targetData) return;

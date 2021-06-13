@@ -57,9 +57,9 @@ export function getVisibleSettings(diagram: GlobalStorage.Diagram, graph: Graph)
           options: [ "circle", "line" ],
           value: diagram.settings.variety,
         } },
-        { id: "hoverEdgeDirection", component: "SelectSetting", name: "Edge Direction", properties: {
+        { id: "edgeHighlightDirection", component: "SelectSetting", name: "Edge Direction", properties: {
           options: [ "incoming", "outgoing", "both" ],
-          value: diagram.settings.hoverEdgeDirection,
+          value: diagram.settings.edgeHighlightDirection,
         } },
       ];
     }
