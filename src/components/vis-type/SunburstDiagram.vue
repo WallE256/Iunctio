@@ -98,6 +98,11 @@ export default defineComponent({
     this.$nextTick(() => {
       app.resize();
       this.diagram.onChange = (diagram: GlobalStorage.Diagram, changedKey: string) => {
+
+        if (changedKey === "name") {
+          return;
+        }
+
         if (changedKey === "selectedNode") {
           // un-highlight old nodes
           const clearTint = 0xffffff;
@@ -278,7 +283,8 @@ export default defineComponent({
           this.attributesColourMap = new Map();
 
           graph.forEachNode((node, attributes) => {
-            if (attributes[settings.colourType]) {
+            if (attributes[settings.colourType] || attributes[settings.colourType] == 0) {
+
               this.attributesColourMap.set(attributes[settings.colourType], indexNumber);
               indexNumber += 1;
             }

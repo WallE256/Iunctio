@@ -16,8 +16,8 @@ import { Viewport } from "pixi-viewport";
 
 // see also scripts/settingconfig.ts
 type Settings = {
-  variety?: string; // "circle" or "line"
-  hoverEdgeDirection?: string;
+  variety: string, // "circle" or "line"
+  edgeHighlightDirection: string,
 };
 
 type NodeData = {
@@ -273,7 +273,7 @@ export default defineComponent({
         fill: "#000000",
         fontSize: nodeRadius + 4,
       });
-      const direction = settings.hoverEdgeDirection;
+      const direction = settings.edgeHighlightDirection;
       const drawOutgoing = direction === "outgoing" || direction === "both";
       const drawIncoming = direction === "incoming" || direction === "both";
       const alpha = drawOutgoing && drawIncoming ? 0.1 : 0.2;
@@ -432,7 +432,7 @@ export default defineComponent({
           targetData.circle.tint = color;
           targetData.edgeGraphics.zIndex = 1;
         };
-        const direction = diagram.settings.hoverEdgeDirection;
+        const direction = diagram.settings.edgeHighlightDirection;
         if (direction === "outgoing" || direction === "both") {
           this.graph.forEachOutboundNeighbor(node, callback);
         }
@@ -472,7 +472,7 @@ export default defineComponent({
           targetData.circle.tint = color;
           targetData.edgeGraphics.zIndex = 0;
         };
-        const direction = diagram.settings.hoverEdgeDirection;
+        const direction = diagram.settings.edgeHighlightDirection;
         if (direction === "outgoing" || direction === "both") {
           this.graph.forEachOutboundNeighbor(node, callback);
         }

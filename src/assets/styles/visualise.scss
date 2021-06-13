@@ -3,38 +3,90 @@
 @include font-face("Poppins", "Medium");
 @include font-face("Poppins", "Regular");
 @include font-face("JetBrainsMono", "Regular");
-.visualise{
-  padding: 75px 50px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 
-  background-color: $CREAM ;
+.visualise {
+  // Occupy entire viewport height.
+  height: 100%;
+  // Prevent content under nav-bar
+  padding: 50px 25px;
+  position: relative;
 
-  // Document styling:
-  h1, h2, h3 {
-    // Default font:
-    @include font-sans("Poppins", $weight:"Medium");
-    // Default font-colour:
-    color: $BLACK_DDD;
-  }
-  p {
-    // Default font:
-    @include font-sans("Poppins", 1rem, $weight: "Regular");
-    // Default font-colour:
-    color: $BLACK_L;
-    padding: 0 1rem;
-    text-align: justify;
+  &__back {
+    @include font-sans("Poppins", 0.75rem, "Regular", $BLACK_DDD);
+    cursor: pointer;
+    margin: 0 5px;
+    &:hover {
+      text-decoration: underline;
+    }
   }
 
-  .visualisation-frame {
-    position: relative;
-    width: 100%;
-    max-width: 1200px;
-    background-color: $WHITE;
-    box-shadow: 3px 3px 2px rgba($BLACK_DDD,0.15);
-    // To move the pseudo-elements behind the parent.
-    transform-style: preserve-3d;
-    padding: 2rem;
+  .upload-dataset {
+    padding: 0 40px;
+    &__title {
+      @include font-sans("Poppins", 1.25rem, "Medium", $BLACK_DDD);
+    }
+
+    &__btn {
+      // Remove default styling.
+      appearance: none;
+      border: 0;
+      // Make the button circular.
+      border-radius: 100%;
+      @include setSize(40px);
+
+      background: $BLACK_DD;
+      box-shadow: 2px 2px 4px rgba($BLACK_DDD, 0.25);
+      margin: 10px;
+      cursor: pointer;
+      position: relative;
+
+      &::after {
+        @include pseudo($height: 50%, $width: 4px);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: $AQUAMARINE;
+      }
+      &::before {
+        @include pseudo($height: 50%, $width: 4px);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotateZ(90deg);
+        background: $AQUAMARINE;
+      }
+
+      // Shift up by 1 character + 5px margin
+      @include transition(transform border, 0.25s, $ease1);
+      &:hover, &:focus {
+        transform: scale(1.1);
+        outline: none;
+      }
+
+    }
+
+    &__tiles {
+      display: flex;
+      flex-flow: row wrap;
+      align-items: center;
+    }
+  }
+
+  .create-diagram {
+    padding: 0 40px;
+    &__title {
+      @include font-sans("Poppins", 1.25rem, "Medium", $BLACK_DDD);
+    }
+
+    &__tiles {
+      display: flex;
+      flex-flow: row wrap;
+    }
+  }
+
+  // Panels containing the diagrams to be displayed side-by-side.
+  .diagram-panels {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
   }
 }
