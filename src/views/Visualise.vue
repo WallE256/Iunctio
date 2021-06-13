@@ -28,7 +28,7 @@
         @upload="updateDatasets"
       />
     </section>
-    <section class="create-diagram" v-show="show_home && datasets.length > 0">
+    <section class="create-diagram" v-show="show_home">
       <h3 class="create-diagram__title">Create a new diagram.</h3>
       <div class="create-diagram__tiles">
         <create-diagram-tile
@@ -69,12 +69,13 @@ export default defineComponent({
       show_upload: false,
       show_panels: false,
       show_home: true,
+      requested_diag: '',
       shownDiagrams: [] as string[],
       diagram_types: [
         { name: "Arc Diagram", path: "img/vis/arc-diagram.png" },
         { name: "Sunburst Diagram", path: "img/vis/sunburst.png" },
         { name: "Distribution Diagram", path: "img/vis/distribution.png" },
-        { name: "Adjacency Matrix", path: "img/vis/adjacency.png" },
+        { name: "Adjacency Matrix", path: "img/vis/adjacency-matrix.png" },
       ],
       datasets: [] as string[],
     };
@@ -86,10 +87,15 @@ export default defineComponent({
 
   methods: {
     async selectDiagram(name: string) {
+      // If the number of datasets is less than 1, first request upload.
+      if (this.datasets.length < 1) {
+        this.toggleUpload(true);
+        this.requested_diag = name;
+        return;
+      }
       // Create a diagramID, create & add diagram to Global Storage and list of
       // shown diagrams. Finally, toggle the homepage and display the diagram panels.
       const diagramID = GlobalStorage.createID(name);
-      console.log(name);
       await this.createDiagram(diagramID, name);
       this.toggleHome(false);
       this.toggleDiagramPanels(true);
@@ -119,6 +125,14 @@ export default defineComponent({
       // Force an update, otherwise Vue doesn't remove the dataset-tile.
       this.$forceUpdate();
       this.toggleUpload(false);
+      // Check if any diagram was requested before upload.
+      // If yes, temporarily store the name, reset the requested diagram field
+      // and execute diagram creation.
+      if(this.requested_diag) {
+        const diag = this.requested_diag;
+        this.requested_diag = '';
+        await this.selectDiagram(diag);
+      }
     },
 
     toggleUpload(visibility?: boolean) {
