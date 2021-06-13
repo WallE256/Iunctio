@@ -2,7 +2,7 @@
   <div id="canvas-parent" ref="canvas-parent" style="height: 100%; width: 100%">
     <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
   </div>
-  <div id="graph-tooltip" ref="graph-tooltip" style="position: fixed; user-select: none"></div>
+  <info-tool id="info-tool" ref="info-tool" v-bind:values="this.infotool_value_list" v-bind:style="'left: ' + this.infotoolXPos + 'px; top: ' + this.infotoolYPos + 'px; display: ' + this.infotoolDisplay + ';'"/>
 </template>
 
 <script lang="ts">
@@ -11,6 +11,7 @@ import * as PIXI from "pixi.js";
 import Graph from "graphology";
 import { debounce } from "lodash";
 import * as GlobalStorage from "@/scripts/globalstorage";
+import InfoTool from "@/components/visualise/InfoTool.vue";
 import { Viewport } from "pixi-viewport";
 
 // see also scripts/settingconfig.ts
@@ -27,6 +28,9 @@ type NodeData = {
 };
 
 export default defineComponent({
+
+  components: { InfoTool, },
+
   props: {
     diagramid: {
       type: String,
@@ -80,7 +84,7 @@ export default defineComponent({
     this.viewport.moveCenter(window.innerWidth / 2, window.innerHeight / 2)
     this.viewport.setZoom(0.5)
 
-    this.tooltip = this.$refs["graph-tooltip"] as HTMLElement;
+    this.infotool = this.$refs["info-tool"] as HTMLElement;
 
     const defaultStyle = new PIXI.TextStyle({
       fill: "#000000",
@@ -102,49 +106,30 @@ export default defineComponent({
       circle.on("mouseover", (event) => {
         event.stopPropagation();
 
-        this.tooltip.style.display = "inline";
-        this.tooltip.style.backgroundColor = "white";
-        this.tooltip.style.padding = "10px";
-        this.tooltip.style.borderRadius = "10px";
-        this.tooltip.style.boxShadow = "2px 2px 6px rgba(0, 0, 0, 0.2)";
+        this.infotoolDisplay = "inline";
+
+        // Reset HTML
+        this.infotool_value_list = [];
 
         // Node ID
-        this.tooltip.innerHTML = "<h2> Node: " + node + "</h2><hr>";
+        this.infotool_value_list.push("<h2> Node: " + node + "</h2>");
+        this.infotool_value_list.push("<hr>");
 
         // Node degree and neighbours
-        this.tooltip.innerHTML +=
-          "<p>" + "Incoming Degree: " + this.graph.inDegree(node) + "</p>";
-        this.tooltip.innerHTML +=
-          "<p>" +
-          "Incoming Neighbours: " +
-          this.graph.inNeighbors(node).length +
-          "</p>";
-        this.tooltip.innerHTML += "<br>";
-        this.tooltip.innerHTML +=
-          "<p>" + "Outgoing Degree: " + this.graph.outDegree(node) + "</p>";
-        this.tooltip.innerHTML +=
-          "<p>" +
-          "Outgoing Neighbours: " +
-          this.graph.outNeighbors(node).length +
-          "</p>";
-        this.tooltip.innerHTML += "<br>";
+        this.infotool_value_list.push("<p>" + "Incoming Degree: " + this.graph.inDegree(node) + "</p>");
+        this.infotool_value_list.push("<p>" + "Incoming Neighbours: " + this.graph.inNeighbors(node).length + "</p>");
+        this.infotool_value_list.push("<br>");
+        this.infotool_value_list.push("<p>" + "Outgoing Degree: " + this.graph.outDegree(node) + "</p>");
+        this.infotool_value_list.push("<p>" + "Outgoing Neighbours: " + this.graph.outNeighbors(node).length + "</p>");
+        this.infotool_value_list.push("<br>");
 
         // Attributes
-        for (
-          let index = 0;
-          index < Object.keys(this.graph.getNodeAttributes(node)).length;
-          index++
-        ) {
-          this.tooltip.innerHTML +=
-            "<p>" +
-            Object.keys(this.graph.getNodeAttributes(node))[index] +
-            ": " +
-            Object.values(this.graph.getNodeAttributes(node))[index] +
-            "</p>";
+        for (let index = 0; index < Object.keys(this.graph.getNodeAttributes(node)).length; index++) {
+          this.infotool_value_list.push("<p>" + Object.keys(this.graph.getNodeAttributes(node))[index] + ": " + Object.values(this.graph.getNodeAttributes(node))[index] + "</p>");
         }
 
-        this.tooltip.style.left = circle.x + 20 + "px";
-        this.tooltip.style.top = circle.y + 40 + "px";
+        this.infotoolXPos = circle.x + 20;
+        this.infotoolYPos = circle.y + 40;
 
         this.unhighlight();
         this.hoverNode = node;
@@ -154,7 +139,7 @@ export default defineComponent({
       circle.on("mouseout", (event) => {
         event.stopPropagation();
 
-        this.tooltip.style.display = "none";
+        this.infotoolDisplay = "none";
 
         this.unhighlight();
         this.hoverNode = null;
@@ -237,7 +222,11 @@ export default defineComponent({
       selectedNodes: [] as string[],
       hoverNode: null as string | null,
       app: null as null | PIXI.Application,
-      tooltip: document.createElement("null"),
+      infotool: document.createElement('null'),
+      infotool_value_list: [] as string[],
+      infotoolXPos: 0,
+      infotoolYPos: 0,
+      infotoolDisplay: "none",
       viewport: null as null | Viewport,
       graph: new Graph({
         //options

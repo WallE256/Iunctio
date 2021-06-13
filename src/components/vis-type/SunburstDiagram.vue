@@ -502,10 +502,14 @@ export default defineComponent({
 
       this.infotoolDisplay = "inline";
 
+      // Reset HTML
       this.infotool_value_list = [];
 
+      // Node ID
       this.infotool_value_list.push("<h2> Node: " + node + "</h2>");
       this.infotool_value_list.push("<hr>");
+
+      // Node degree and neighbours
       this.infotool_value_list.push("<p>" + "Incoming Degree: " + this.graph.inDegree(node) + "</p>");
       this.infotool_value_list.push("<p>" + "Incoming Neighbours: " + this.graph.inNeighbors(node).length + "</p>");
       this.infotool_value_list.push("<br>");
@@ -513,6 +517,7 @@ export default defineComponent({
       this.infotool_value_list.push("<p>" + "Outgoing Neighbours: " + this.graph.outNeighbors(node).length + "</p>");
       this.infotool_value_list.push("<br>");
 
+      // Attributes
       for (let index = 0; index < Object.keys(this.graph.getNodeAttributes(node)).length; index++) {
 
         if (Object.keys(this.graph.getNodeAttributes(node))[index] === settings.colourType) {
