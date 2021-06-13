@@ -512,7 +512,7 @@ export default defineComponent({
       this.infotool_value_list = [];
 
       // Node ID
-      this.infotool_value_list.push("<h2> Node: " + node + "</h2>");
+      this.infotool_value_list.push("<h3> Node: " + node + "</h3>");
       this.infotool_value_list.push("<hr>");
 
       // Node degree and neighbours
@@ -540,11 +540,11 @@ export default defineComponent({
 
       this.infotoolXPos = Math.min(
         mouseEvent.clientX + 20,
-        rectangle.left + canvasParent.clientWidth - infotool_element.clientWidth,
+        rectangle.left + canvasParent.clientWidth - 250,
       );
       this.infotoolYPos = Math.min(
         mouseEvent.clientY + 20,
-        rectangle.top + canvasParent.clientHeight - infotool_element.clientHeight,
+        rectangle.top + canvasParent.clientHeight - 250,
       );
 
     });
