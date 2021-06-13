@@ -512,15 +512,15 @@ export default defineComponent({
       this.infotool_value_list = [];
 
       // Node ID
-      this.infotool_value_list.push("<h3> Node: " + node + "</h3>");
+      this.infotool_value_list.push("<h2 style='font-size: 16px;'> Node: " + node + "</h3>");
       this.infotool_value_list.push("<hr>");
 
       // Node degree and neighbours
-      this.infotool_value_list.push("<p>" + "Incoming Degree: " + this.graph.inDegree(node) + "</p>");
-      this.infotool_value_list.push("<p>" + "Incoming Neighbours: " + this.graph.inNeighbors(node).length + "</p>");
+      this.infotool_value_list.push("<p> Incoming Degree: " + this.graph.inDegree(node) + "</p>");
+      this.infotool_value_list.push("<p> Incoming Neighbours: " + this.graph.inNeighbors(node).length + "</p>");
       this.infotool_value_list.push("<br>");
-      this.infotool_value_list.push("<p>" + "Outgoing Degree: " + this.graph.outDegree(node) + "</p>");
-      this.infotool_value_list.push("<p>" + "Outgoing Neighbours: " + this.graph.outNeighbors(node).length + "</p>");
+      this.infotool_value_list.push("<p> Outgoing Degree: " + this.graph.outDegree(node) + "</p>");
+      this.infotool_value_list.push("<p> Outgoing Neighbours: " + this.graph.outNeighbors(node).length + "</p>");
       this.infotool_value_list.push("<br>");
 
       // Attributes
