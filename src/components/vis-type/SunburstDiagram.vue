@@ -2,7 +2,7 @@
   <div id="canvas-parent" ref="canvas-parent" style="height: 100%; width: 100%;">
     <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
   </div>
-  <div id="graph-tooltip" ref="graph-tooltip" style="position: fixed; user-select: none;"></div>
+  <info-tool id="info-tool" ref="info-tool" v-bind:values="this.infotool_value_list" v-bind:style="'left: ' + this.infotoolXPos + 'px; top: ' + this.infotoolYPos + 'px; display: ' + this.infotoolDisplay + ';'"/>
 </template>
 
 <script lang="ts">
@@ -12,6 +12,7 @@ import { debounce } from "lodash";
 import * as d3 from "d3";
 import * as PIXI from "pixi.js";
 import * as GlobalStorage from "@/scripts/globalstorage";
+import InfoTool from "@/components/visualise/InfoTool.vue";
 
 // stolen from https://pixijs.download/dev/docs/packages_graphics-extras_src_drawTorus.ts.html
 function drawTorus(graphics: PIXI.Graphics,
@@ -50,6 +51,9 @@ type Settings = {
 };
 
 export default defineComponent({
+
+  components: { InfoTool, },
+
   props: {
     diagramid: {
       type: String,
@@ -72,7 +76,7 @@ export default defineComponent({
       return;
     }
 
-    this.tooltip = this.$refs["graph-tooltip"] as HTMLElement;
+    this.infotool = this.$refs["info-tool"] as HTMLElement;
 
     this.app = new PIXI.Application({
       view: this.canvas,
@@ -146,7 +150,6 @@ export default defineComponent({
       graph: null as any,
       diagram: null as any,
       app: null as null | PIXI.Application,
-      tooltip: document.createElement('null'),
       canvas: null as null | HTMLCanvasElement,
       clickedNode: false,
       double: 0,
@@ -161,6 +164,11 @@ export default defineComponent({
       colours: null as any,
       selectedNodes: [] as string[],
       graphicsMap: new Map<string, PIXI.Graphics[]>(),
+      infotool: document.createElement('null'),
+      infotool_value_list: [] as string[],
+      infotoolXPos: 0,
+      infotoolYPos: 0,
+      infotoolDisplay: "none",
     };
   },
 
@@ -491,39 +499,36 @@ export default defineComponent({
     // Show node name on hover
     drawnNode.on('pointerover', (event) => {
       event.stopPropagation();
-      //this.tooltip.innerText = "Node: " + node;
 
-      this.tooltip.style.display = "inline";
-      this.tooltip.style.backgroundColor = "white";
-      this.tooltip.style.padding = "10px";
-      this.tooltip.style.borderRadius = "10px";
-      this.tooltip.style.boxShadow = "2px 2px 6px rgba(0, 0, 0, 0.2)";
+      this.infotoolDisplay = "inline";
 
-      // Node ID
-      this.tooltip.innerHTML = "<h2> Node: " + node + "</h2><hr>";
+      this.infotool_value_list = [];
 
-      // Node degree and neighbours
-      this.tooltip.innerHTML += "<p>" + "Incoming Degree: " + this.graph.inDegree(node) + "</p>";
-      this.tooltip.innerHTML += "<p>" + "Incoming Neighbours: " + this.graph.inNeighbors(node).length + "</p>";
-      this.tooltip.innerHTML += "<br>";
-      this.tooltip.innerHTML += "<p>" + "Outgoing Degree: " + this.graph.outDegree(node) + "</p>";
-      this.tooltip.innerHTML += "<p>" + "Outgoing Neighbours: " + this.graph.outNeighbors(node).length + "</p>";
-      this.tooltip.innerHTML += "<br>";
+      this.infotool_value_list.push("<h2> Node: " + node + "</h2>");
+      this.infotool_value_list.push("<hr>");
+      this.infotool_value_list.push("<p>" + "Incoming Degree: " + this.graph.inDegree(node) + "</p>");
+      this.infotool_value_list.push("<p>" + "Incoming Neighbours: " + this.graph.inNeighbors(node).length + "</p>");
+      this.infotool_value_list.push("<br>");
+      this.infotool_value_list.push("<p>" + "Outgoing Degree: " + this.graph.outDegree(node) + "</p>");
+      this.infotool_value_list.push("<p>" + "Outgoing Neighbours: " + this.graph.outNeighbors(node).length + "</p>");
+      this.infotool_value_list.push("<br>");
 
       for (let index = 0; index < Object.keys(this.graph.getNodeAttributes(node)).length; index++) {
-        //this.tooltip.innerText += "<br>" + Object.keys(this.graph.getNodeAttributes(node))[index] + ": " + Object.values(this.graph.getNodeAttributes(node))[index];
+
         if (Object.keys(this.graph.getNodeAttributes(node))[index] === settings.colourType) {
-          this.tooltip.innerHTML += "<p style='text-decoration: underline;'>" + Object.keys(this.graph.getNodeAttributes(node))[index] + ": " + Object.values(this.graph.getNodeAttributes(node))[index] + "</p>";
+          this.infotool_value_list.push("<p style='text-decoration: underline;'>" + Object.keys(this.graph.getNodeAttributes(node))[index] + ": " + Object.values(this.graph.getNodeAttributes(node))[index] + "</p>");
         } else {
-          this.tooltip.innerHTML += "<p>" + Object.keys(this.graph.getNodeAttributes(node))[index] + ": " + Object.values(this.graph.getNodeAttributes(node))[index] + "</p>";
+          this.infotool_value_list.push("<p>" + Object.keys(this.graph.getNodeAttributes(node))[index] + ": " + Object.values(this.graph.getNodeAttributes(node))[index] + "</p>");
         }
       }
+
+      // Set info tool location
       if (settings.variety === "sunburst") {
-        this.tooltip.style.left = drawnNode.x + "px";
-        this.tooltip.style.top = drawnNode.y + canvas.height * 0.05 + "px";
+        this.infotoolXPos = drawnNode.x;
+        this.infotoolYPos = drawnNode.y + canvas.height * 0.05;
       } else {
-        this.tooltip.style.left = drawnNode.x + (this.maxWidth * sizePerc / 2) + "px";
-        this.tooltip.style.top = drawnNode.y + canvas.height * 0.15 + "px";
+        this.infotoolXPos = drawnNode.x + (this.maxWidth * sizePerc / 2);
+        this.infotoolYPos = drawnNode.y + canvas.height * 0.15;
       }
     });
 
@@ -531,7 +536,7 @@ export default defineComponent({
     drawnNode.on('pointerout', (event) => {
       event.stopPropagation();
 
-      this.tooltip.style.display = "none";
+      this.infotoolDisplay = "none";
     });
   }
 },
