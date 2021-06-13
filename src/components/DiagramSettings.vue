@@ -45,6 +45,7 @@ export default defineComponent({
 
   data() {
     return {
+      diagram: null as any,
       settings: [] as Setting[],
     };
   },
@@ -61,7 +62,7 @@ export default defineComponent({
       return;
     }
 
-    this.settings = getVisibleSettings(diagram, graph);
+    this.settings = getVisibleSettings(this.diagram, graph);
   },
 
   methods: {
