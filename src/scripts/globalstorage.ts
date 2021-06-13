@@ -94,7 +94,7 @@ async function mutateStorageList(
 /// them, both in memory and in the localstorage).
 export async function getDatasets(): Promise<string[]> {
   if (!datasetList.values) {
-    datasetList.values = (await localforage.getItem("datasets")) as string[];
+    datasetList.values = (await localforage.getItem("datasets") || []) as string[];
   }
   return datasetList.values;
 }
@@ -153,7 +153,7 @@ export function removeDataset(id: string): void {
 /// both in memory and in local storage.
 export async function getDiagrams(): Promise<string[]> {
   if (!diagramList.values) {
-    diagramList.values = (await localforage.getItem("diagrams")) as string[];
+    diagramList.values = (await localforage.getItem("diagrams") || []) as string[];
   }
   return diagramList.values;
 }
