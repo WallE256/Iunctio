@@ -1,35 +1,27 @@
 <template>
-  <label :for="settingid" class="num">
-    <span class="num__label"> {{ settinglabel }} </span>
-    <div class="num__container">
-      <button
-        class="input__decrease"
-        onclick="this.nextElementSibling.stepDown();"
-        @click="onChange"
-      ></button>
-      <input
-        id="number-input"
-        ref="number-input"
-        type="number"
-        :name="settingid"
-        v-on:change="onChange"
-        :min="min"
-        :max="max"
-        :value="value"
-        class="num__input"
-      />
-      <button
-        class="input__increase"
-        onclick="this.previousElementSibling.stepUp();"
-        @click="onChange"
-      ></button>
-    </div>
-  </label>
+    <label :for="settingid" class="num">
+      <span class="num__label"> {{settinglabel}} </span>
+      <div class="num__container">
+        <button class="input__decrease" onclick="this.nextElementSibling.stepDown();" @click="onChange"></button>
+        <input
+          id="number-input"
+          ref="number-input"
+          type="number"
+          :name="settingid"
+          v-on:change="onChange"
+          :min="min"
+          :max="max"
+          :value="value"
+          class="num__input"
+        />
+        <button class="input__increase" onclick="this.previousElementSibling.stepUp();" @click="onChange"></button>
+      </div>
+    </label>
 </template>
 
 <style lang="scss" scoped>
 @import "../../assets/styles/config";
-.num {
+.num{
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -39,7 +31,7 @@
     margin: 0 15px 0 5px;
   }
 
-  &__container {
+  &__container{
     @include rel();
     margin-left: auto;
     margin-right: 0;
@@ -66,7 +58,7 @@
 
     $arrow-size: 10px;
 
-    button.input__decrease {
+    button.input__decrease{
       appearance: none;
       @include abs(50% 0 0 0.75rem);
       display: block;
@@ -79,7 +71,7 @@
       cursor: pointer;
     }
 
-    button.input__increase {
+    button.input__increase{
       appearance: none;
       @include abs(50% 0.75rem 0 0);
       display: block;
@@ -92,8 +84,11 @@
       cursor: pointer;
     }
   }
+
+
 }
 </style>
+
 
 <script lang="ts">
 import { defineComponent } from "vue";
