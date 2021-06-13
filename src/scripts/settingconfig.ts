@@ -35,7 +35,7 @@ export function getDefaultSettings(componentName: string): any {
       };
     }
 
-    case "DistributionDiagram": {
+    case "StatisticsDiagram": {
       return {
         variety: "distribution",
         logarithmic: false,
@@ -107,7 +107,7 @@ export function getVisibleSettings(diagram: GlobalStorage.Diagram, graph: Graph)
       ];
     }
 
-    case "DistributionDiagram": {
+    case "StatisticsDiagram": {
       return [
         { id: "variety", component: "SelectSetting", name: "Diagram Variety", properties: {
           options: [ "distribution", "histogram"],

@@ -41,7 +41,7 @@
 import { defineComponent } from "vue";
 import ArcDiagram from "@/components/vis-type/ArcDiagram.vue";
 import SunburstDiagram from "@/components/vis-type/SunburstDiagram.vue";
-import DistributionDiagram from "@/components/vis-type/DistributionDiagram.vue";
+import StatisticsDiagram from "@/components/vis-type/StatisticsDiagram.vue";
 import AdjacencyMatrix from "@/components/vis-type/AdjacencyMatrix.vue";
 import DiagramSettings from "@/components/DiagramSettings.vue";
 import SelectSetting from "@/components/settings/SelectSetting.vue";
@@ -55,7 +55,7 @@ export default defineComponent({
     SelectSetting,
     ArcDiagram,
     SunburstDiagram,
-    DistributionDiagram,
+    StatisticsDiagram,
     AdjacencyMatrix,
   },
   props: {
