@@ -48,6 +48,11 @@ export class Diagram {
   }
 }
 
+export function createID(id: string): string {
+  // this is unique enough and not too long
+  return String(Math.floor(Date.now() % 1e5)) + "-" + id;
+}
+
 const diagrams = new Map<string, Diagram>();
 const datasets = new Map<string, Graph>();
 
@@ -69,7 +74,7 @@ function diagramToJSON(diagram: Diagram): string {
 async function mutateStorageList(
   storageID: string,
   listObject: { values: string[] | null },
-  callback: (list: string[]) => void,
+  callback: (list: string[]) => void
 ): Promise<void> {
   if (listObject.values) {
     // if it's in memory, there's no need to fetch if from local storage first
@@ -89,7 +94,7 @@ async function mutateStorageList(
 /// them, both in memory and in the localstorage).
 export async function getDatasets(): Promise<string[]> {
   if (!datasetList.values) {
-    datasetList.values = (await localforage.getItem("datasets")) as string[];
+    datasetList.values = (await localforage.getItem("datasets") || []) as string[];
   }
   return datasetList.values;
 }
@@ -140,7 +145,7 @@ export function removeDataset(id: string): void {
 
   mutateStorageList("datasets", datasetList, (ids) => {
     const index = ids.indexOf(id);
-    if (index !== -1) ids.splice(index);
+    if (index !== -1) ids.splice(index, 1);
   });
 }
 
@@ -148,7 +153,7 @@ export function removeDataset(id: string): void {
 /// both in memory and in local storage.
 export async function getDiagrams(): Promise<string[]> {
   if (!diagramList.values) {
-    diagramList.values = (await localforage.getItem("diagrams")) as string[];
+    diagramList.values = (await localforage.getItem("diagrams") || []) as string[];
   }
   return diagramList.values;
 }
@@ -203,7 +208,7 @@ export function removeDiagram(diagram: Diagram): void {
 
   mutateStorageList("diagrams", diagramList, (ids) => {
     const index = ids.indexOf(diagram.id);
-    if (index !== -1) ids.splice(index);
+    if (index !== -1) ids.splice(index, 1);
   });
 }
 
@@ -230,7 +235,7 @@ export function changeSetting(diagram: Diagram, ...values: any[]): void {
 export const selectedNodes = [] as {
   // The ID of the dataset, so `GlobalStorage.getDataset(datasetID)` will give
   // you the graph that the node belongs to.
-  datasetID: string,
+  datasetID: string;
   // The ID of the node in the Graph object
-  nodeID: any,
+  nodeID: any;
 }[];
