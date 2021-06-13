@@ -541,9 +541,6 @@ export default defineComponent({
         rectangle.top + canvasParent.clientHeight - infotool_element.clientHeight,
       );
 
-      console.log(infotool_element.clientWidth, infotool_element.clientHeight);
-
-
     });
 
     // Hide node name after hover
