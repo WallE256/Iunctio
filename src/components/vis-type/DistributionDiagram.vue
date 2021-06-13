@@ -1,9 +1,5 @@
 <template>
-  <div
-    id="canvas-parent"
-    ref="canvas-parent"
-    style="margin: 0; padding: 0; height: 100%; width: 100%"
-  >
+  <div id="canvas-parent" ref="canvas-parent" style="margin: 0; padding: 0; height: 100%; width: 100%;">
     <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
   </div>
 </template>
@@ -17,8 +13,8 @@ import * as PIXI from "pixi.js";
 import * as GlobalStorage from "@/scripts/globalstorage";
 
 type Settings = {
-  variety: string;
-  logarithmic: boolean;
+  variety: string,
+  logarithmic: boolean,
 };
 
 export default defineComponent({
@@ -61,10 +57,7 @@ export default defineComponent({
     // correct yet (because they've not been rendered yet)
     this.$nextTick(() => {
       app.resize();
-      this.diagram.onChange = (
-        diagram: GlobalStorage.Diagram,
-        changedKey: string
-      ) => {
+      this.diagram.onChange = (diagram: GlobalStorage.Diagram, changedKey: string) => {
         app.stage.removeChildren();
         this.draw(app, this.diagram.settings);
       };
@@ -73,21 +66,16 @@ export default defineComponent({
     });
   },
 
-  created() {
+  created(){
     window.addEventListener(
       "resize",
       debounce((event) => {
         if (!this.diagram) {
           return;
         }
-        this.handleResize(
-          event,
-          this.graph,
-          this.app as PIXI.Application,
-          this.diagram.settings as Settings
-        );
+        this.handleResize(event, this.graph, this.app as PIXI.Application, this.diagram.settings as Settings);
       }, 250)
-    );
+    )
   },
 
   data() {
@@ -104,23 +92,16 @@ export default defineComponent({
   },
 
   methods: {
-    handleResize(
-      e: any,
-      graph: Graph,
-      app: PIXI.Application,
-      settings: Settings
-    ) {
+    handleResize(e: any, graph: Graph, app: PIXI.Application, settings: Settings) {
       this.draw(app, settings);
     },
 
     getInterval() {
-      var minDate = new Date("9999-12-31 00:00");
-      var maxDate = new Date("0000-01-01 00:00");
+      var minDate = new Date('9999-12-31 00:00');
+        var maxDate = new Date('0000-01-01 00:00');
       this.graph.forEachEdge((edge: any) => {
-        if (this.graph.hasEdgeAttribute(edge, "date")) {
-          var newDate = this.attrDateToDate(
-            this.graph.getEdgeAttribute(edge, "date")
-          );
+        if (this.graph.hasEdgeAttribute(edge, 'date')) {
+          var newDate = this.attrDateToDate(this.graph.getEdgeAttribute(edge, 'date'));
 
           if (newDate < minDate) {
             minDate = newDate;
@@ -150,10 +131,7 @@ export default defineComponent({
     drawDate(app: PIXI.Application, date: any, posX: number, posY: number) {
       const dateISO = this.utcToDate(date).toISOString();
 
-      const dateText = new PIXI.Text(dateISO.substr(0, dateISO.indexOf("T")), {
-        fontSize: 18,
-        align: "center",
-      });
+      const dateText = new PIXI.Text(dateISO.substr(0, dateISO.indexOf('T')), {fontSize: 18, align: 'center'});
       dateText.x = posX;
       dateText.y = posY;
       dateText.anchor.set(0.5, 0);
@@ -161,13 +139,8 @@ export default defineComponent({
       app.stage.addChild(dateText);
     },
 
-    drawLine(
-      app: PIXI.Application,
-      startX: number,
-      startY: number,
-      endX: number,
-      endY: number
-    ) {
+    drawLine(app: PIXI.Application, startX: number, startY: number, endX: number, endY: number) {
+
       const line = new PIXI.Graphics();
 
       line.lineStyle(0.666, 0x878787);
@@ -178,7 +151,10 @@ export default defineComponent({
     },
 
     // Draw the diagram
-    draw(app: PIXI.Application, settings: Settings) {
+    draw(
+      app: PIXI.Application,
+      settings: Settings,
+    ) {
       app.stage.removeChildren();
 
       const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
@@ -190,14 +166,11 @@ export default defineComponent({
       const maxX = canvas.width * (1 - borderPerc);
       const maxY = canvas.height * (1 - borderPerc);
 
-      var intervalUTC = [
-        this.dateToUTC(this.interval[0]),
-        this.dateToUTC(this.interval[1]),
-      ];
+      var intervalUTC = [this.dateToUTC(this.interval[0]), this.dateToUTC(this.interval[1])];
       var intervalTimeUTC = intervalUTC[1] - intervalUTC[0];
 
       const secondsPerDay = 1000 * 60 * 60 * 24;
-      const dayWidth = (secondsPerDay / intervalTimeUTC) * (maxX - minX);
+      const dayWidth = secondsPerDay / intervalTimeUTC * (maxX - minX);
 
       const windowSize = this.window.length * secondsPerDay;
       const startPosition = intervalUTC[0] - windowSize;
@@ -209,9 +182,7 @@ export default defineComponent({
       let dateMap = new Map();
 
       this.graph.forEachEdge((edge: any) => {
-        var edgeDate = this.dateToUTC(
-          this.attrDateToDate(this.graph.getEdgeAttribute(edge, "date"))
-        );
+        var edgeDate = this.dateToUTC(this.attrDateToDate(this.graph.getEdgeAttribute(edge, 'date')));
         var mapValue = dateMap.get(edgeDate);
         if (isNaN(mapValue)) {
           dateMap.set(edgeDate, 1);
@@ -227,6 +198,7 @@ export default defineComponent({
       }
 
       if (settings.variety === "distribution") {
+
         var points = [] as any[];
         points.push(minX, maxY);
 
@@ -235,15 +207,9 @@ export default defineComponent({
         for (let i = intervalUTC[0]; i <= intervalUTC[1]; i += secondsPerDay) {
           mapValue = 0;
 
-          for (
-            let j = windowDisFromMiddle * -1;
-            j <= windowDisFromMiddle;
-            j++
-          ) {
+          for (let j = windowDisFromMiddle * -1; j <= windowDisFromMiddle; j++) {
             if (!isNaN(dateMap.get(i + j * secondsPerDay))) {
-              mapValue +=
-                dateMap.get(i + j * secondsPerDay) *
-                this.window[j + windowDisFromMiddle];
+              mapValue += dateMap.get(i + j * secondsPerDay) * this.window[j + windowDisFromMiddle];
             }
           }
 
@@ -255,22 +221,15 @@ export default defineComponent({
         for (let i = intervalUTC[0]; i <= intervalUTC[1]; i += secondsPerDay) {
           mapValue = 0;
 
-          for (
-            let j = windowDisFromMiddle * -1;
-            j <= windowDisFromMiddle;
-            j++
-          ) {
+          for (let j = windowDisFromMiddle * -1; j <= windowDisFromMiddle; j++) {
             if (!isNaN(dateMap.get(i + j * secondsPerDay))) {
-              mapValue +=
-                dateMap.get(i + j * secondsPerDay) *
-                this.window[j + windowDisFromMiddle];
+              mapValue += dateMap.get(i + j * secondsPerDay) * this.window[j + windowDisFromMiddle];
             }
           }
 
           if (!isNaN(mapValue)) {
-            var newXPos =
-              ((i - intervalUTC[0]) / intervalTimeUTC) * (maxX - minX) + minX;
-            var newYPos = maxY - (mapValue / maxHeight) * (maxY - minY);
+            var newXPos = (i - intervalUTC[0]) / intervalTimeUTC * (maxX - minX) + minX;
+            var newYPos = maxY - ((mapValue / maxHeight) * (maxY - minY));
 
             points.push(newXPos, newYPos);
           }
@@ -294,9 +253,8 @@ export default defineComponent({
           mapValue = dateMap.get(i);
 
           if (!isNaN(mapValue)) {
-            var newX =
-              ((i - intervalUTC[0]) / intervalTimeUTC) * (maxX - minX) + minX;
-            var newY = maxY - (mapValue / maxHeight) * (maxY - minY);
+            var newX = (i - intervalUTC[0]) / intervalTimeUTC * (maxX - minX) + minX;
+            var newY = maxY - ((mapValue / maxHeight) * (maxY - minY));
 
             const distribution = new PIXI.Graphics();
             distribution.beginFill(0x4287f5);
@@ -313,20 +271,15 @@ export default defineComponent({
       this.drawDate(app, intervalUTC[0], minX, maxY);
       this.drawLine(app, minX, maxY, minX, minY);
 
-      for (
-        let time = intervalUTC[0] + stepSize;
-        time <= intervalUTC[1] - stepSize;
-        time += stepSize
-      ) {
-        const drawXPos =
-          ((time - intervalUTC[0]) / intervalTimeUTC) * (maxX - minX) + minX;
+      for (let time = intervalUTC[0] + stepSize; time <= intervalUTC[1] - stepSize; time += stepSize) {
+        const drawXPos = (time - intervalUTC[0]) / intervalTimeUTC * (maxX - minX) + minX;
         this.drawDate(app, time, drawXPos, maxY);
         this.drawLine(app, drawXPos, maxY, drawXPos, minY);
       }
 
       this.drawDate(app, intervalUTC[1], maxX, maxY);
       this.drawLine(app, maxX, maxY, maxX, minY);
-    },
-  },
+    }
+},
 });
 </script>
