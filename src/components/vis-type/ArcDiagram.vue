@@ -100,7 +100,7 @@ export default defineComponent({
       const edgeGraphics = new PIXI.Graphics();
       const circle = new PIXI.Graphics();
 
-      // tooltip display
+      // infotool display
       circle.interactive = true;
       circle.buttonMode = true;
       circle.on("mouseover", (event) => {
@@ -133,11 +133,11 @@ export default defineComponent({
 
         this.infotoolXPos = Math.min(
           mouseEvent.screenX + 20,
-          rectangle.left + canvasParent.clientWidth - tooltip.clientWidth,
+          rectangle.left + canvasParent.clientWidth - this.infotool.clientWidth,
         );
         this.infotoolYPos = Math.min(
           mouseEvent.screenY,
-          rectangle.top + canvasParent.clientHeight - tooltip.clientHeight,
+          rectangle.top + canvasParent.clientHeight - this.infotool.clientHeight,
         );
 
         this.unhighlight();
