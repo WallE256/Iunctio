@@ -17,7 +17,7 @@ export function getDefaultSettings(componentName: string): any {
     case "ArcDiagram": {
       return {
         variety: "circle",
-        hoverEdgeDirection: "outgoing",
+        edgeHighlightDirection: "outgoing",
       };
     }
 
