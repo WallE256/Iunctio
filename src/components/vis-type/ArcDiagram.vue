@@ -128,8 +128,17 @@ export default defineComponent({
           this.infotool_value_list.push("<p>" + Object.keys(this.graph.getNodeAttributes(node))[index] + ": " + Object.values(this.graph.getNodeAttributes(node))[index] + "</p>");
         }
 
-        this.infotoolXPos = circle.x + 20;
-        this.infotoolYPos = circle.y + 40;
+        const mouseEvent = event.data.originalEvent as MouseEvent;
+        const rectangle = canvasParent.getBoundingClientRect();
+
+        this.infotoolXPos = Math.min(
+          mouseEvent.screenX + 20,
+          rectangle.left + canvasParent.clientWidth - tooltip.clientWidth,
+        );
+        this.infotoolYPos = Math.min(
+          mouseEvent.screenY,
+          rectangle.top + canvasParent.clientHeight - tooltip.clientHeight,
+        );
 
         this.unhighlight();
         this.hoverNode = node;

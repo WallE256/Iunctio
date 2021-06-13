@@ -527,14 +527,18 @@ export default defineComponent({
         }
       }
 
-      // Set info tool location
-      if (settings.variety === "sunburst") {
-        this.infotoolXPos = drawnNode.x;
-        this.infotoolYPos = drawnNode.y + canvas.height * 0.05;
-      } else {
-        this.infotoolXPos = drawnNode.x + (this.maxWidth * sizePerc / 2);
-        this.infotoolYPos = drawnNode.y + canvas.height * 0.15;
-      }
+      const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
+      const rectangle = canvasParent.getBoundingClientRect();
+      const mouseEvent = event.data.originalEvent as MouseEvent;
+
+      this.infotoolXPos = Math.min(
+        mouseEvent.screenX + 20,
+        rectangle.left + canvasParent.clientWidth - this.infotool.clientWidth,
+      );
+      this.infotoolYPos = Math.min(
+        mouseEvent.screenY,
+        rectangle.top + canvasParent.clientHeight - this.infotool.clientHeight,
+      );
     });
 
     // Hide node name after hover
