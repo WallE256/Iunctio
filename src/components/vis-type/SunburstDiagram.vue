@@ -530,15 +530,20 @@ export default defineComponent({
       const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
       const rectangle = canvasParent.getBoundingClientRect();
       const mouseEvent = event.data.originalEvent as MouseEvent;
+      const infotool_element = document.getElementById('info-tool') as HTMLElement;
 
       this.infotoolXPos = Math.min(
-        mouseEvent.screenX + 20,
-        rectangle.left + canvasParent.clientWidth - this.infotool.clientWidth,
+        mouseEvent.clientX + 20,
+        rectangle.left + canvasParent.clientWidth - infotool_element.clientWidth,
       );
       this.infotoolYPos = Math.min(
-        mouseEvent.screenY,
-        rectangle.top + canvasParent.clientHeight - this.infotool.clientHeight,
+        mouseEvent.clientY + 20,
+        rectangle.top + canvasParent.clientHeight - infotool_element.clientHeight,
       );
+
+      console.log(infotool_element.clientWidth, infotool_element.clientHeight);
+
+
     });
 
     // Hide node name after hover
