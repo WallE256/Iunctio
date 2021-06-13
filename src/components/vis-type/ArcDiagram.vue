@@ -101,10 +101,20 @@ export default defineComponent({
       circle.on("mouseover", (event) => {
         event.stopPropagation();
 
+        const mouseEvent = event.data.originalEvent as MouseEvent;
+        const rectangle = canvasParent.getBoundingClientRect();
+
         tooltip.style.display = "inline";
-        tooltip.innerText = "Node: " + sourceString;
-        tooltip.style.left = (circle.x + 20) + "px";
-        tooltip.style.top = (circle.y + 40) + "px";
+        tooltip.innerText = "Node: " + sourceAttr.email;
+        tooltip.style.left = Math.min(
+          mouseEvent.screenX + 20,
+          rectangle.left + canvasParent.clientWidth - tooltip.clientWidth,
+        ) + "px";
+        tooltip.style.top = Math.min(
+          mouseEvent.screenY,
+          rectangle.top + canvasParent.clientHeight - tooltip.clientHeight,
+        ) + "px";
+        
         this.unhighlight();
         this.hoverNode = source;
         this.highlight();
