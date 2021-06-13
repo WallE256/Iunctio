@@ -1,5 +1,6 @@
 import Graph from "graphology";
 import * as GlobalStorage from "@/scripts/globalstorage";
+import louvain from "graphology-communities-louvain";
 
 /// Parses the CSV file `file` describing a graph.
 /// When done reading and parsing, it returns the 
@@ -34,6 +35,10 @@ function processData(data: string): Graph {
       sentiment: line[8],
     });
   }
+
+  // Add communities to the graph
+  louvain.assign(graph);
+
   // console.log(graph);
   const t1 = performance.now();
   console.log("Parsing took " + (t1 - t0) + " milliseconds.");

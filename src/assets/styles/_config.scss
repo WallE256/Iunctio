@@ -16,8 +16,11 @@ $z-indices: (
     "subtitle": 1,
     "blobs": 0
   ),
+  "visualise": (
+    "upload-panel": 6,
+  ),
   "user-manual": 3,
-  "nav-bar": 10,
+  "nav-bar": 5,
 );
 
 //Set media query breakpoints:
@@ -41,6 +44,7 @@ $CREAM: #DCBE90;
 $BLUE: #8AB6D6;
 $BLUE_D: #364f6b;
 $AQUAMARINE: #12E2A3;
+$RED: #f85959;
 
 /***************************************
 *            3. Transitions            *

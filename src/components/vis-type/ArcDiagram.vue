@@ -18,8 +18,8 @@ import * as d3 from "d3";
 
 // see also scripts/settingconfig.ts
 type Settings = {
-  variety?: string, // "circle" or "line"
-  hoverEdgeDirection?: string,
+  variety: string, // "circle" or "line"
+  edgeHighlightDirection: string,
 };
 
 type NodeData = {
@@ -64,7 +64,7 @@ export default defineComponent({
       backgroundAlpha: 0,
       resizeTo: canvasParent,
     });
-    
+
     this.viewport = new Viewport({
         screenWidth: canvas.width,
         screenHeight: canvas.height,
@@ -89,7 +89,7 @@ export default defineComponent({
     const defaultStyle = new PIXI.TextStyle({
       fill: "#000000",
     });
-    
+
     // give each node a corresponding index and corresponding text element
     let i = 0;
     let colorIndex = 0;
@@ -106,11 +106,20 @@ export default defineComponent({
       circle.buttonMode = true;
       circle.on("mouseover", (event) => {
         event.stopPropagation();
-        console.log(sourceAttr.jobtitle);
+
+        const mouseEvent = event.data.originalEvent as MouseEvent;
+        const rectangle = canvasParent.getBoundingClientRect();
+
         tooltip.style.display = "inline";
-        tooltip.innerText = "Node: " + sourceString;
-        tooltip.style.left = (circle.x + 20) + "px";
-        tooltip.style.top = (circle.y + 40) + "px";
+        tooltip.innerText = "Node: " + sourceAttr.email;
+        tooltip.style.left = Math.min(
+          mouseEvent.screenX + 20,
+          rectangle.left + canvasParent.clientWidth - tooltip.clientWidth,
+        ) + "px";
+        tooltip.style.top = Math.min(
+          mouseEvent.screenY,
+          rectangle.top + canvasParent.clientHeight - tooltip.clientHeight,
+        ) + "px";
 
         this.unhighlight();
         this.hoverNode = source;
@@ -203,7 +212,7 @@ export default defineComponent({
       }, 250)
     )
   },
-  
+
   data() {
     return {
       jobMap: new Map<string, {
@@ -291,23 +300,23 @@ export default defineComponent({
 
     draw(graph: Graph, app: PIXI.Application, settings: Settings, viewport: Viewport) {
       const canvas = this.canvas as HTMLCanvasElement;
-      
+
       //node radius has to be fixed size otherwise they become very small when adding too many nodes
       //const nodeRadius = graph.order == 0 ? 200 : Math.floor(500 / graph.order);
       let nodeRadius = 10;
       //---------------------------------------------
-      
+
       const textStyle = new PIXI.TextStyle({
         fill: "#000000",
         fontSize: nodeRadius + 4,
       });
-      const direction = settings.hoverEdgeDirection;
+      const direction = settings.edgeHighlightDirection;
       const drawOutgoing = direction === "outgoing" || direction === "both";
       const drawIncoming = direction === "incoming" || direction === "both";
       const alpha = (drawOutgoing && drawIncoming) ? 0.1 : 0.2;
 
       viewport.removeChildren();
-      
+
       // NOTE: some forEach* callbacks have ": any", because graphology lies
       // about its types :(
       if (!settings.variety || settings.variety === "circle") {
@@ -458,14 +467,14 @@ export default defineComponent({
         nodeData.edgeGraphics.tint = color;
         nodeData.edgeGraphics.alpha = 5;
         nodeData.edgeGraphics.zIndex = 1;
-        
+
         const callback = (target: any, targetAttributes: any) => {
           const targetData = this.nodeMap.get(target);
           if (!targetData) return;
           targetData.circle.tint = color;
           targetData.edgeGraphics.zIndex = 1;
         };
-        const direction = diagram.settings.hoverEdgeDirection;
+        const direction = diagram.settings.edgeHighlightDirection;
         if (direction === "outgoing" || direction === "both") {
           this.graph.forEachOutboundNeighbor(node, callback);
         }
@@ -505,7 +514,7 @@ export default defineComponent({
           targetData.circle.tint = color;
           targetData.edgeGraphics.zIndex = 0;
         };
-        const direction = diagram.settings.hoverEdgeDirection;
+        const direction = diagram.settings.edgeHighlightDirection;
         if (direction === "outgoing" || direction === "both") {
           this.graph.forEachOutboundNeighbor(node, callback);
         }

@@ -1,88 +1,161 @@
 <template>
   <main class="visualise">
-    <create-visualisations v-show="show_vis_home" @tile-click="requestUpload" />
-    <upload-dataset
-      v-show="show_upload"
-      @back="returnToHome"
-      :diagram_component="selectedDiagram"
-      @dataset-upload="onUpload"
-    />
-    <current-visualisations v-show="show_vis_home" />
-    <div class="visualise__panels" v-show="show_panels">
-      <diagram-panel
-        v-for="diagram in shownDiagrams"
-        :key="diagram"
-        :diagram_id="diagram"
-        @selected-node-change="onSelectedNodeChange"
+    <span
+      class="visualise__back"
+      v-show="!show_home"
+      @click="
+        toggleHome(true);
+        toggleDiagramPanels(false);
+      "
+      >BACK</span
+    >
+    <section class="upload-dataset" v-show="show_home">
+      <h3 class="upload-dataset__title">Upload a new data set.</h3>
+      <div class="upload-dataset__tiles">
+        <dataset-tile
+          v-for="dataset in datasets"
+          :key="dataset"
+          :id_name="dataset"
+          @delete="updateDatasets"
+        />
+        <div class="upload-dataset__btn-container">
+          <button class="upload-dataset__btn" @click="toggleUpload(true)" />
+        </div>
+      </div>
+      <upload-panel
+        v-if="show_upload"
+        @toggle="toggleUpload"
+        @upload="updateDatasets"
       />
-    </div>
-    <span class="visualise__back" v-show="!show_vis_home" @click="returnToHome">BACK</span>
+    </section>
+    <section class="create-diagram" v-show="show_home">
+      <h3 class="create-diagram__title">Create a new diagram.</h3>
+      <div class="create-diagram__tiles">
+        <create-diagram-tile
+          v-for="diag in diagram_types"
+          :key="diag.name"
+          :name="diag.name"
+          :path="diag.path"
+          @tile-click="selectDiagram"
+        />
+      </div>
+    </section>
+    <section class="diagram-panels" v-show="show_panels">
+      <diagram-panel
+        v-for="diag in shownDiagrams"
+        :key="diag"
+        :diagram_id="diag"
+        @selected-node-change="onSelectedNodeChange"
+        @hide="hideDiagram"
+      />
+    </section>
   </main>
 </template>
 
 <script lang="ts">
-import { defineComponent, DefineComponent } from "vue";
-import CreateVisualisations from "@/components/visualise/CreateVisualisations.vue";
-import UploadDataset from "@/components/visualise/UploadDataset.vue";
+import { defineComponent } from "vue";
+import UploadPanel from "@/components/visualise/UploadPanel.vue";
 import DiagramPanel from "@/components/visualise/DiagramPanel.vue";
-import CurrentVisualisations from "@/components/visualise/CurrentVisualisations.vue";
+import CreateDiagramTile from "@/components/visualise/CreateDiagramTile.vue";
+import DatasetTile from "@/components/visualise/DatasetTile.vue";
+import { getDefaultSettings } from "@/scripts/settingconfig";
 import * as GlobalStorage from "@/scripts/globalstorage";
 
 export default defineComponent({
   name: "Visualise",
-  components: { UploadDataset, CurrentVisualisations, DiagramPanel, CreateVisualisations },
+  components: { CreateDiagramTile, UploadPanel, DatasetTile, DiagramPanel },
   data() {
     return {
-      show_vis_home: true,
       show_upload: false,
       show_panels: false,
-      selectedDiagram: null as DefineComponent | null,
+      show_home: true,
+      requested_diag: '',
       shownDiagrams: [] as string[],
+      diagram_types: [
+        { name: "Arc Diagram", path: "img/vis/arc-diagram.png" },
+        { name: "Sunburst Diagram", path: "img/vis/sunburst.png" },
+        { name: "Distribution Diagram", path: "img/vis/distribution.png" },
+        { name: "Adjacency Matrix", path: "img/vis/adjacency-matrix.png" },
+      ],
+      datasets: [] as string[],
     };
   },
+  async created() {
+    // Retrieve the list of datasets from
+    await this.updateDatasets();
+  },
+
   methods: {
-    toggleHome(visibility?: boolean) {
-      if(!(visibility === undefined)) {
-        this.show_vis_home = visibility;
-      } else {
-        this.show_vis_home = !this.show_vis_home;
+    async selectDiagram(name: string) {
+      // If the number of datasets is less than 1, first request upload.
+      if (this.datasets.length < 1) {
+        this.toggleUpload(true);
+        this.requested_diag = name;
+        return;
       }
-    },
-    toggleUpload(visibility?: boolean) {
-      if(!(visibility === undefined)) {
-        this.show_upload = visibility;
-      } else {
-        this.show_upload = !this.show_vis_home;
-      }
-    },
-    togglePanels(visibility?: boolean) {
-      if(!(visibility === undefined)) {
-        this.show_panels = visibility;
-      } else {
-        this.show_panels = !this.show_vis_home;
-      }
-    },
-    returnToHome() {
-      this.toggleHome(true);
-      this.toggleUpload(false);
-      this.togglePanels(false);
-    },
-    requestUpload(component: DefineComponent) {
+      // Create a diagramID, create & add diagram to Global Storage and list of
+      // shown diagrams. Finally, toggle the homepage and display the diagram panels.
+      const diagramID = GlobalStorage.createID(name);
+      await this.createDiagram(diagramID, name);
       this.toggleHome(false);
-      this.toggleUpload(true);
-      this.togglePanels(false);
-      this.selectedDiagram = component;
-    },
-    async onUpload(diagramID: string) {
-      this.toggleHome(false);
-      this.toggleUpload(false);
-      this.togglePanels(true);
-      this.shownDiagrams = await GlobalStorage.getDiagrams();
+      this.toggleDiagramPanels(true);
     },
 
-    // brush-and-link interactivity: update GlobalStorage and each diagram if
-    // needed
-    async onSelectedNodeChange(datasetID: string, nodeID: string, append: boolean) {
+    async createDiagram(diagramID: string, name: string) {
+      // Obtain the default settings for the chosen diagram.
+      const defaultSettings = getDefaultSettings(name);
+      // The most recent dataset upload is considered.
+      const graphID = this.datasets[this.datasets.length - 1];
+      // Add the diagram to GlobalStorage.
+      await GlobalStorage.addDiagram(
+        new GlobalStorage.Diagram(diagramID, graphID, name, defaultSettings)
+      );
+      // Add the diagram to list of shown diagrams.
+      this.shownDiagrams.push(diagramID);
+    },
+
+    hideDiagram(diagramID: string) {
+      // Only hides the diagram, doesn't delete from the Global Storage.
+      const index = this.shownDiagrams.indexOf(diagramID);
+      if (index !== -1) this.shownDiagrams.splice(index, 1);
+    },
+
+    async updateDatasets() {
+      this.datasets = await GlobalStorage.getDatasets();
+      // Force an update, otherwise Vue doesn't remove the dataset-tile.
+      this.$forceUpdate();
+      this.toggleUpload(false);
+      // Check if any diagram was requested before upload.
+      // If yes, temporarily store the name, reset the requested diagram field
+      // and execute diagram creation.
+      if(this.requested_diag) {
+        const diag = this.requested_diag;
+        this.requested_diag = '';
+        await this.selectDiagram(diag);
+      }
+    },
+
+    toggleUpload(visibility?: boolean) {
+      if (visibility !== undefined) this.show_upload = visibility;
+      else this.show_upload = !this.show_upload;
+    },
+
+    toggleDiagramPanels(visibility?: boolean) {
+      if (visibility !== undefined) this.show_panels = visibility;
+      else this.show_panels = !this.show_panels;
+    },
+
+    toggleHome(visibility?: boolean) {
+      if (visibility !== undefined) this.show_home = visibility;
+      else this.show_home = !this.show_home;
+    },
+
+    // brush-and-link interactivity: update GlobalStorage and each diagram if needed
+    async onSelectedNodeChange(
+      datasetID: string,
+      nodeID: string,
+      append: boolean
+    ) {
       const nodes = GlobalStorage.selectedNodes;
 
       // remove it if already present, add it if not present yet (so toggle)
@@ -106,8 +179,7 @@ export default defineComponent({
 
       // update every diagram that could have this node in it
       for (let i = 0; i < this.shownDiagrams.length; i++) {
-        GlobalStorage.getDiagram(this.shownDiagrams[i])
-        .then((diagram) => {
+        GlobalStorage.getDiagram(this.shownDiagrams[i]).then((diagram) => {
           if (!diagram) return;
           if (diagram.graphID !== datasetID) return;
 
@@ -121,29 +193,4 @@ export default defineComponent({
 });
 </script>
 
-<style scoped lang="scss">
-@import "../assets/styles/_config.scss";
-.visualise {
-  // Occupy entire viewport height.
-  height: 100%;
-  // Prevent content under nav-bar
-  padding: 50px 25px 25px 25px;
-  position: relative;
-
-  &__panels {
-    display: flex;
-    flex-direction: row;
-    height: 100%;
-  }
-  &__back {
-    @include font-sans("Poppins", 0.75rem, "Regular", $BLACK_DDD);
-    @include abs();
-    cursor: pointer;
-    margin: 2px;
-
-    &:hover {
-      text-decoration: underline;
-    }
-  }
-}
-</style>
+<style lang="scss" src="@/assets/styles/visualise.scss"></style>
