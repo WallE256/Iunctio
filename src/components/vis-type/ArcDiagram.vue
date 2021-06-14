@@ -13,7 +13,7 @@ import { debounce, random } from "lodash";
 import * as GlobalStorage from "@/scripts/globalstorage";
 import InfoTool from "@/components/visualise/InfoTool.vue";
 import { Viewport } from 'pixi-viewport';
-import { Cull } from '@pixi-essentials/cull'; 
+import { Cull } from '@pixi-essentials/cull';
 import { Container } from '@pixi/display';
 import * as d3 from "d3";
 
@@ -175,13 +175,13 @@ export default defineComponent({
         circle: circle,
         index: i,
         edgeGraphics: edgeGraphics,
-        inboundDegree: this.graph.inDegree(source),
-        outboundDegree: this.graph.outDegree(source)
+        inboundDegree: this.graph.inDegree(node),
+        outboundDegree: this.graph.outDegree(node)
       });
 
-      if(!this.jobMap.has(sourceAttr.jobtitle)) {
+      if(!this.jobMap.has(attributes.jobtitle)) {
         const color = d3.schemeSet3[colorIndex++];
-        this.jobMap.set(sourceAttr.jobtitle, {
+        this.jobMap.set(attributes.jobtitle, {
           id: colorIndex,
           assignedColor: parseInt(this.cssToHex(color), 16)
         })
@@ -293,11 +293,11 @@ export default defineComponent({
         if((viewport as Viewport).dirty) {
           cull.cull(app.renderer.screen);
           viewport.dirty = false;
-          
+
           //lvl of detail
           const zoom = viewport.scale.x;
 
-          //the level points can be changed later 
+          //the level points can be changed later
           const zoomingSteps = [0.2, 0.35, 0.5, 1];
           const zoomingStep = zoomingSteps.findIndex(zoomStep => zoom <= zoomStep);
           //console.log(zoomingStep, zoom)
@@ -320,11 +320,11 @@ export default defineComponent({
     })
     },
     saveSnapshot(app: PIXI.Application, viewport: Viewport) {
-      
+
       const graphics = new PIXI.Graphics()
           .beginFill(0xFF0000)
           .drawCircle(0, 0, 50);
-      
+
       let image = app.renderer.plugins.extract.image(graphics);
       viewport.addChild(image, 'image/jpeg', 1)
 
@@ -381,7 +381,7 @@ export default defineComponent({
             (vertexRadius + textDistance) * Math.sin(sourceData.index * angle);
 
           viewport.addChild(text);
-          
+
           if(drawOutgoing) {
             nodeRadius = Math.min(30, Math.max(5 * Math.log(sourceData.outboundDegree), 5));
           } else {
@@ -389,7 +389,7 @@ export default defineComponent({
           }
 
           const circleColor = this.jobMap.get(sourceAttr.jobtitle)?.assignedColor;
-          
+
           const circle = sourceData.circle;
           circle.clear();
           circle.lineStyle(1);
