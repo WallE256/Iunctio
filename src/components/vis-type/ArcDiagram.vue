@@ -9,9 +9,12 @@
 import { defineComponent } from "vue";
 import * as PIXI from "pixi.js";
 import Graph from "graphology";
-import { debounce } from "lodash";
+import { debounce, random } from "lodash";
 import * as GlobalStorage from "@/scripts/globalstorage";
 import { Viewport } from 'pixi-viewport';
+import { Cull } from '@pixi-essentials/cull'; 
+import { Container } from '@pixi/display';
+import * as d3 from "d3";
 
 // see also scripts/settingconfig.ts
 type Settings = {
@@ -24,6 +27,8 @@ type NodeData = {
   circle: PIXI.Graphics,
   index: number,
   edgeGraphics: PIXI.Graphics,
+  inboundDegree: number,
+  outboundDegree: number,
 };
 
 export default defineComponent({
@@ -61,8 +66,8 @@ export default defineComponent({
     });
 
     this.viewport = new Viewport({
-        screenWidth: window.innerWidth,
-        screenHeight: window.innerHeight,
+        screenWidth: canvas.width,
+        screenHeight: canvas.height,
         interaction: this.app.renderer.plugins.interaction // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
     })
 
@@ -87,6 +92,7 @@ export default defineComponent({
 
     // give each node a corresponding index and corresponding text element
     let i = 0;
+    let colorIndex = 0;
     this.graph.forEachNode((source: any, sourceAttr) => {
       const sourceString = source.toString();
       const text = new PIXI.Text(sourceString, defaultStyle);
@@ -144,9 +150,21 @@ export default defineComponent({
         circle: circle,
         index: i,
         edgeGraphics: edgeGraphics,
+        inboundDegree: this.graph.inDegree(source),
+        outboundDegree: this.graph.outDegree(source)
       });
+
+      if(!this.jobMap.has(sourceAttr.jobtitle)) {
+        const color = d3.schemeSet3[colorIndex++];
+        this.jobMap.set(sourceAttr.jobtitle, {
+          id: colorIndex,
+          assignedColor: parseInt(this.cssToHex(color), 16)
+        })
+      }
       i++;
     });
+
+
 
     // this has to happen next tick, otherwise the elements do not have their
     // size yet (because they've not been renderd yet)
@@ -176,7 +194,11 @@ export default defineComponent({
         this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
       };
       this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
+      //culling
+      this.culling(this.app as PIXI.Application, this.viewport as Viewport, this.graph);
     });
+
+
   },
 
   created(){
@@ -193,6 +215,10 @@ export default defineComponent({
 
   data() {
     return {
+      jobMap: new Map<string, {
+        id: number,
+        assignedColor: number
+      }>(),
       // node map
       nodeMap: new Map<string, NodeData>(),
 
@@ -210,6 +236,64 @@ export default defineComponent({
   },
 
   methods: {
+    rgbToHex(rgbString: string) {
+      const a = rgbString.split("(")[1].split(")")[0];
+      const b = a.split(",");
+      const c = b.map((x) => {             //For each array element
+        x = parseInt(x).toString(16);      //Convert to a base16 string
+        return (x.length==1) ? "0"+x : x;  //Add zero if we get only one character
+      })
+      return "0x"+c.join("");
+    },
+
+    cssToHex(cssString: string): string {
+      return "0x"+ cssString.substring(1);
+    },
+
+    culling(app: PIXI.Application, viewport: Viewport, graph: Graph) {
+      const cull = new Cull().addAll(viewport.children);
+      app.loader.load(()=> {
+      viewport.on('frame-end', () => {
+        if((viewport as Viewport).dirty) {
+          cull.cull(app.renderer.screen);
+          viewport.dirty = false;
+          
+          //lvl of detail
+          const zoom = viewport.scale.x;
+
+          //the level points can be changed later 
+          const zoomingSteps = [0.2, 0.35, 0.5, 1];
+          const zoomingStep = zoomingSteps.findIndex(zoomStep => zoom <= zoomStep);
+          //console.log(zoomingStep, zoom)
+
+          graph.forEachNode((node:any) => {
+            const nodeObj = this.nodeMap.get(node);
+            if(!nodeObj) {console.log("node does not exist"); return;}
+
+            const nodeGFX = nodeObj.circle;
+            const nodeText = nodeObj.text;
+
+            nodeText.visible = zoomingStep > 2;
+            //later we can change to only make nodes that have low degree
+            //and their corresponding edges dissapear
+            nodeGFX.visible = zoomingStep > 0;
+          })
+
+        }
+      })
+    })
+    },
+    saveSnapshot(app: PIXI.Application, viewport: Viewport) {
+      
+      const graphics = new PIXI.Graphics()
+          .beginFill(0xFF0000)
+          .drawCircle(0, 0, 50);
+      
+      let image = app.renderer.plugins.extract.image(graphics);
+      viewport.addChild(image, 'image/jpeg', 1)
+
+    },
+
     handleResize(e: any, graph: Graph, app: PIXI.Application, settings: Settings, viewport: Viewport) {
       this.draw(graph, app, settings, viewport);
     },
@@ -219,7 +303,7 @@ export default defineComponent({
 
       //node radius has to be fixed size otherwise they become very small when adding too many nodes
       //const nodeRadius = graph.order == 0 ? 200 : Math.floor(500 / graph.order);
-      const nodeRadius = 10;
+      let nodeRadius = 10;
       //---------------------------------------------
 
       const textStyle = new PIXI.TextStyle({
@@ -237,7 +321,7 @@ export default defineComponent({
       // about its types :(
       if (!settings.variety || settings.variety === "circle") {
         const textDistance = 40;
-        const vertexRadius = Math.min(canvas.width, canvas.height) - textDistance;
+        const vertexRadius = Math.min(canvas.width, canvas.height)*1.2 - textDistance;
         const angle = 2 * Math.PI / (graph.order == 0 ? 1 : graph.order);
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
@@ -252,11 +336,19 @@ export default defineComponent({
           text.y = centerY + (vertexRadius + textDistance) * Math.sin(sourceData.index * angle);
 
           viewport.addChild(text);
+          
+          if(drawOutgoing) {
+            nodeRadius = Math.min(30, Math.max(5 * Math.log(sourceData.outboundDegree), 5));
+          } else {
+            nodeRadius = Math.min(30, Math.max(5 * Math.log(sourceData.inboundDegree), 5));
+          }
 
+          const circleColor = this.jobMap.get(sourceAttr.jobtitle)?.assignedColor;
+          
           const circle = sourceData.circle;
           circle.clear();
           circle.lineStyle(1);
-          circle.beginFill(0x50D5E8, 1);
+          circle.beginFill(circleColor, 1);
           circle.drawCircle(0, 0, nodeRadius);
           circle.endFill();
           circle.x = centerX + vertexRadius * Math.cos(sourceData.index * angle);
@@ -295,17 +387,25 @@ export default defineComponent({
         const nodeLineY = canvas.height * 5/6;
         const nodeLineX = canvas.width * 1/10;
         //let gap = Math.floor(canvas.width/(1.2 * graph.order));
-        let gap = 30;
+        let gap = 35;
 
         // draw every node
         graph.forEachNode((source: any, sourceAttr) => {
           const sourceData = this.nodeMap.get(source);
           if (!sourceData) return; // not supposed to happen
 
+
+          if(drawOutgoing) {
+            nodeRadius = Math.min(30, Math.max(5 * Math.log(sourceData.outboundDegree), 5));
+          } else {
+            nodeRadius = Math.min(30, Math.max(5 * Math.log(sourceData.inboundDegree), 5));
+          }
+
+          const circleColor = this.jobMap.get(sourceAttr.jobtitle)?.assignedColor;
           const circle = sourceData.circle;
           circle.clear();
           circle.lineStyle(1);
-          circle.beginFill(0x50D5E8, 1);
+          circle.beginFill(circleColor, 1);
           circle.drawCircle(0, 0, nodeRadius);
           circle.endFill();
           circle.x = nodeLineX + gap * sourceData.index;
