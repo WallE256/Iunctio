@@ -18,6 +18,7 @@ export function getDefaultSettings(componentName: string): any {
       return {
         variety: "circle",
         edgeHighlightDirection: "outgoing",
+        filterJobtitle: "None"
       };
     }
 
@@ -60,6 +61,10 @@ export function getVisibleSettings(diagram: GlobalStorage.Diagram, graph: Graph)
         { id: "edgeHighlightDirection", component: "SelectSetting", name: "Edge Direction", properties: {
           options: [ "incoming", "outgoing", "both" ],
           value: diagram.settings.edgeHighlightDirection,
+        } },
+        { id: "filterJobtitle", component: "SelectSetting", name: "Filter", properties: {
+          options: [ "None", "Employee", "Trader", "Vice President", "Managing", "Unknown", "Manager", "Director", "President", "CEO" ],
+          value: diagram.settings.filterJobtitle,
         } },
       ];
     }

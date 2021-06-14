@@ -223,7 +223,9 @@ export default defineComponent({
       this.culling(this.app as PIXI.Application, this.viewport as Viewport, this.graph);
     });
 
-
+    this.jobMap.forEach((value,key, map ) => {
+         console.log(`m[${key}] = ${value}`);
+    })
   },
 
   created() {
