@@ -8,6 +8,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@pixi-essentials/cull": "^1.1.0",
     "@pixi/graphics-extras": "^6.0.2",
     "@types/d3": "^6.3.0",
     "core-js": "^3.11.2",
