@@ -1,8 +1,8 @@
 <template>
-  <div id="canvas-parent" ref="canvas-parent" style="height: 100%; width: 100%;">
+  <div id="canvas-parent" ref="canvas-parent" style="height: 100%; width: 100%">
     <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
   </div>
-  <p id="graph-tooltip" ref="graph-tooltip" style="position: fixed; user-select: none;"></p>
+  <info-tool id="info-tool" ref="info-tool" v-bind:values="this.infotool_value_list" v-bind:style="'left: ' + this.infotoolXPos + 'px; top: ' + this.infotoolYPos + 'px; display: ' + this.infotoolDisplay + ';'"/>
 </template>
 
 <script lang="ts">
@@ -11,6 +11,7 @@ import * as PIXI from "pixi.js";
 import Graph from "graphology";
 import { debounce, random } from "lodash";
 import * as GlobalStorage from "@/scripts/globalstorage";
+import InfoTool from "@/components/visualise/InfoTool.vue";
 import { Viewport } from 'pixi-viewport';
 import { Cull } from '@pixi-essentials/cull'; 
 import { Container } from '@pixi/display';
@@ -32,6 +33,9 @@ type NodeData = {
 };
 
 export default defineComponent({
+
+  components: { InfoTool, },
+
   props: {
     diagramid: {
       type: String,
@@ -84,7 +88,8 @@ export default defineComponent({
 
     this.viewport.moveCenter(window.innerWidth / 2, window.innerHeight / 2)
     this.viewport.setZoom(0.5)
-    const tooltip = this.$refs["graph-tooltip"] as HTMLElement;
+
+    this.infotool = this.$refs["info-tool"] as HTMLElement;
 
     const defaultStyle = new PIXI.TextStyle({
       fill: "#000000",
@@ -93,43 +98,63 @@ export default defineComponent({
     // give each node a corresponding index and corresponding text element
     let i = 0;
     let colorIndex = 0;
-    this.graph.forEachNode((source: any, sourceAttr) => {
-      const sourceString = source.toString();
+    this.graph.forEachNode((node: any, attributes) => {
+      const sourceString = node.toString();
       const text = new PIXI.Text(sourceString, defaultStyle);
       text.anchor.set(0.5, 0.5);
 
       const edgeGraphics = new PIXI.Graphics();
       const circle = new PIXI.Graphics();
 
-      // tooltip display
+      // infotool display
       circle.interactive = true;
       circle.buttonMode = true;
       circle.on("mouseover", (event) => {
         event.stopPropagation();
 
+        this.infotoolDisplay = "inline";
+
+        // Reset HTML
+        this.infotool_value_list = [];
+
+        // Node ID
+        this.infotool_value_list.push("<h2 style='font-size: 16px;'> Node: " + node + "</h3>");
+        this.infotool_value_list.push("<hr>");
+
+        // Node degree and neighbours
+        this.infotool_value_list.push("<p> Incoming Degree: " + this.graph.inDegree(node) + "</p>");
+        this.infotool_value_list.push("<p> Incoming Neighbours: " + this.graph.inNeighbors(node).length + "</p>");
+        this.infotool_value_list.push("<br>");
+        this.infotool_value_list.push("<p> Outgoing Degree: " + this.graph.outDegree(node) + "</p>");
+        this.infotool_value_list.push("<p> Outgoing Neighbours: " + this.graph.outNeighbors(node).length + "</p>");
+        this.infotool_value_list.push("<br>");
+
+        // Attributes
+        for (let index = 0; index < Object.keys(this.graph.getNodeAttributes(node)).length; index++) {
+          this.infotool_value_list.push("<p>" + Object.keys(this.graph.getNodeAttributes(node))[index] + ": " + Object.values(this.graph.getNodeAttributes(node))[index] + "</p>");
+        }
+
         const mouseEvent = event.data.originalEvent as MouseEvent;
         const rectangle = canvasParent.getBoundingClientRect();
 
-        tooltip.style.display = "inline";
-        tooltip.innerText = "Node: " + sourceAttr.email;
-        tooltip.style.left = Math.min(
-          mouseEvent.screenX + 20,
-          rectangle.left + canvasParent.clientWidth - tooltip.clientWidth,
-        ) + "px";
-        tooltip.style.top = Math.min(
-          mouseEvent.screenY,
-          rectangle.top + canvasParent.clientHeight - tooltip.clientHeight,
-        ) + "px";
+        this.infotoolXPos = Math.min(
+          mouseEvent.clientX + 20,
+          rectangle.left + canvasParent.clientWidth - 250,
+        );
+        this.infotoolYPos = Math.min(
+          mouseEvent.clientY + 20,
+          rectangle.top + canvasParent.clientHeight - 250,
+        );
 
         this.unhighlight();
-        this.hoverNode = source;
+        this.hoverNode = node;
         this.highlight();
       });
 
       circle.on("mouseout", (event) => {
         event.stopPropagation();
 
-        tooltip.style.display = "none";
+        this.infotoolDisplay = "none";
 
         this.unhighlight();
         this.hoverNode = null;
@@ -142,10 +167,10 @@ export default defineComponent({
           return;
         }
         const append = (event.data.originalEvent as MouseEvent).ctrlKey;
-        this.$emit("selected-node-change", this.diagram.graphID, source, append);
+        this.$emit("selected-node-change", this.diagram.graphID, node, append);
       });
 
-      this.nodeMap.set(source, {
+      this.nodeMap.set(node, {
         text: text,
         circle: circle,
         index: i,
@@ -201,16 +226,22 @@ export default defineComponent({
 
   },
 
-  created(){
+  created() {
     window.addEventListener(
       "resize",
       debounce((event) => {
         if (!this.diagram) {
           return;
         }
-        this.handleResize(event, this.graph, this.app as PIXI.Application, this.diagram.settings as Settings, this.viewport as Viewport);
+        this.handleResize(
+          event,
+          this.graph,
+          this.app as PIXI.Application,
+          this.diagram.settings as Settings,
+          this.viewport as Viewport
+        );
       }, 250)
-    )
+    );
   },
 
   data() {
@@ -226,6 +257,11 @@ export default defineComponent({
       selectedNodes: [] as string[],
       hoverNode: null as string | null,
       app: null as null | PIXI.Application,
+      infotool: document.createElement('null'),
+      infotool_value_list: [] as string[],
+      infotoolXPos: 0,
+      infotoolYPos: 0,
+      infotoolDisplay: "none",
       viewport: null as null | Viewport,
       graph: new Graph({
         //options
@@ -298,7 +334,12 @@ export default defineComponent({
       this.draw(graph, app, settings, viewport);
     },
 
-    draw(graph: Graph, app: PIXI.Application, settings: Settings, viewport: Viewport) {
+    draw(
+      graph: Graph,
+      app: PIXI.Application,
+      settings: Settings,
+      viewport: Viewport
+    ) {
       const canvas = this.canvas as HTMLCanvasElement;
 
       //node radius has to be fixed size otherwise they become very small when adding too many nodes
@@ -313,7 +354,7 @@ export default defineComponent({
       const direction = settings.edgeHighlightDirection;
       const drawOutgoing = direction === "outgoing" || direction === "both";
       const drawIncoming = direction === "incoming" || direction === "both";
-      const alpha = (drawOutgoing && drawIncoming) ? 0.1 : 0.2;
+      const alpha = drawOutgoing && drawIncoming ? 0.1 : 0.2;
 
       viewport.removeChildren();
 
@@ -332,8 +373,12 @@ export default defineComponent({
 
           const text = sourceData.text;
           text.style = textStyle;
-          text.x = centerX + (vertexRadius + textDistance) * Math.cos(sourceData.index * angle);
-          text.y = centerY + (vertexRadius + textDistance) * Math.sin(sourceData.index * angle);
+          text.x =
+            centerX +
+            (vertexRadius + textDistance) * Math.cos(sourceData.index * angle);
+          text.y =
+            centerY +
+            (vertexRadius + textDistance) * Math.sin(sourceData.index * angle);
 
           viewport.addChild(text);
           
@@ -351,26 +396,32 @@ export default defineComponent({
           circle.beginFill(circleColor, 1);
           circle.drawCircle(0, 0, nodeRadius);
           circle.endFill();
-          circle.x = centerX + vertexRadius * Math.cos(sourceData.index * angle);
-          circle.y = centerY + vertexRadius * Math.sin(sourceData.index * angle);
+          circle.x =
+            centerX + vertexRadius * Math.cos(sourceData.index * angle);
+          circle.y =
+            centerY + vertexRadius * Math.sin(sourceData.index * angle);
           viewport.addChild(circle);
 
           const edgeGraphics = sourceData.edgeGraphics;
           edgeGraphics.clear();
 
-          const fromX = centerX + vertexRadius * Math.cos(sourceData.index * angle);
-          const fromY = centerY + vertexRadius * Math.sin(sourceData.index * angle);
+          const fromX =
+            centerX + vertexRadius * Math.cos(sourceData.index * angle);
+          const fromY =
+            centerY + vertexRadius * Math.sin(sourceData.index * angle);
 
           // draw outgoing edges
           const callback = (target: any, attributes: any) => {
             const targetData = this.nodeMap.get(target);
             if (typeof targetData === "undefined") return;
 
-            const toX = centerX + vertexRadius * Math.cos(targetData.index * angle);
-            const toY = centerY + vertexRadius * Math.sin(targetData.index * angle);
+            const toX =
+              centerX + vertexRadius * Math.cos(targetData.index * angle);
+            const toY =
+              centerY + vertexRadius * Math.sin(targetData.index * angle);
 
             edgeGraphics
-              .lineStyle(2, 0xE06776, alpha)
+              .lineStyle(2, 0xe06776, alpha)
               .moveTo(fromX, fromY)
               .quadraticCurveTo(centerX, centerY, toX, toY);
           };
@@ -383,9 +434,9 @@ export default defineComponent({
 
           viewport.addChild(edgeGraphics);
         });
-      } else if (settings.variety === "line"){
-        const nodeLineY = canvas.height * 5/6;
-        const nodeLineX = canvas.width * 1/10;
+      } else if (settings.variety === "line") {
+        const nodeLineY = (canvas.height * 5) / 6;
+        const nodeLineX = (canvas.width * 1) / 10;
         //let gap = Math.floor(canvas.width/(1.2 * graph.order));
         let gap = 35;
 
@@ -438,7 +489,7 @@ export default defineComponent({
             const xArcCenter = (sourceX + targetX) / 2;
 
             edgeGraphics
-              .lineStyle(2, 0xE06776, alpha)
+              .lineStyle(2, 0xe06776, alpha)
               .arc(xArcCenter, sourceY, radius, Math.PI, 2 * Math.PI);
           };
           if (drawOutgoing) {
@@ -462,7 +513,7 @@ export default defineComponent({
       const highlightNode = (node: string) => {
         const nodeData = this.nodeMap.get(node);
         if (!nodeData) return;
-        const color = 0x00D737;
+        const color = 0x00d737;
 
         nodeData.edgeGraphics.tint = color;
         nodeData.edgeGraphics.alpha = 5;
@@ -482,7 +533,7 @@ export default defineComponent({
           this.graph.forEachInboundNeighbor(node, callback);
         }
 
-        nodeData.circle.tint = 0xFE00EF;
+        nodeData.circle.tint = 0xfe00ef;
       };
 
       for (const node of this.selectedNodes) {
