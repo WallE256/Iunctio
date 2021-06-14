@@ -3,12 +3,16 @@
     <section class="upload-panel">
       <div class="upload-panel__close" @click="$emit('toggle')"></div>
       <label tabindex="0" class="upload-panel__btn">
-        <input type="file" accept="text/csv" @change="parseDataset" />
+        <input
+          type="file"
+          accept="text/csv,.csv,.gexf"
+          @change="parseDataset"
+        />
         UPLOAD
       </label>
       <h5 class="upload-panel__hint">Upload your dataset here.</h5>
       <h6 class="upload-panel__sub-hint">
-        Note: The dataset must be in a CSV format.
+        Note: The dataset must be in a CSV or GEXF format.
       </h6>
     </section>
   </div>
@@ -17,7 +21,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import * as GlobalStorage from "@/scripts/globalstorage";
-import { csvParse } from "@/scripts/parser";
+import { parse } from "@/scripts/parser";
 import Graph from "graphology";
 
 export default defineComponent({
@@ -34,7 +38,7 @@ export default defineComponent({
         event.target.value = "";
       };
 
-      csvParse(file, graphID, onFinish);
+      parse(file, graphID, onFinish);
     },
   },
 });

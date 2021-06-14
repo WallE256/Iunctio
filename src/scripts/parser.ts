@@ -1,14 +1,18 @@
 import Graph from "graphology";
 import * as GlobalStorage from "@/scripts/globalstorage";
 import louvain from "graphology-communities-louvain";
+import gexf from "graphology-gexf/browser";
 
-/// Parses the CSV file `file` describing a graph.
-/// When done reading and parsing, it returns the 
-export function csvParse(file: File, id: string, onFinish: (graph: Graph) => void): void {
+/// Parses the file `file` describing a graph.
+/// When done reading and parsing, it returns the graph via the onFinish function
+export function parse(file: File, id: string, onFinish: (graph: Graph) => void): void {
   const reader = new FileReader();
   reader.readAsText(file);
   reader.onload = async () => {
-    const graph = processData(reader.result as string);
+    const extension = file.name.split(".").pop();
+    let graph;
+    if (extension == "gexf") graph = gexf.parse(Graph, reader.result as string);
+    else graph = processData(reader.result as string);
     // file name variable stores the name without the extension
     await GlobalStorage.addDataset(id, graph);
     onFinish(graph);
