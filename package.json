@@ -16,6 +16,7 @@
     "d3-color": "^2.0.0",
     "graphology": "^0.19.3",
     "graphology-communities-louvain": "^1.4.1",
+    "graphology-gexf": "^0.7.5",
     "graphology-types": "^0.19.2",
     "localforage": "^1.9.0",
     "lodash": "^4.17.21",
