@@ -21,6 +21,7 @@ import * as d3 from "d3";
 type Settings = {
   variety: string, // "circle" or "line"
   edgeHighlightDirection: string,
+  filterJobtitle: string
 };
 
 type NodeData = {
@@ -30,6 +31,7 @@ type NodeData = {
   edgeGraphics: PIXI.Graphics,
   inboundDegree: number,
   outboundDegree: number,
+  jobTitle: string,
 };
 
 export default defineComponent({
@@ -176,7 +178,8 @@ export default defineComponent({
         index: i,
         edgeGraphics: edgeGraphics,
         inboundDegree: this.graph.inDegree(node),
-        outboundDegree: this.graph.outDegree(node)
+        outboundDegree: this.graph.outDegree(node),
+        jobTitle: attributes.jobtitle,
       });
 
       if(!this.jobMap.has(attributes.jobtitle)) {
@@ -372,69 +375,63 @@ export default defineComponent({
         graph.forEachNode((source: any, sourceAttr) => {
           const sourceData = this.nodeMap.get(source);
           if (typeof sourceData === "undefined") return; // not supposed to happen
+          if(settings.filterJobtitle === "None" || sourceData.jobTitle === settings.filterJobtitle) {
+            const text = sourceData.text;
+            text.style = textStyle;
+            text.x = centerX + (vertexRadius + textDistance) * Math.cos(sourceData.index * angle);
+            text.y = centerY + (vertexRadius + textDistance) * Math.sin(sourceData.index * angle);
 
-          const text = sourceData.text;
-          text.style = textStyle;
-          text.x =
-            centerX +
-            (vertexRadius + textDistance) * Math.cos(sourceData.index * angle);
-          text.y =
-            centerY +
-            (vertexRadius + textDistance) * Math.sin(sourceData.index * angle);
+            viewport.addChild(text);
+            
+            if(drawOutgoing) {
+              nodeRadius = Math.min(30, Math.max(5 * Math.log(sourceData.outboundDegree), 5));
+            } else {
+              nodeRadius = Math.min(30, Math.max(5 * Math.log(sourceData.inboundDegree), 5));
+            }
 
-          viewport.addChild(text);
+            const circleColor = this.jobMap.get(sourceAttr.jobtitle)?.assignedColor;
+            
+            const circle = sourceData.circle;
+            circle.clear();
+            circle.lineStyle(1);
+            circle.beginFill(circleColor, 1);
+            circle.drawCircle(0, 0, nodeRadius);
+            circle.endFill();
+            circle.x = centerX + vertexRadius * Math.cos(sourceData.index * angle);
+            circle.y = centerY + vertexRadius * Math.sin(sourceData.index * angle);
+            viewport.addChild(circle);
 
-          if(drawOutgoing) {
-            nodeRadius = Math.min(30, Math.max(5 * Math.log(sourceData.outboundDegree), 5));
-          } else {
-            nodeRadius = Math.min(30, Math.max(5 * Math.log(sourceData.inboundDegree), 5));
-          }
+            const edgeGraphics = sourceData.edgeGraphics;
+            edgeGraphics.clear();
 
-          const circleColor = this.jobMap.get(sourceAttr.jobtitle)?.assignedColor;
+            const fromX = centerX + vertexRadius * Math.cos(sourceData.index * angle);
+            const fromY = centerY + vertexRadius * Math.sin(sourceData.index * angle);
 
-          const circle = sourceData.circle;
-          circle.clear();
-          circle.lineStyle(1);
-          circle.beginFill(circleColor, 1);
-          circle.drawCircle(0, 0, nodeRadius);
-          circle.endFill();
-          circle.x =
-            centerX + vertexRadius * Math.cos(sourceData.index * angle);
-          circle.y =
-            centerY + vertexRadius * Math.sin(sourceData.index * angle);
-          viewport.addChild(circle);
+            // draw outgoing edges
+            const callback = (target: any, attributes: any) => {
+              const targetData = this.nodeMap.get(target);
+              
+              if (typeof targetData === "undefined") return;
+              if(settings.filterJobtitle === "None" || targetData.jobTitle === settings.filterJobtitle) {
 
-          const edgeGraphics = sourceData.edgeGraphics;
-          edgeGraphics.clear();
+                const toX = centerX + vertexRadius * Math.cos(targetData.index * angle);
+                const toY = centerY + vertexRadius * Math.sin(targetData.index * angle);
+  
+                edgeGraphics
+                  .lineStyle(2, 0xE06776, alpha)
+                  .moveTo(fromX, fromY)
+                  .quadraticCurveTo(centerX, centerY, toX, toY);
+              };
+            };
+            if (drawOutgoing) {
+              graph.forEachOutboundNeighbor(source, callback);
+            }
+            if (drawIncoming) {
+              graph.forEachInboundNeighbor(source, callback);
+            }
 
-          const fromX =
-            centerX + vertexRadius * Math.cos(sourceData.index * angle);
-          const fromY =
-            centerY + vertexRadius * Math.sin(sourceData.index * angle);
-
-          // draw outgoing edges
-          const callback = (target: any, attributes: any) => {
-            const targetData = this.nodeMap.get(target);
-            if (typeof targetData === "undefined") return;
-
-            const toX =
-              centerX + vertexRadius * Math.cos(targetData.index * angle);
-            const toY =
-              centerY + vertexRadius * Math.sin(targetData.index * angle);
-
-            edgeGraphics
-              .lineStyle(2, 0xe06776, alpha)
-              .moveTo(fromX, fromY)
-              .quadraticCurveTo(centerX, centerY, toX, toY);
+            viewport.addChild(edgeGraphics); 
           };
-          if (drawOutgoing) {
-            graph.forEachOutboundNeighbor(source, callback);
-          }
-          if (drawIncoming) {
-            graph.forEachInboundNeighbor(source, callback);
-          }
-
-          viewport.addChild(edgeGraphics);
         });
       } else if (settings.variety === "line") {
         const nodeLineY = (canvas.height * 5) / 6;
