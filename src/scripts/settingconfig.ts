@@ -63,7 +63,7 @@ export function getVisibleSettings(diagram: GlobalStorage.Diagram, graph: Graph)
           value: diagram.settings.edgeHighlightDirection,
         } },
         { id: "filterJobtitle", component: "SelectSetting", name: "Filter", properties: {
-          options: [ "None", "Employee", "Trader", "Vice President", "Managing", "Unknown", "Manager", "Director", "President", "CEO" ],
+          options: [ "None", "Employee", "Trader", "Vice President", "Managing Director", "Unknown", "Manager", "Director", "President", "CEO", "In House Lawyer" ],
           value: diagram.settings.filterJobtitle,
         } },
       ];
