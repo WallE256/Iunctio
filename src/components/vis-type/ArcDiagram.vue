@@ -444,61 +444,68 @@ export default defineComponent({
           const sourceData = this.nodeMap.get(source);
           if (!sourceData) return; // not supposed to happen
 
+          if(settings.filterJobtitle === "None" || sourceData.jobTitle === settings.filterJobtitle) {
 
-          if(drawOutgoing) {
-            nodeRadius = Math.min(30, Math.max(5 * Math.log(sourceData.outboundDegree), 5));
-          } else {
-            nodeRadius = Math.min(30, Math.max(5 * Math.log(sourceData.inboundDegree), 5));
-          }
-
-          const circleColor = this.jobMap.get(sourceAttr.jobtitle)?.assignedColor;
-          const circle = sourceData.circle;
-          circle.clear();
-          circle.lineStyle(1);
-          circle.beginFill(circleColor, 1);
-          circle.drawCircle(0, 0, nodeRadius);
-          circle.endFill();
-          circle.x = nodeLineX + gap * sourceData.index;
-          circle.y = nodeLineY;
-
-          // node's value
-          const text = sourceData.text;
-          text.style = textStyle;
-          text.x = circle.x;
-          text.y = circle.y + nodeRadius + text.height;
-
-          viewport.addChild(circle, text);
+            if(drawOutgoing) {
+              nodeRadius = Math.min(30, Math.max(5 * Math.log(sourceData.outboundDegree), 5));
+            } else {
+              nodeRadius = Math.min(30, Math.max(5 * Math.log(sourceData.inboundDegree), 5));
+            }
+  
+            const circleColor = this.jobMap.get(sourceAttr.jobtitle)?.assignedColor;
+            const circle = sourceData.circle;
+            circle.clear();
+            circle.lineStyle(1);
+            circle.beginFill(circleColor, 1);
+            circle.drawCircle(0, 0, nodeRadius);
+            circle.endFill();
+            circle.x = nodeLineX + gap * sourceData.index;
+            circle.y = nodeLineY;
+  
+            // node's value
+            const text = sourceData.text;
+            text.style = textStyle;
+            text.x = circle.x;
+            text.y = circle.y + nodeRadius + text.height;
+  
+            viewport.addChild(circle, text);
+          };
         });
         // draw every edge
         graph.forEachNode((source: any, sourceAttr) => {
           const sourceData = this.nodeMap.get(source);
           if (!sourceData) return;
 
-          const edgeGraphics = sourceData.edgeGraphics;
-          edgeGraphics.clear();
+          if(settings.filterJobtitle === "None" || sourceData.jobTitle === settings.filterJobtitle) {
 
-          const sourceX = sourceData.circle.x;
-          const sourceY = sourceData.circle.y;
-          const callback = (target: any, targetAttributes: any) => {
-            const targetData = this.nodeMap.get(target);
-            if (!targetData) return; // shouldn't happen
+            const edgeGraphics = sourceData.edgeGraphics;
+            edgeGraphics.clear();
+  
+            const sourceX = sourceData.circle.x;
+            const sourceY = sourceData.circle.y;
+            const callback = (target: any, targetAttributes: any) => {
+              const targetData = this.nodeMap.get(target);
+              if (!targetData) return; // shouldn't happen
+              if(settings.filterJobtitle === "None" || targetData.jobTitle === settings.filterJobtitle) {
 
-            const targetX = targetData.circle.x;
-            const radius = Math.abs(sourceX - targetX) / 2;
-            const xArcCenter = (sourceX + targetX) / 2;
-
-            edgeGraphics
-              .lineStyle(2, 0xe06776, alpha)
-              .arc(xArcCenter, sourceY, radius, Math.PI, 2 * Math.PI);
-          };
-          if (drawOutgoing) {
-            graph.forEachOutboundNeighbor(source, callback);
+                const targetX = targetData.circle.x;
+                const radius = Math.abs(sourceX - targetX) / 2;
+                const xArcCenter = (sourceX + targetX) / 2;
+    
+                edgeGraphics
+                  .lineStyle(2, 0xE06776, alpha)
+                  .arc(xArcCenter, sourceY, radius, Math.PI, 2 * Math.PI);
+              }
+            };
+            if (drawOutgoing) {
+              graph.forEachOutboundNeighbor(source, callback);
+            }
+            if (drawIncoming) {
+              graph.forEachInboundNeighbor(source, callback);
+            }
+  
+            viewport.addChild(edgeGraphics);
           }
-          if (drawIncoming) {
-            graph.forEachInboundNeighbor(source, callback);
-          }
-
-          viewport.addChild(edgeGraphics);
         });
       } else {
         console.warn("Unrecognized shape", settings.variety);
