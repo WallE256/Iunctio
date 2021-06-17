@@ -4,6 +4,18 @@
       <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
     </div>
     <info-tool id="info-tool" ref="info-tool" v-bind:values="this.infotool_value_list" v-bind:style="'left: ' + this.infotoolXPos + 'px; top: ' + this.infotoolYPos + 'px; display: ' + this.infotoolDisplay + ';'"/>
+    <div v-if="showTimeline" style="height: 17%; width: 100%;">
+      <distribution-diagram :diagramid="timelineDiagram.id" />
+      <input
+        type="range"
+        min="0"
+        :max="(maxDate.getFullYear() - minDate.getFullYear()) * 12 - minDate.getMonth() + maxDate.getMonth()"
+        value="0"
+        step="1"
+        @change="onTimelineChange"
+        style="height: 3%; width: 80%; margin: 0 10%;"
+      />
+    </div>
   </div>
 </template>
 
@@ -11,13 +23,14 @@
 import { defineComponent } from "vue";
 import * as PIXI from "pixi.js";
 import Graph from "graphology";
-import { debounce, random } from "lodash";
+import { debounce } from "lodash";
+import DistributionDiagram from "@/components/vis-type/DistributionDiagram.vue";
 import * as GlobalStorage from "@/scripts/globalstorage";
+import { sortEdgesByDate } from "@/scripts/sorter";
 import InfoTool from "@/components/visualise/InfoTool.vue";
 import { dateIsBetween } from "@/scripts/util";
 import { Viewport } from 'pixi-viewport';
 import { Cull } from '@pixi-essentials/cull';
-import { Container } from '@pixi/display';
 import * as d3 from "d3";
 
 // see also scripts/settingconfig.ts
@@ -38,7 +51,7 @@ type NodeData = {
   outboundDegree: number,
   jobTitle: string,
 };
-function shouldDrawEdges(graph: Graph, source: number, target: number, timeRange: [string, string]): boolean {
+function shouldDrawEdges(graph: Graph, source: string, target: string, timeRange: [string, string]): boolean {
   let found = false;
   graph.forEachEdgeUntil(source, target, (edge, edgeAttributes) => {
     if (dateIsBetween(edgeAttributes.date, timeRange)) {
@@ -51,8 +64,10 @@ function shouldDrawEdges(graph: Graph, source: number, target: number, timeRange
 }
 
 export default defineComponent({
-
-  components: { InfoTool, },
+  components: {
+    InfoTool,
+    DistributionDiagram,
+  },
 
   props: {
     diagramid: {
@@ -98,6 +113,23 @@ export default defineComponent({
       return;
     }
     this.graph = dataset.graph;
+    this.sortedEdges = sortEdgesByDate(this.graph);
+    let min = "9999-12-31";
+    let max = "1000-01-01";
+    this.graph.forEachNode((node: string) => {
+      const list = this.sortedEdges.get(node);
+      // only have to look at the first and the last one
+      if (list && list.length > 0) {
+        const firstDate = this.graph.getEdgeAttribute(list[0], "date");
+        if (firstDate < min) min = firstDate;
+
+        const lastDate = this.graph.getEdgeAttribute(list[list.length - 1], "date");
+        if (lastDate > max) max = lastDate;
+        console.log(firstDate, lastDate);
+      }
+    });
+    this.minDate = new Date(min);
+    this.maxDate = new Date(max);
 
     this.app = new PIXI.Application({
       view: canvas,
@@ -254,6 +286,23 @@ export default defineComponent({
           return;
         }
         if (changedKey === "showTimeline") {
+          if (diagram.settings.showTimeline) {
+            canvasParent.style.height = "80%";
+            const randomID = "timeline-" + String(Math.floor(Math.random() * 1e5));
+            this.timelineDiagram = new GlobalStorage.Diagram(
+              randomID,
+              diagram.graphID,
+              "DistributionDiagram",
+            );
+            GlobalStorage.addDiagram(this.timelineDiagram);
+          } else {
+            if (this.timelineDiagram) {
+              GlobalStorage.removeDiagram(this.timelineDiagram);
+              this.timelineDiagram = null;
+            }
+            canvasParent.style.height = "100%";
+          }
+
           this.showTimeline = diagram.settings.showTimeline;
           return;
         }
@@ -315,9 +364,14 @@ export default defineComponent({
       graph: new Graph({
         //options
       }),
+      sortedEdges: new Map<string, string[]>(),
+      minDate: new Date("1000-01-01"),
+      maxDate: new Date("9999-12-31"),
       diagram: null as GlobalStorage.Diagram | null,
       canvas: null as null | HTMLCanvasElement,
+      
       showTimeline: false,
+      timelineDiagram: null as GlobalStorage.Diagram | null,
     };
   },
 
@@ -365,8 +419,9 @@ export default defineComponent({
           })
         }
       })
-    })
+      })
     },
+
     saveSnapshot(app: PIXI.Application, viewport: Viewport) {
 
       const graphics = new PIXI.Graphics()
@@ -388,11 +443,25 @@ export default defineComponent({
       this.highlight();
     },
 
+    onTimelineChange(event: Event) {
+      const input = event.target as HTMLInputElement;
+      const fraction = parseInt(input.value) / parseInt(input.max);
+      const startDate = new Date(
+        this.minDate.getTime()
+        + fraction * (this.maxDate.getTime() - this.minDate.getTime()),
+      );
+      const start = startDate.toISOString().split("T")[0];
+      // TODO: if a "double-range slider" is added, this could get an appropriate value
+      const end = "2999-01-01";
+
+      GlobalStorage.changeSetting(this.diagram as GlobalStorage.Diagram, "timeRange", [start, end]);
+    },
+
     draw(
       graph: Graph,
       app: PIXI.Application,
       settings: Settings,
-      viewport: Viewport
+      viewport: Viewport,
     ) {
       const canvas = this.canvas as HTMLCanvasElement;
 
@@ -585,6 +654,8 @@ export default defineComponent({
         nodeData.edgeGraphics.zIndex = 1;
 
         const callback = (target: any, targetAttributes: any) => {
+          if (!shouldDrawEdges(this.graph, node, target, diagram.settings.timeRange)) return;
+
           const targetData = this.nodeMap.get(target);
           if (!targetData) return;
           targetData.circle.tint = 0xfe00ef; // purple-ish

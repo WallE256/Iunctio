@@ -35,7 +35,7 @@ export function getDefaultSettings(componentName: string): any {
         diagramColour: 0x4287f5,
         minRenderSize: 10000,
         showTimeline: false,
-        timeRange: [0, 1],
+        timeRange: ["1000-01-01", "3000-12-31"],
       };
     }
 

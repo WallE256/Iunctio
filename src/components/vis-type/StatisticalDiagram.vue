@@ -10,7 +10,6 @@
 import { defineComponent } from "vue";
 import Graph from "graphology";
 import { debounce } from "lodash";
-import * as d3 from "d3";
 import * as PIXI from "pixi.js";
 import * as GlobalStorage from "@/scripts/globalstorage";
 
