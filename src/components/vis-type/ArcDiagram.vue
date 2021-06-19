@@ -226,9 +226,6 @@ export default defineComponent({
       this.culling(this.app as PIXI.Application, this.viewport as Viewport, this.graph);
     });
 
-    this.jobMap.forEach((value,key, map ) => {
-         console.log(`m[${key}] = ${value}`);
-    })
   },
 
   created() {
@@ -305,7 +302,6 @@ export default defineComponent({
           //the level points can be changed later
           const zoomingSteps = [0.2, 0.35, 0.5, 1];
           const zoomingStep = zoomingSteps.findIndex(zoomStep => zoom <= zoomStep);
-          //console.log(zoomingStep, zoom)
 
           graph.forEachNode((node:any) => {
             const nodeObj = this.nodeMap.get(node);
