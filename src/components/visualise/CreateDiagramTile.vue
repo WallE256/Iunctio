@@ -33,8 +33,9 @@ export default defineComponent({
 @include font-face("Poppins", "Medium");
 
 .diag-tile {
+  $SIZE: 140px;
   text-align: center;
-  width: 120px;
+  width: $SIZE;
   margin: 10px;
   cursor: pointer;
 
@@ -52,7 +53,7 @@ export default defineComponent({
   }
 
   &__bg {
-    @include setSize(120px, 120px);
+    @include setSize($SIZE);
     background-color: $BLACK_L;
     padding: 5px;
     border-radius: 5px;
@@ -61,9 +62,10 @@ export default defineComponent({
     box-shadow: 2px 2px 4px rgba($BLACK_DDD, 0.25);
     @include transition(transform border, 0.3s, $ease2);
 
+    @include center_item();
+
     .diag-tile__icon {
-      max-width: 100%;
-      max-height: 100%;
+      @include setSize(90%);
     }
   }
 
