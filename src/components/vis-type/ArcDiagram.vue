@@ -133,7 +133,7 @@ export default defineComponent({
         start: [0, maxValue],
         step: 1,
       });
-      slider.noUiSlider.on("end", (values: any) => {
+      slider.noUiSlider.on("set", (values: any) => {
         this.onTimelineChange(parseInt(values[0]), parseInt(values[1]), maxValue);
       });
     }
