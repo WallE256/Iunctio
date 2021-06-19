@@ -6,16 +6,13 @@
     <info-tool id="info-tool" ref="info-tool" v-bind:values="this.infotool_value_list" v-bind:style="'left: ' + this.infotoolXPos + 'px; top: ' + this.infotoolYPos + 'px; display: ' + this.infotoolDisplay + ';'"/>
     <div v-if="showTimeline" style="height: 17%; width: 100%;">
       <distribution-diagram :diagramid="timelineDiagram.id" />
-      <input
-        type="range"
-        min="0"
-        :max="(maxDate.getFullYear() - minDate.getFullYear()) * 12 - minDate.getMonth() + maxDate.getMonth()"
-        value="0"
-        step="1"
-        @change="onTimelineChange"
-        style="height: 3%; width: 80%; margin: 0 10%;"
-      />
     </div>
+    <div
+      v-show="showTimeline"
+      id="time-slider"
+      ref="time-slider"
+      style="max-height: 3%; width: 80%; margin: 0 10%;"
+    ></div>
   </div>
 </template>
 
@@ -32,6 +29,7 @@ import { dateIsBetween } from "@/scripts/util";
 import { Viewport } from 'pixi-viewport';
 import { Cull } from '@pixi-essentials/cull';
 import * as d3 from "d3";
+import noUiSlider from "nouislider";
 
 // see also scripts/settingconfig.ts
 type Settings = {
@@ -51,17 +49,6 @@ type NodeData = {
   outboundDegree: number,
   jobTitle: string,
 };
-function shouldDrawEdges(graph: Graph, source: string, target: string, timeRange: [string, string]): boolean {
-  let found = false;
-  graph.forEachEdgeUntil(source, target, (edge, edgeAttributes) => {
-    if (dateIsBetween(edgeAttributes.date, timeRange)) {
-      found = true;
-      return true; // break
-    }
-    return false;
-  });
-  return found;
-}
 
 export default defineComponent({
   components: {
@@ -125,11 +112,31 @@ export default defineComponent({
 
         const lastDate = this.graph.getEdgeAttribute(list[list.length - 1], "date");
         if (lastDate > max) max = lastDate;
-        console.log(firstDate, lastDate);
       }
     });
     this.minDate = new Date(min);
     this.maxDate = new Date(max);
+
+    const maxValue = (this.maxDate.getFullYear() - this.minDate.getFullYear()) * 12
+        - this.minDate.getMonth() + this.maxDate.getMonth();
+
+    console.log(maxValue);
+    const slider = this.$refs["time-slider"] as any;
+    if (!slider.noUiSlider) {
+      noUiSlider.create(slider, {
+        connect: true,
+        range: {
+          min: 0,
+          max: maxValue,
+        },
+        margin: 0,
+        start: [0, maxValue],
+        step: 1,
+      });
+      slider.noUiSlider.on("end", (values: any) => {
+        this.onTimelineChange(parseInt(values[0]), parseInt(values[1]), maxValue);
+      });
+    }
 
     this.app = new PIXI.Application({
       view: canvas,
@@ -443,16 +450,17 @@ export default defineComponent({
       this.highlight();
     },
 
-    onTimelineChange(event: Event) {
-      const input = event.target as HTMLInputElement;
-      const fraction = parseInt(input.value) / parseInt(input.max);
+    onTimelineChange(startValue: number, endValue: number, max: number) {
       const startDate = new Date(
         this.minDate.getTime()
-        + fraction * (this.maxDate.getTime() - this.minDate.getTime()),
+        + startValue / max * (this.maxDate.getTime() - this.minDate.getTime()),
       );
       const start = startDate.toISOString().split("T")[0];
-      // TODO: if a "double-range slider" is added, this could get an appropriate value
-      const end = "2999-01-01";
+      const endDate = new Date(
+        this.minDate.getTime()
+        + endValue / max * (this.maxDate.getTime() - this.minDate.getTime()),
+      );
+      const end = endDate.toISOString().split("T")[0];
 
       GlobalStorage.changeSetting(this.diagram as GlobalStorage.Diagram, "timeRange", [start, end]);
     },
@@ -530,7 +538,7 @@ export default defineComponent({
 
             // draw outgoing edges
             const callback = (target: any, attributes: any) => {
-              if (!shouldDrawEdges(graph, source, target, settings.timeRange)) return;
+              if (!this.shouldDrawEdges(source, target, settings.timeRange)) return;
 
               const targetData = this.nodeMap.get(target);
 
@@ -610,12 +618,11 @@ export default defineComponent({
               // TODO: this is pretty slow, because it makes the algorithm
               // O(edges) in the worst case... a solution would be to store the
               // edges sorted by date
-              if (!shouldDrawEdges(graph, source, target, settings.timeRange)) return;
+              if (!this.shouldDrawEdges(source, target, settings.timeRange)) return;
 
               const targetData = this.nodeMap.get(target);
               if (!targetData) return; // shouldn't happen
-              if(settings.filterJobtitle === "None" || targetData.jobTitle === settings.filterJobtitle) {
-
+              if (settings.filterJobtitle === "None" || targetData.jobTitle === settings.filterJobtitle) {
                 const targetX = targetData.circle.x;
                 const radius = Math.abs(sourceX - targetX) / 2;
                 const xArcCenter = (sourceX + targetX) / 2;
@@ -654,7 +661,7 @@ export default defineComponent({
         nodeData.edgeGraphics.zIndex = 1;
 
         const callback = (target: any, targetAttributes: any) => {
-          if (!shouldDrawEdges(this.graph, node, target, diagram.settings.timeRange)) return;
+          if (!this.shouldDrawEdges(node, target, diagram.settings.timeRange)) return;
 
           const targetData = this.nodeMap.get(target);
           if (!targetData) return;
@@ -715,6 +722,21 @@ export default defineComponent({
       if (this.hoverNode) {
         unhighlightNode(this.hoverNode);
       }
+    },
+
+    shouldDrawEdges(source: string, target: string, timeRange: [string, string]) {
+      if (!this.graph) return;
+
+      // TODO: this could probably be done faster by using this.sortedEdges
+      let found = false;
+      this.graph.forEachEdgeUntil(source, target, (edge, edgeAttributes) => {
+        if (dateIsBetween(edgeAttributes.date, timeRange)) {
+          found = true;
+          return true; // break
+        }
+        return false;
+      });
+      return found;
     },
   },
 });
