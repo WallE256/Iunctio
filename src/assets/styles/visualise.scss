@@ -4,6 +4,8 @@
 @include font-face("Poppins", "Regular");
 @include font-face("JetBrainsMono", "Regular");
 
+@import url("https://cdn.jsdelivr.net/npm/nouislider@14.6.0/distribute/nouislider.min.css");
+
 .visualise {
   // Occupy entire viewport height.
   height: 100%;

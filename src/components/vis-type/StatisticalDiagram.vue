@@ -160,7 +160,7 @@ export default defineComponent({
     drawDate(app: PIXI.Application, date: any, posX: number, posY: number) {
       const dateISO = this.utcToDate(date).toISOString();
 
-      const dateText = new PIXI.Text(dateISO.substr(0, dateISO.indexOf('T')), {fontSize: 18, align: 'center'});
+      const dateText = new PIXI.Text(dateISO.substr(0, dateISO.indexOf('T')), {fontSize: 15, align: 'center'});
       dateText.x = posX;
       dateText.y = posY;
       dateText.anchor.set(0.5, 0);
@@ -204,8 +204,6 @@ export default defineComponent({
       const secondsPerDay = 1000 * 60 * 60 * 24;
       const dayWidth = secondsPerDay / intervalTimeUTC * (this.maxX - this.minX);
 
-      const windowSize = this.window.length * secondsPerDay;
-      const startPosition = intervalUTC[0] - windowSize;
       const windowDisFromMiddle = Math.floor(this.window.length / 2);
 
       var mapValue = 0;
