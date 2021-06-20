@@ -5,7 +5,7 @@
     </div>
     <info-tool id="info-tool" ref="info-tool" v-bind:values="this.infotool_value_list" v-bind:style="'left: ' + this.infotoolXPos + 'px; top: ' + this.infotoolYPos + 'px; display: ' + this.infotoolDisplay + ';'"/>
     <div v-if="showTimeline" style="height: 17%; width: 100%;">
-      <distribution-diagram :diagramid="timelineDiagram.id" />
+      <statistical-diagram :diagramid="timelineDiagram.id" />
     </div>
     <div
       v-show="showTimeline"
@@ -21,7 +21,8 @@ import { defineComponent } from "vue";
 import * as PIXI from "pixi.js";
 import Graph from "graphology";
 import { debounce } from "lodash";
-import DistributionDiagram from "@/components/vis-type/DistributionDiagram.vue";
+import StatisticalDiagram from "@/components/vis-type/StatisticalDiagram.vue";
+import { getDefaultSettings } from "@/scripts/settingconfig";
 import * as GlobalStorage from "@/scripts/globalstorage";
 import { sortEdgesByDate } from "@/scripts/sorter";
 import InfoTool from "@/components/visualise/InfoTool.vue";
@@ -53,7 +54,7 @@ type NodeData = {
 export default defineComponent({
   components: {
     InfoTool,
-    DistributionDiagram,
+    StatisticalDiagram,
   },
 
   props: {
@@ -296,10 +297,12 @@ export default defineComponent({
           if (diagram.settings.showTimeline) {
             canvasParent.style.height = "80%";
             const randomID = "timeline-" + String(Math.floor(Math.random() * 1e5));
+            const defaultSettings = getDefaultSettings("StatisticalDiagram");
             this.timelineDiagram = new GlobalStorage.Diagram(
               randomID,
               diagram.graphID,
-              "DistributionDiagram",
+              "StatisticalDiagram",
+              defaultSettings,
             );
             GlobalStorage.addDiagram(this.timelineDiagram);
           } else {
