@@ -19,6 +19,12 @@ type Settings = {
   logarithmic: boolean,
 };
 
+const dateTextSize = 15;
+const dateTextStyle = new PIXI.TextStyle({
+  fontSize: dateTextSize,
+  align: "center",
+});
+
 export default defineComponent({
   props: {
     diagramid: {
@@ -160,7 +166,7 @@ export default defineComponent({
     drawDate(app: PIXI.Application, date: any, posX: number, posY: number) {
       const dateISO = this.utcToDate(date).toISOString();
 
-      const dateText = new PIXI.Text(dateISO.substr(0, dateISO.indexOf('T')), {fontSize: 15, align: 'center'});
+      const dateText = new PIXI.Text(dateISO.substr(0, dateISO.indexOf('T')), dateTextStyle);
       dateText.x = posX;
       dateText.y = posY;
       dateText.anchor.set(0.5, 0);
@@ -192,8 +198,8 @@ export default defineComponent({
 
       this.minX = canvas.width * borderPerc;
       this.minY = canvas.height * borderPerc;
-      this.maxX = canvas.width * (1 - borderPerc);
-      this.maxY = canvas.height * (1 - borderPerc);
+      this.maxX = Math.min(canvas.width * (1 - borderPerc), canvas.width - dateTextSize);
+      this.maxY = Math.min(canvas.height * (1 - borderPerc), canvas.height - dateTextSize);
       this.dateY = this.maxY;
 
       if (settings.dataType === "avg-sentiment" || settings.dataType === "tot-sentiment") this.maxY /= 2;
