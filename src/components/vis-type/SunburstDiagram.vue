@@ -214,6 +214,10 @@ export default defineComponent({
 
       const predecessors = [] as any[];
 
+      if (settings.root === "[no root]") {
+        settings.root = null;
+      }
+
       // Calculate height based on graph type
       if (settings.variety === "sunburst") {
         this.maxWidth = Math.min(canvas.width, canvas.height) * .7;
