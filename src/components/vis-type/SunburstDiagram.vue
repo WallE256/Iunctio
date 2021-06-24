@@ -200,10 +200,7 @@ export default defineComponent({
       settings: Settings,
     ) {
       app.stage.removeChildren();
-      for (const [node, graphicsList] of this.graphicsMap) {
-        for (const graphics of graphicsList) graphics.clear();
-        graphicsList.length = 0;
-      }
+      this.graphicsMap = new Map<string, PIXI.Graphics[]>();
 
       const canvas = this.canvas as HTMLCanvasElement;
 
