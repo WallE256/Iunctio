@@ -156,8 +156,6 @@ export default defineComponent({
       diagram: null as any,
       app: null as null | PIXI.Application,
       canvas: null as null | HTMLCanvasElement,
-      clickedNode: false,
-      double: 0,
       centerX: 0,
       centerY: 0,
       levelHeight: 0,
@@ -474,31 +472,18 @@ export default defineComponent({
     // Set root on click
     drawnNode.on('click', (event) => {
       event.stopPropagation();
+      const mouseEvent = event.data.originalEvent as MouseEvent;
 
-      // If another click has been detected in the past 600 ms.
-      if ((this.clickedNode) && (this.clickedNode == node)) {
-
-        // Reset graph is the user presses the node in the middle
+      if (mouseEvent.shiftKey) { // shift-click
+        // redraw graph is the user presses the node in the middle
         if ((level == 0) && (sizePerc == 1)) {
-          GlobalStorage.changeSetting(this.diagram, "root", null, "diagramColour", nodeColour)
+          GlobalStorage.changeSetting(this.diagram, "root", null, "diagramColour", nodeColour);
         } else {
-          GlobalStorage.changeSetting(this.diagram, "root", node, "diagramColour", nodeColour)
+          GlobalStorage.changeSetting(this.diagram, "root", node, "diagramColour", nodeColour);
         }
-
-        this.clickedNode = false;
-        clearTimeout(this.double);
-
       } else {
-        clearTimeout(this.double);
-        this.clickedNode = node;
-        this.double = setTimeout(() => {
-          this.clickedNode = false;
-
-          // single click means selecting --> brush-and-link interactivity
-          const append = (event.data.originalEvent as MouseEvent).ctrlKey;
-          this.$emit("selected-node-change", this.diagram.graphID, node, append);
-        }, 600); // Set timeout at 600 ms for double click detection
-
+        // non-shift-click means selecting --> brush-and-link interactivity
+        this.$emit("selected-node-change", this.diagram.graphID, node, mouseEvent.ctrlKey);
       }
     });
 
