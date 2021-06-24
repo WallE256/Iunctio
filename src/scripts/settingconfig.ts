@@ -72,7 +72,7 @@ export function getVisibleSettings(diagram: GlobalStorage.Diagram, graph: Graph)
     case "SunburstDiagram": {
       return [
         { id: "variety", component: "SelectSetting", name: "Hierarchical Diagram Variety", properties: {
-          options: [ "sunburst", "flame", "inverse-flame" ],
+          options: [ "sunburst", "flame", "icicle" ],
           value: diagram.settings.variety,
         } },
         { id: "root", component: "SelectSetting", name: "Root Node", properties: {
