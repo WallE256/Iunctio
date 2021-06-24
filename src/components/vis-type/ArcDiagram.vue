@@ -515,16 +515,16 @@ export default defineComponent({
       const highlightNode = (node: string) => {
         const nodeData = this.nodeMap.get(node);
         if (!nodeData) return;
-        const color = 0x00d737;
+        const highlightColor = 0x00d737; // green
 
-        nodeData.edgeGraphics.tint = color;
+        nodeData.edgeGraphics.tint = highlightColor;
         nodeData.edgeGraphics.alpha = 5;
         nodeData.edgeGraphics.zIndex = 1;
 
         const callback = (target: any, targetAttributes: any) => {
           const targetData = this.nodeMap.get(target);
           if (!targetData) return;
-          targetData.circle.tint = color;
+          targetData.circle.tint = 0xfe00ef; // purple-ish
           targetData.edgeGraphics.zIndex = 1;
         };
         const direction = diagram.settings.edgeHighlightDirection;
@@ -535,7 +535,7 @@ export default defineComponent({
           this.graph.forEachInboundNeighbor(node, callback);
         }
 
-        nodeData.circle.tint = 0xfe00ef;
+        nodeData.circle.tint = highlightColor;
       };
 
       for (const node of this.selectedNodes) {
