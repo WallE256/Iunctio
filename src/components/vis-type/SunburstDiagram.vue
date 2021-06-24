@@ -518,8 +518,12 @@ export default defineComponent({
         }
       }
 
+      this.infotool_value_list.push("<br><hr><p style='font-style: italic'> Click for brush-and-link </p>");
+
       if (level == 0) {
-        this.infotool_value_list.push("<br><hr><p style='font-style: italic'> Shift click to reset root </p>");
+        this.infotool_value_list.push("<p style='font-style: italic'> Shift click to reset root </p>");
+      } else {
+        this.infotool_value_list.push("<p style='font-style: italic'> Shift click to set as root </p>");
       }
 
       const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
