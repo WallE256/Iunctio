@@ -26,7 +26,7 @@ import { getDefaultSettings } from "@/scripts/settingconfig";
 import * as GlobalStorage from "@/scripts/globalstorage";
 import { sortEdgesByDate } from "@/scripts/sorter";
 import InfoTool from "@/components/visualise/InfoTool.vue";
-import { dateIsBetween } from "@/scripts/util";
+import { dateIsBetween, findMinMaxDates } from "@/scripts/util";
 import { Viewport } from 'pixi-viewport';
 import { Cull } from '@pixi-essentials/cull';
 import * as d3 from "d3";
@@ -101,27 +101,14 @@ export default defineComponent({
       return;
     }
     this.graph = dataset.graph;
-    this.sortedEdges = sortEdgesByDate(this.graph);
-    let min = "9999-12-31";
-    let max = "1000-01-01";
-    this.graph.forEachNode((node: string) => {
-      const list = this.sortedEdges.get(node);
-      // only have to look at the first and the last one
-      if (list && list.length > 0) {
-        const firstDate = this.graph.getEdgeAttribute(list[0], "date");
-        if (firstDate < min) min = firstDate;
 
-        const lastDate = this.graph.getEdgeAttribute(list[list.length - 1], "date");
-        if (lastDate > max) max = lastDate;
-      }
-    });
-    this.minDate = new Date(min);
-    this.maxDate = new Date(max);
+    // initialize time slider
+    this.sortedEdges = sortEdgesByDate(this.graph);
+    [this.minDate, this.maxDate] = findMinMaxDates(dataset);
 
     const maxValue = (this.maxDate.getFullYear() - this.minDate.getFullYear()) * 12
         - this.minDate.getMonth() + this.maxDate.getMonth();
 
-    console.log(maxValue);
     const slider = this.$refs["time-slider"] as any;
     if (!slider.noUiSlider) {
       noUiSlider.create(slider, {
