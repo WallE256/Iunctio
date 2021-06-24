@@ -33,10 +33,23 @@
       <div class="create-diagram__tiles">
         <create-diagram-tile
           v-for="diag in diagram_types"
-          :key="diag.name"
-          :name="diag.name"
+          :key="diag.d_type"
+          :type="diag.d_type"
           :path="diag.path"
           @tile-click="selectDiagram"
+        />
+      </div>
+    </section>
+    <section class="your-diagrams" v-show="show_home">
+      <h3 class="your-diagrams__title">Your diagrams.</h3>
+      <div class="your-diagrams__tiles">
+        <your-diagrams-tile
+          v-for="your_diag in diagram_list"
+          :key="your_diag.id"
+          :id="your_diag.id"
+          :name="your_diag.name"
+          :path="your_diag.path"
+          @tile-click="openDiagram"
         />
       </div>
     </section>
@@ -57,13 +70,14 @@ import { defineComponent } from "vue";
 import UploadPanel from "@/components/visualise/UploadPanel.vue";
 import DiagramPanel from "@/components/visualise/DiagramPanel.vue";
 import CreateDiagramTile from "@/components/visualise/CreateDiagramTile.vue";
+import YourDiagramsTile from "@/components/visualise/YourDiagramsTile.vue";
 import DatasetTile from "@/components/visualise/DatasetTile.vue";
 import { getDefaultSettings } from "@/scripts/settingconfig";
 import * as GlobalStorage from "@/scripts/globalstorage";
 
 export default defineComponent({
   name: "Visualise",
-  components: { CreateDiagramTile, UploadPanel, DatasetTile, DiagramPanel },
+  components: { CreateDiagramTile, YourDiagramsTile, UploadPanel, DatasetTile, DiagramPanel },
   data() {
     return {
       show_upload: false,
@@ -72,46 +86,123 @@ export default defineComponent({
       requested_diag: '',
       shownDiagrams: [] as string[],
       diagram_types: [
-        { name: "Arc Diagram", path: "img/vis/arc-diagram.png" },
-        { name: "Sunburst Diagram", path: "img/vis/sunburst.png" },
-        { name: "Distribution Diagram", path: "img/vis/distribution.png" },
-        { name: "Adjacency Matrix", path: "img/vis/adjacency-matrix.png" },
+        { d_type: "Arc Diagram", path: "img/vis/arc-diagram.png" },
+        { d_type: "Sunburst Diagram", path: "img/vis/sunburst.png" },
+        { d_type: "Distribution Diagram", path: "img/vis/distribution.png" },
+        { d_type: "Adjacency Matrix", path: "img/vis/adjacency-matrix.png" },
       ],
+      diagram_list: [] as any[],
       datasets: [] as string[],
     };
   },
   async created() {
+    await this.setDiagramList();
     // Retrieve the list of datasets from
     await this.updateDatasets();
   },
 
   methods: {
-    async selectDiagram(name: string) {
+    async selectDiagram(d_type: string) {
       // If the number of datasets is less than 1, first request upload.
       if (this.datasets.length < 1) {
         this.toggleUpload(true);
-        this.requested_diag = name;
+        this.requested_diag = d_type;
         return;
       }
       // Create a diagramID, create & add diagram to Global Storage and list of
       // shown diagrams. Finally, toggle the homepage and display the diagram panels.
-      const diagramID = GlobalStorage.createID(name);
-      await this.createDiagram(diagramID, name);
+      const diagramID = GlobalStorage.createID(d_type);
+      await this.createDiagram(diagramID, d_type);
+      this.updateDiagramList(diagramID, d_type);
       this.toggleHome(false);
       this.toggleDiagramPanels(true);
     },
 
-    async createDiagram(diagramID: string, name: string) {
+    async createDiagram(diagramID: string, diag_type: string) {
+
       // Obtain the default settings for the chosen diagram.
-      const defaultSettings = getDefaultSettings(name);
+      const defaultSettings = getDefaultSettings(diag_type);
+
       // The most recent dataset upload is considered.
       const graphID = this.datasets[this.datasets.length - 1];
+
       // Add the diagram to GlobalStorage.
       await GlobalStorage.addDiagram(
-        new GlobalStorage.Diagram(diagramID, graphID, name, defaultSettings)
+        new GlobalStorage.Diagram(diagramID, graphID, diag_type, defaultSettings)
       );
+
       // Add the diagram to list of shown diagrams.
       this.shownDiagrams.push(diagramID);
+    },
+
+    async setDiagramList() {
+      this.diagram_list = [];
+
+      GlobalStorage.getDiagrams().then((diagrams) => {
+        if (!diagrams) return;
+        diagrams.forEach(diagramID => {
+          GlobalStorage.getDiagram(diagramID).then((diagram) => {
+            if (!diagram) return;
+
+            this.diagram_list.push({ id: diagramID, name: diagram.name, path: this.getPNGPath(diagram.type) });
+          });
+        });
+      });
+    },
+
+    async updateDiagramList(diagramID: string, d_type: string) {
+
+      GlobalStorage.getDiagram(diagramID).then((diagram) => {
+        if (!diagram) return;
+
+        this.diagram_list.push({ id: diagramID, name: diagram.name, path: this.getPNGPath(d_type) });
+      });
+    },
+
+    async openDiagram(diagramID: string) {
+      // Add diagram to list of shown diagrams. Finally, toggle the homepage and display the diagram panels.
+      let isShown = false;
+
+      this.shownDiagrams.forEach(shownDiagram => {
+        if (shownDiagram == diagramID) {
+          isShown = true;
+        }
+      });
+
+      if (!isShown) {
+        this.shownDiagrams.push(diagramID);
+      }
+
+      this.toggleHome(false);
+      this.toggleDiagramPanels(true);
+    },
+
+    getPNGPath(diagram_type: string) {
+      var diagram_png_path = "";
+
+      switch (diagram_type) {
+        case "ArcDiagram":
+          diagram_png_path = "img/vis/arc-diagram.png"
+          break;
+
+        case "SunburstDiagram":
+          diagram_png_path = "img/vis/sunburst.png"
+          break;
+
+        case "DistributionDiagram":
+          diagram_png_path = "img/vis/distribution.png"
+          break;
+
+        case "AdjacencyMatrix":
+          diagram_png_path = "img/vis/adjacency-matrix.png"
+          break;
+
+        default:
+          diagram_png_path = "img/vis/arc-diagram.png"
+          break;
+      }
+
+      return diagram_png_path;
     },
 
     hideDiagram(diagramID: string) {

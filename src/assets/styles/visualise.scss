@@ -83,6 +83,18 @@
     }
   }
 
+  .your-diagrams {
+    padding: 0 40px;
+    &__title {
+      @include font-sans("Poppins", 1.25rem, "Medium", $BLACK_DDD);
+    }
+
+    &__tiles {
+      display: flex;
+      flex-flow: row wrap;
+    }
+  }
+
   // Panels containing the diagrams to be displayed side-by-side.
   .diagram-panels {
     display: flex;

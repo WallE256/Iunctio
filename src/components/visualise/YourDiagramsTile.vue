@@ -6,9 +6,9 @@
     class="diag-tile"
   >
     <div class="diag-tile__bg">
-      <img :src="path" :alt="type" class="diag-tile__icon" />
+      <img :src="path" :alt="name" class="diag-tile__icon" />
     </div>
-    <h4 class="diag-tile__title">{{ type }}</h4>
+    <h4 class="diag-tile__title">{{ name }}</h4>
   </div>
 </template>
 
@@ -17,12 +17,13 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
   props: {
-    type: { required: true, type: String },
+    id: { required: true, type: String },
+    name: { required: true, type: String },
     path: { required: true, type: String },
   },
   methods: {
     onClick() {
-      this.$emit("tile-click", this.type.replaceAll(" ", ""));
+      this.$emit("tile-click", this.id.replaceAll(" ", ""));
     },
   },
 });

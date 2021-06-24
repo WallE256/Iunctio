@@ -10,9 +10,6 @@ export class Diagram {
   /// This diagram's unique identifier
   id: string;
 
-  /// This diagram's name
-  name: string;
-
   /// The graph that this diagram is drawing (the id refers to the graph's
   /// unique id, which can be used in `getDataset()`).
   graphID: string;
@@ -27,6 +24,9 @@ export class Diagram {
   /// directly.
   settings: any;
 
+  /// This diagram's name
+  name: string;
+
   /// The change listener, which is called when a setting is changed using
   /// `changeSetting()`.
   onChange?: (diagram: Diagram, changedKey: string) => void;
@@ -40,7 +40,6 @@ export class Diagram {
     onChange?: (diagram: Diagram, changedKey: string) => void
   ) {
     this.id = id;
-    this.name = type + "_" + id;
     this.graphID = graphID;
     this.type = type;
     if (settings) {
@@ -49,6 +48,7 @@ export class Diagram {
       this.settings = {};
     }
     this.onChange = onChange;
+    this.name = type + "_" + id;
   }
 }
 
@@ -192,10 +192,10 @@ export async function getDiagram(id: string): Promise<Diagram | null> {
     const deserialized = JSON.parse(storageItem);
     const diagram = new Diagram(
       deserialized.id,
-      deserialized.name,
       deserialized.graphID,
       deserialized.type,
-      deserialized.settings
+      deserialized.settings,
+      deserialized.name
     );
     diagrams.set(id, diagram);
     return diagram;
