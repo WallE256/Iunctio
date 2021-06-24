@@ -120,21 +120,17 @@ export default defineComponent({
         this.infotool_value_list = [];
 
         // Node ID
-        this.infotool_value_list.push("<h2 style='font-size: 16px;'> Node: " + node + "</h3>");
-        this.infotool_value_list.push("<hr>");
+        this.infotool_value_list.push("<h2 style='font-size: 16px;'> Node: " + node + "</h2><hr><br>");
 
         // Node degree and neighbours
-        this.infotool_value_list.push("<p> Incoming Degree: " + this.graph.inDegree(node) + "</p>");
-        this.infotool_value_list.push("<p> Incoming Neighbours: " + this.graph.inNeighbors(node).length + "</p>");
-        this.infotool_value_list.push("<br>");
-        this.infotool_value_list.push("<p> Outgoing Degree: " + this.graph.outDegree(node) + "</p>");
-        this.infotool_value_list.push("<p> Outgoing Neighbours: " + this.graph.outNeighbors(node).length + "</p>");
-        this.infotool_value_list.push("<br>");
+        this.infotool_value_list.push("<p> Incoming Degree: " + this.graph.inDegree(node) + "</p><p> Incoming Neighbours: " + this.graph.inNeighbors(node).length + "</p><br><p> Outgoing Degree: " + this.graph.outDegree(node) + "</p><p> Outgoing Neighbours: " + this.graph.outNeighbors(node).length + "</p><br>");
 
         // Attributes
         for (let index = 0; index < Object.keys(this.graph.getNodeAttributes(node)).length; index++) {
           this.infotool_value_list.push("<p>" + Object.keys(this.graph.getNodeAttributes(node))[index] + ": " + Object.values(this.graph.getNodeAttributes(node))[index] + "</p>");
         }
+
+        this.infotool_value_list.push("<br><hr><p style='font-style: italic'> Click for brush-and-link </p>");
 
         const mouseEvent = event.data.originalEvent as MouseEvent;
         const rectangle = canvasParent.getBoundingClientRect();
