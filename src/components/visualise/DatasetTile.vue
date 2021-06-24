@@ -35,7 +35,7 @@ export default defineComponent({
   methods: {
     deleteDataset() {
       GlobalStorage.removeDataset(this.id_name);
-      this.$emit("delete", this.id_name);
+      this.$emit("delete_data", this.id_name);
     },
   },
 });

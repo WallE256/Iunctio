@@ -218,6 +218,15 @@ export function removeDiagram(diagram: Diagram): void {
   });
 }
 
+/// `removeDiagram` deletes a diagram/visualization from the memory AND from
+/// the local storage
+export function removeDiagramByID(diagramID: string): void {
+  getDiagram(diagramID).then((diagram) => {
+    const remove_diag = diagram as Diagram;
+    removeDiagram(remove_diag);
+  });
+}
+
 /// `changeSetting` updates a diagram's setting(s) and will call the `onChange`
 /// handler so visualizations can be redrawn.
 /// updates multiple settings if multiple are provided

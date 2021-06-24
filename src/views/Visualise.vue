@@ -16,7 +16,7 @@
           v-for="dataset in datasets"
           :key="dataset"
           :id_name="dataset"
-          @delete="updateDatasets"
+          @delete_data="updateDatasets"
         />
         <div class="upload-dataset__btn-container">
           <button class="upload-dataset__btn" @click="toggleUpload(true)" />
@@ -50,6 +50,7 @@
           :name="your_diag.name"
           :path="your_diag.path"
           @tile-click="openDiagram"
+          @delete_diag="setDiagramList"
         />
       </div>
     </section>
