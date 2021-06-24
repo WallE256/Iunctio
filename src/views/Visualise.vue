@@ -50,7 +50,7 @@
           :name="your_diag.name"
           :path="your_diag.path"
           @tile-click="openDiagram"
-          @delete_diag="setDiagramList"
+          @delete_diag="diagramDeleted"
         />
       </div>
     </section>
@@ -158,6 +158,11 @@ export default defineComponent({
 
         this.diagram_list.push({ id: diagramID, name: diagram.name, path: this.getPNGPath(d_type) });
       });
+    },
+
+    async diagramDeleted() {
+      this.setDiagramList();
+      this.shownDiagrams = [];
     },
 
     async openDiagram(diagramID: string) {
