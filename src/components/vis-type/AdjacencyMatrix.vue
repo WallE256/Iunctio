@@ -16,8 +16,12 @@ import { Viewport } from 'pixi-viewport';
 
 type Settings = {
   variety: string, // "edge-frequency" or "sentiment"
-  hoverEdgeDirection: string, // "incoming" or "outgoing" or "both"
+  edgeHighlightDirection: string, // "incoming" or "outgoing" or "both"
   drawInnerLines: boolean, // true or false
+};
+
+type NodeData = {
+  index: number,
 };
 
 export default defineComponent({
@@ -94,7 +98,7 @@ export default defineComponent({
             .map((node) => node.nodeID);
           for (const node of this.selectedNodes) {
             const nodeData = this.nodeMap.get(node);
-            if (nodeData) {
+            if (nodeData.rectangle) {
               nodeData.rectangle.tint = 0xFFFFFF;
             }
           }
@@ -123,10 +127,11 @@ export default defineComponent({
   data() {
     return {
       nodeMap: new Map<number, {
-        text: PIXI.Text,
-        rectangle: PIXI.Graphics,
         index: number,
       }>(),
+
+      // the node that you're currently hovering over
+      selectedNodes: [] as string[],
 
       app: null as null | PIXI.Application,
       infotool: document.createElement('null'),
@@ -148,6 +153,9 @@ export default defineComponent({
       verticalHighlight: null as PIXI.Graphics,
 
       nodeSize: 17,
+
+      minXPos: 0,
+      minYPos: 0,
 
       defaultStyle: new PIXI.TextStyle({
         fill: "#000000",
@@ -174,19 +182,21 @@ export default defineComponent({
 
       // create a matrix that stores graphic objects for each existing edge
       this.matrix.length = this.graph.order;
-      for(let i = 0; i < this.graph.order; i++) {
-        this.matrix[i] = Array.from({ length: this.graph.order }, () => null)
-      }
 
       this.graph.forEachNode((node_1: any) => {
-        let sourceData1 = this.nodeMap.get(node_1);
-        this.graph.forEachNode((node_2: any) => {
-          let sourceData2 = this.nodeMap.get(node_2);
+        const sourceData1 = this.nodeMap.get(node_1);
+        if (!sourceData1) return;
 
-          if (this.graph.outEdges(node_1, node_2).length < 1) return;
+        this.matrix[sourceData1.index] = [];
+        this.matrix[sourceData1.index].length = this.graph.order;
+
+        this.graph.forEachNode((node_2: any) => {
+          const sourceData2 = this.nodeMap.get(node_2);
+          if (!sourceData2) return;
+
+          if (!this.graph.hasEdge(node_1, node_2)) return;
 
           const rectangle = new PIXI.Graphics();
-          this.matrix[sourceData1.index][sourceData2.index] = rectangle;
 
           rectangle.interactive = true;
           rectangle.buttonMode = true;
@@ -194,58 +204,42 @@ export default defineComponent({
           rectangle.on("mouseover", (event) => {
             event.stopPropagation();
 
-            const direction = this.diagram.settings.highlightEdgeDirection;
-            const color = 0xD2D2D2;
-
-            if(direction === "incoming" && this.matrix[1][sourceData2.index].tint != 0xB8B6B6 && this.graph.outEdges(node_1, node_2).length < 1) {
-              for(let i = 0; i < this.graph.order; i++) {
-                this.matrix[i][sourceData2.index].tint = color;
-              }
-            } else if(direction === "outgoing" && this.matrix[sourceData1.index][1].tint != 0xB8B6B6 && this.graph.outEdges(node_1, node_2).length < 1) {
-              for(let i = 0; i < this.graph.order; i++) {
-                this.matrix[sourceData1.index][i].tint = color;
-              }
-            }
-
             // Reset HTML
             this.infotool_value_list = [];
 
-            if(this.graph.hasEdge(node_1, node_2)) {
+            this.infotoolDisplay = "inline";
 
-              this.infotoolDisplay = "inline";
+            // Edge ID
+            this.infotool_value_list.push("<h2 style='font-size: 16px;'> Edge: " + node_1 + "->" + node_2 + "</h3>");
+            this.infotool_value_list.push("<hr>");
 
-              // Edge ID
-              this.infotool_value_list.push("<h2 style='font-size: 16px;'> Edge: " + node_1 + "->" + node_2 + "</h3>");
-              this.infotool_value_list.push("<hr>");
+            // Edge Frequency and Sentiment
+            this.infotool_value_list.push("<p> Edge Frequency: " + this.graph.outEdges(node_1, node_2).length + "</p>");
+            this.infotool_value_list.push("<p> Average Sentiment: " + this.avgSentiment(node_1, node_2) + "</p>");
+            this.infotool_value_list.push("<br>");
 
-              // Edge Frequency and Sentiment
-              this.infotool_value_list.push("<p> Edge Frequency: " + this.graph.outEdges(node_1, node_2).length + "</p>");
-              this.infotool_value_list.push("<p> Average Sentiment: " + this.avgSentiment(node_1, node_2) + "</p>");
-              this.infotool_value_list.push("<br>");
+            // Node 1 Attributes
+            this.infotool_value_list.push("<p> From Email: " + this.graph.getNodeAttributes(node_1)["email"] + "</p>");
+            this.infotool_value_list.push("<p> From Jobtitle: " + this.graph.getNodeAttributes(node_1)["jobtitle"] + "</p>");
 
-              // Node 1 Attributes
-              this.infotool_value_list.push("<p> From Email: " + this.graph.getNodeAttributes(node_1)["email"] + "</p>");
-              this.infotool_value_list.push("<p> From Jobtitle: " + this.graph.getNodeAttributes(node_1)["jobtitle"] + "</p>");
+            this.infotool_value_list.push("<br>");
 
-              this.infotool_value_list.push("<br>");
+            // Node 2 Attributes
+            this.infotool_value_list.push("<p> To Email: " + this.graph.getNodeAttributes(node_2)["email"] + "</p>");
+            this.infotool_value_list.push("<p> To Jobtitle: " + this.graph.getNodeAttributes(node_2)["jobtitle"] + "</p>");
 
-              // Node 2 Attributes
-              this.infotool_value_list.push("<p> To Email: " + this.graph.getNodeAttributes(node_2)["email"] + "</p>");
-              this.infotool_value_list.push("<p> To Jobtitle: " + this.graph.getNodeAttributes(node_2)["jobtitle"] + "</p>");
+            const mouseEvent = event.data.originalEvent as MouseEvent;
+            const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
+            const rectangle = canvasParent.getBoundingClientRect();
 
-              const mouseEvent = event.data.originalEvent as MouseEvent;
-              const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
-              const rectangle = canvasParent.getBoundingClientRect();
-
-              this.infotoolXPos = Math.min(
-                mouseEvent.clientX + 20,
-                rectangle.left + canvasParent.clientWidth - 250,
-              );
-              this.infotoolYPos = Math.min(
-                mouseEvent.clientY + 20,
-                rectangle.top + canvasParent.clientHeight - 250,
-              );
-            }
+            this.infotoolXPos = Math.min(
+              mouseEvent.clientX + 20,
+              rectangle.left + canvasParent.clientWidth - 250,
+            );
+            this.infotoolYPos = Math.min(
+              mouseEvent.clientY + 20,
+              rectangle.top + canvasParent.clientHeight - 250,
+            );
 
           });
 
@@ -253,19 +247,6 @@ export default defineComponent({
             event.stopPropagation();
 
             this.infotoolDisplay = "none";
-
-            const direction = this.diagram.settings.highlightEdgeDirection;
-            const color = 0xFFFFFF;
-
-            if(direction === "incoming" && this.matrix[1][sourceData2.index].tint != 0xB8B6B6) {
-              for(let i = 0; i < this.graph.order; i++) {
-                this.matrix[i][sourceData2.index].tint = color;
-              }
-            } else if(direction === "outgoing" && this.matrix[sourceData1.index][1].tint != 0xB8B6B6) {
-              for(let i = 0; i < this.graph.order; i++) {
-                this.matrix[sourceData1.index][i].tint = color;
-              }
-            }
           });
 
           //brush-and-linking interactivity
@@ -274,35 +255,37 @@ export default defineComponent({
             if (!this.diagram) return;
 
             const append = (event.data.originalEvent as MouseEvent).ctrlKey;
-            if (this.diagram.settings.highlightEdgeDirection === "outgoing") {
+            if (this.diagram.settings.edgeHighlightDirection === "outgoing") {
               this.$emit("selected-node-change", this.diagram.graphID, node_1, append);
-            } else if (this.diagram.settings.highlightEdgeDirection === "incoming") {
+            } else if (this.diagram.settings.edgeHighlightDirection === "incoming") {
               this.$emit("selected-node-change", this.diagram.graphID, node_2, append);
             }
           });
+
+          this.matrix[sourceData1.index][sourceData2.index] = rectangle;
         });
       });
     },
 
-    drawLines(viewport: Viewport, settings: Settings, startX: number, startY: number) {
+    drawLines(viewport: Viewport) {
       const numberOfLines = 2 * (this.graph.order + 1);
       this.lines.length = numberOfLines;
 
       for (let index = 0; index < numberOfLines; index++) {
 
-        if ((settings.drawInnerLines) || (index == 0) || (index == numberOfLines / 2 - 1) || (index == numberOfLines / 2) || (index == numberOfLines - 1)) {
+        if ((this.diagram.settings.drawInnerLines) || (index == 0) || (index == numberOfLines / 2 - 1) || (index == numberOfLines / 2) || (index == numberOfLines - 1)) {
           this.lines[index] = new PIXI.Graphics();
           this.lines[index].lineStyle(1, 0x000000);
           this.lines[index].moveTo(0, 0);
 
           if (index < numberOfLines / 2) { // Horizontal
             this.lines[index].lineTo((this.nodeSize * this.graph.order), 0);
-            this.lines[index].x = startX;
-            this.lines[index].y = startY + (this.nodeSize * index);
+            this.lines[index].x = this.minXPos;
+            this.lines[index].y = this.minYPos + (this.nodeSize * index);
           } else { // Vertical
             this.lines[index].lineTo(0, (this.nodeSize * this.graph.order));
-            this.lines[index].x = startX + (this.nodeSize * (index - (this.graph.order + 1)));
-            this.lines[index].y = startY;
+            this.lines[index].x = this.minXPos + (this.nodeSize * (index - (this.graph.order + 1)));
+            this.lines[index].y = this.minYPos;
           }
 
           viewport.addChild(this.lines[index]);
@@ -323,16 +306,16 @@ export default defineComponent({
       });
       viewport.removeChildren();
 
-      const nodeX = canvas.width * 1/10;
-      const nodeY = canvas.height * 1/5;
-      let maxEdges = 0;
+      this.minXPos = canvas.width * 1/10;
+      this.minYPos = canvas.height * 1/5;
+      let maxEdges = this.maxEdges();
 
-      this.drawLines(viewport, settings, nodeX, nodeY);
+      this.drawLines(viewport);
 
       // Horizontal Highlight
       this.horizontalHighlight = new PIXI.Graphics();
       this.horizontalHighlight.beginFill(0xFE00EF);
-      this.horizontalHighlight.drawRect(nodeX, 0, this.nodeSize * this.graph.order, this.nodeSize);
+      this.horizontalHighlight.drawRect(this.minXPos, 0, this.nodeSize * this.graph.order, this.nodeSize);
       this.horizontalHighlight.endFill();
       this.horizontalHighlight.alpha = 0;
       viewport.addChild(this.horizontalHighlight);
@@ -340,22 +323,10 @@ export default defineComponent({
       // Vertical Highlight
       this.verticalHighlight = new PIXI.Graphics();
       this.verticalHighlight.beginFill(0xFE00EF);
-      this.verticalHighlight.drawRect(0, nodeY, this.nodeSize, this.nodeSize * this.graph.order);
+      this.verticalHighlight.drawRect(0, this.minYPos, this.nodeSize, this.nodeSize * this.graph.order);
       this.verticalHighlight.endFill();
       this.verticalHighlight.alpha = 0;
       viewport.addChild(this.verticalHighlight);
-
-      if (settings.variety === "edge-frequency") {
-        graph.forEachNode((node_1: any) => {
-          graph.forEachNode((node_2: any) => {
-            if (maxEdges < graph.outEdges(node_1, node_2).length)
-            {
-              maxEdges = graph.outEdges(node_1, node_2).length;
-            }
-          });
-        });
-        maxEdges = Math.log(maxEdges);
-      }
 
       graph.forEachNode((node_1: any) => {
         const sourceData1 = this.nodeMap.get(node_1);
@@ -363,54 +334,29 @@ export default defineComponent({
 
         graph.forEachNode((node_2: any) => {
           const sourceData2 = this.nodeMap.get(node_2);
-          if (!sourceData2) return; // not supposed to happen
-
-          if (this.graph.outEdges(node_1, node_2).length < 1) return;
+          if (!sourceData2 || !this.graph.hasEdge(node_1, node_2)) return;
 
           const rectangle = this.matrix[sourceData1.index][sourceData2.index];
+          rectangle.clear();
 
-          if (graph.hasEdge(node_1, node_2)) {
+          this.colour(node_1, node_2, maxEdges, rectangle as PIXI.Graphics);
 
-            if (settings.variety === "edge-frequency") {
-              rectangle.beginFill(0xAF1A1A, 1);
-              rectangle.alpha = (Math.log(graph.outEdges(node_1, node_2).length) / maxEdges) * 0.8 + 0.2;
-            } else if (settings.variety === "sentiment") {
-
-              let avgSentiment = 0;
-              let sentimentSum = 0;
-              for(let edge of graph.outEdges(node_1, node_2)) {
-                sentimentSum += graph.getEdgeAttributes(edge)["sentiment"];
-              }
-              avgSentiment = sentimentSum / graph.outEdges(node_1, node_2).length;
-
-              if (avgSentiment > 0) {
-                rectangle.beginFill(0x337F1E, 1);
-              } else if (avgSentiment < 0) {
-                rectangle.beginFill(0xAF1A1A, 1);
-              } else if (avgSentiment == 0) {
-                rectangle.beginFill(0xFCFFA5, 1);
-              }
-
-              // rectangle.alpha = Math.abs(avgSentiment * 0.2 + 0.8);
-            }
-
-          } else {
-            rectangle.beginFill(0xC0C0C0, 1);
-          }
           rectangle.drawRect(0, 0, this.nodeSize, this.nodeSize);
           rectangle.endFill();
 
-          rectangle.interactive = true;
+          rectangle.x = this.minXPos + (this.nodeSize * sourceData2.index);
+          rectangle.y = this.minYPos + (this.nodeSize * sourceData1.index);
+
           // rectangle.buttonMode = true;
           rectangle.on("mouseover", (event) => {
             event.stopPropagation();
 
-            if(settings.hoverEdgeDirection === "outgoing" || settings.hoverEdgeDirection === "both") {
-              this.horizontalHighlight.y = nodeY + (this.nodeSize * sourceData1.index);
+            if (settings.edgeHighlightDirection === "outgoing" || settings.edgeHighlightDirection === "both") {
+              this.horizontalHighlight.y = this.minYPos + (this.nodeSize * sourceData1.index);
               this.horizontalHighlight.alpha = 0.5;
             }
-            if(settings.hoverEdgeDirection === "incoming" || settings.hoverEdgeDirection === "both") {
-              this.verticalHighlight.x = nodeX + (this.nodeSize * sourceData2.index);
+            if (settings.edgeHighlightDirection === "incoming" || settings.edgeHighlightDirection === "both") {
+              this.verticalHighlight.x = this.minXPos + (this.nodeSize * sourceData2.index);
               this.verticalHighlight.alpha = 0.5;
             }
           });
@@ -421,9 +367,6 @@ export default defineComponent({
             this.horizontalHighlight.alpha = 0;
             this.verticalHighlight.alpha = 0;
           });
-
-          rectangle.x = nodeX + (this.nodeSize * sourceData2.index);
-          rectangle.y = nodeY + (this.nodeSize * sourceData1.index);
 
           viewport.addChild(rectangle as PIXI.Graphics);
         });
@@ -436,22 +379,22 @@ export default defineComponent({
 
         const textX = new PIXI.Text(node);
         textX.style = textStyle;
-        textX.x = nodeX - (this.nodeSize / 2);
-        textX.y = nodeY + (this.nodeSize / 2) + (this.nodeSize * sourceData.index);
+        textX.x = this.minXPos - (this.nodeSize / 2);
+        textX.y = this.minYPos + (this.nodeSize / 2) + (this.nodeSize * sourceData.index);
         textX.anchor.set(1, 0.5);
 
         viewport.addChild(textX);
       });
 
-      // Display fromId for the column node
+      // Display toId for the column node
       graph.forEachNode((node: any) => {
         const sourceData = this.nodeMap.get(node);
         if (!sourceData) return;
 
         const textY = new PIXI.Text(node);
         textY.style = textStyle;
-        textY.x = nodeX + (this.nodeSize / 2) + (this.nodeSize * sourceData.index);
-        textY.y = nodeY - (this.nodeSize / 2);
+        textY.x = this.minXPos + (this.nodeSize / 2) + (this.nodeSize * sourceData.index);
+        textY.y = this.minYPos - (this.nodeSize / 2);
         textY.angle = 270;
         textY.anchor.set(0, 0.5);
 
@@ -460,15 +403,17 @@ export default defineComponent({
 
       const fromId = new PIXI.Text("From ID");
       fromId.style = labelStyle;
-      fromId.x = nodeX - (this.nodeSize / 2) - 80;
-      fromId.y = nodeY + (this.nodeSize / 2) + (this.nodeSize * (graph.order / 2)) + 20;
+      fromId.anchor.set(0.5, 0);
+      fromId.x = this.minXPos - (this.nodeSize / 2) - 80;
+      fromId.y = this.minYPos + (this.nodeSize / 2) + (this.nodeSize * (graph.order / 2)) + 20;
       fromId.angle = 270;
       viewport.addChild(fromId);
 
       const toId = new PIXI.Text("To ID");
       toId.style = labelStyle;
-      toId.x = nodeX + (this.nodeSize / 2) + (this.nodeSize * (graph.order / 2)) - 35;
-      toId.y = nodeY - (this.nodeSize / 2) - 65;
+      toId.anchor.set(0.5, 0.5);
+      toId.x = this.minXPos + (this.nodeSize / 2) + (this.nodeSize * (graph.order / 2)) - 35;
+      toId.y = this.minYPos - (this.nodeSize / 2) - 65;
       viewport.addChild(toId);
     },
 
@@ -505,7 +450,7 @@ export default defineComponent({
       if (graph.hasEdge(node_1, node_2)) {
 
         if (diagram.settings.variety === "edge-frequency") {
-          rectangle.beginFill(0xC71585, 1);
+          rectangle.beginFill(0xAF1A1A, 1);
           rectangle.alpha = (Math.log(graph.outEdges(node_1, node_2).length) / maxEdges) * 0.8 + 0.2;
         } else if (diagram.settings.variety === "sentiment") {
 
@@ -524,11 +469,6 @@ export default defineComponent({
 
           rectangle.alpha = 1;
         }
-
-      } else if (diagram.settings.variety === "edge-frequency") {
-        rectangle.beginFill(0xFFFFFF, 1);
-      } else if (diagram.settings.variety === "sentiment") {
-        rectangle.beginFill(0xFFFFFF, 1);
       }
     },
 
@@ -540,16 +480,34 @@ export default defineComponent({
 
       const highlightNode = (node: string) => {
         const nodeData = this.nodeMap.get(node);
+
         if (!nodeData) return;
+
         const nodeIndex = nodeData.index;
 
-        if (diagram.settings.highlightEdgeDirection === "incoming" || diagram.settings.highlightEdgeDirection === "both") {
+        console.log(this.diagram.settings.edgeHighlightDirection);
+
+
+        if ((diagram.settings.edgeHighlightDirection === "incoming") || (diagram.settings.edgeHighlightDirection === "both")) {
+
+          this.verticalHighlight.x = this.minXPos + nodeIndex * this.nodeSize;
+          this.verticalHighlight.alpha = 0.5;
+
           for(let i = 0; i < this.graph.order; i++) {
-            this.matrix[i][nodeIndex].tint = color;
+            if (this.matrix[i][nodeIndex]) {
+              this.matrix[i][nodeIndex].tint = color;
+            }
           }
-        } else if (diagram.settings.highlightEdgeDirection === "outgoing" || diagram.settings.highlightEdgeDirection === "both") {
+        }
+        if ((diagram.settings.edgeHighlightDirection === "outgoing") || (diagram.settings.edgeHighlightDirection === "both")) {
+
+          this.horizontalHighlight.y = this.minYPos + nodeIndex * this.nodeSize;
+          this.horizontalHighlight.alpha = 0.5;
+
           for(let i = 0; i < this.graph.order; i++) {
-            this.matrix[nodeIndex][i].tint = color;
+            if (this.matrix[nodeIndex][i]) {
+              this.matrix[nodeIndex][i].tint = color;
+            }
           }
         }
       };
@@ -563,16 +521,21 @@ export default defineComponent({
       const diagram = this.diagram;
       if (!diagram) return;
 
-      const graph = this.graph;
       const color = 0xFFFFFF;
 
       const unhighlightNode = (node: string) => {
+
         const nodeData = this.nodeMap.get(node);
         if (!nodeData) return;
+
         const nodeIndex = nodeData.index;
-        for(let i = 0; i < graph.order; i++) {
-          this.matrix[nodeIndex][i].tint = color;
-          this.matrix[i][nodeIndex].tint = color;
+        for(let i = 0; i < this.graph.order; i++) {
+          if (this.matrix[i][nodeIndex]) {
+            this.matrix[i][nodeIndex].tint = color;
+          }
+          if (this.matrix[nodeIndex][i]) {
+            this.matrix[nodeIndex][i].tint = color;
+          }
         }
       };
 

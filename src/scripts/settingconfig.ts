@@ -45,7 +45,7 @@ export function getDefaultSettings(componentName: string): any {
     case "AdjacencyMatrix": {
       return {
         variety: "edge-frequency",
-        hoverEdgeDirection: "both",
+        edgeHighlightDirection: "both",
         drawInnerLines: false,
       };
     }
@@ -125,9 +125,9 @@ export function getVisibleSettings(diagram: GlobalStorage.Diagram, graph: Graph)
             options: [ "edge-frequency", "sentiment" ],
             value: diagram.settings.variety,
           } },
-          { id: "hoverEdgeDirection", component: "SelectSetting", name: "Edge Direction", properties: {
+          { id: "edgeHighlightDirection", component: "SelectSetting", name: "Edge Direction", properties: {
             options: [ "incoming", "outgoing", "both" ],
-            value: diagram.settings.hoverEdgeDirection,
+            value: diagram.settings.edgeHighlightDirection,
           } },
           { id: "drawInnerLines", component: "CheckboxSetting", name: "Draw Inner Lines", properties: {
             value: diagram.settings.drawInnerLines,
