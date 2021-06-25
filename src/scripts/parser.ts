@@ -10,11 +10,11 @@ export function parse(file: File, id: string, onFinish: (graph: Graph) => void):
   reader.readAsText(file);
   reader.onload = async () => {
     const extension = file.name.split(".").pop();
-    let graph;
+    let graph: Graph;
     if (extension == "gexf") graph = gexf.parse(Graph, reader.result as string);
     else graph = processData(reader.result as string);
     // file name variable stores the name without the extension
-    await GlobalStorage.addDataset(id, graph);
+    await GlobalStorage.addDataset(id, new GlobalStorage.Dataset(graph));
     onFinish(graph);
   };
 }

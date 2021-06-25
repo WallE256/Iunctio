@@ -34,11 +34,12 @@ export default defineComponent({
       console.warn("Non-existent diagram:", this.diagramid);
       return;
     }
-    this.graph = await GlobalStorage.getDataset(this.diagram.graphID);
-    if (!this.graph) {
+    const dataset = await GlobalStorage.getDataset(this.diagram.graphID);
+    if (!dataset) {
       console.warn("Non-existent dataset:", this.diagram.graphID);
       return;
     }
+    this.graph = dataset.graph;
 
     this.app = new PIXI.Application({
       view: this.canvas,
