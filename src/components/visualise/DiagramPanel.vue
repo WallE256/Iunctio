@@ -1,19 +1,12 @@
 <template>
   <div class="diagram-panel">
-    <span class="diag-del" @click="$emit('hide', diagram_id)"></span>
+    <span class="diag-back" @click="$emit('back')" title="Back To Visualise Page"></span>
+    <span class="diag-close" @click="$emit('close', diagram_id)" title="Close Diagram View"></span>
     <component
       :is="componentName"
       :diagramid="diagram_id"
       @selected-node-change="onSelectedNodeChange"
     />
-    <transition name="slide-fade">
-      <div class="diagram-panel__settings" v-show="showSettings">
-        <diagram-settings
-          :diagramid="diagram_id"
-          @setting-changed="onSettingChanged"
-        />
-      </div>
-    </transition>
     <span
       class="settings-icon"
       @click="toggleSettings"
@@ -29,6 +22,15 @@
         />
       </svg>
     </span>
+    <transition name="slide-fade">
+      <div class="diagram-panel__settings" v-show="showSettings">
+        <diagram-settings
+          :diagramid="diagram_id"
+          @setting-changed="onSettingChanged"
+          @close-settings="toggleSettings"
+        />
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -85,10 +87,6 @@ export default defineComponent({
       GlobalStorage.changeSetting(diagram, id, value);
     },
 
-    createDiagram() {
-      console.log("diagram created");
-    },
-
     toggleSettings() {
       this.showSettings = !this.showSettings;
     },
@@ -116,10 +114,45 @@ export default defineComponent({
   @include font-face("Poppins", "Regular");
   @include font-sans("Poppins", 0.75rem, "Regular", $BLACK_DDD);
 
-  .diag-del {
+  .diag-back {
     // Make the button circular.
     border-radius: 100%;
-    @include setSize(20px);
+    @include setSize(25px);
+    cursor: pointer;
+    @include abs(0 0 0 0);
+
+    &::after,
+    &::before {
+      @include pseudo($height: 50%, $width: 3px);
+      top: 50%;
+      left: 50%;
+      background: $GREY;
+      @include transition(background transform, 0.3s, $ease1);
+    }
+
+    &::after {
+      transform: translate(-50%, 5%) rotateZ(-45deg);
+    }
+
+    &::before {
+      transform: translate(-50%, -55%) rotateZ(45deg);
+    }
+
+    &:hover.diag-back::after {
+      background: $RED;
+      transform: translate(-50%, 10%) rotateZ(-45deg) scale(1.1);
+    }
+
+    &:hover.diag-back::before {
+      background: $RED;
+      transform: translate(-50%, -60%) rotateZ(45deg) scale(1.1);
+    }
+  }
+
+  .diag-close {
+    // Make the button circular.
+    border-radius: 100%;
+    @include setSize(25px);
     cursor: pointer;
     @include abs(5px 5px 0 0);
 
@@ -140,12 +173,12 @@ export default defineComponent({
       transform: translate(-50%, -50%) rotateZ(45deg);
     }
 
-    &:hover.diag-del::after {
+    &:hover.diag-close::after {
       background: $RED;
       transform: translate(-50%, -50%) rotateZ(-45deg) scale(1.1);
     }
 
-    &:hover.diag-del::before {
+    &:hover.diag-close::before {
       background: $RED;
       transform: translate(-50%, -50%) rotateZ(45deg) scale(1.1);
     }
@@ -155,7 +188,7 @@ export default defineComponent({
     background-color: darken($WHITE_D, 5%);
     border-radius: 5px;
     box-shadow: 0 0 5px rgba($BLUE_D, 0.2);
-    padding: 10px;
+    padding: 10px 10px 0px 10px;
     @include abs(0 10px 10px 0);
   }
 
@@ -163,7 +196,7 @@ export default defineComponent({
     display: block;
     @include setSize(25px);
     border-radius: 100%;
-    @include abs(0 0 10px 10px);
+    @include abs(0 10px 10px 0);
     cursor: pointer;
     .icon-gear {
       fill: $BLUE_D;

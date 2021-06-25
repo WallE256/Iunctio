@@ -1,14 +1,5 @@
 <template>
   <main class="visualise">
-    <span
-      class="visualise__back"
-      v-show="!show_home"
-      @click="
-        toggleHome(true);
-        toggleDiagramPanels(false);
-      "
-      >BACK</span
-    >
     <section class="upload-dataset" v-show="show_home">
       <h3 class="upload-dataset__title">Upload a new data set.</h3>
       <div class="upload-dataset__tiles">
@@ -60,7 +51,10 @@
         :key="diag"
         :diagram_id="diag"
         @selected-node-change="onSelectedNodeChange"
-        @hide="hideDiagram"
+        @close="closeDiagram"
+        @back="
+          toggleHome(true);
+          toggleDiagramPanels(false);"
       />
     </section>
   </main>
@@ -211,10 +205,14 @@ export default defineComponent({
       return diagram_png_path;
     },
 
-    hideDiagram(diagramID: string) {
-      // Only hides the diagram, doesn't delete from the Global Storage.
+    closeDiagram(diagramID: string) {
+      // Only closes the diagram, doesn't delete from the Global Storage.
       const index = this.shownDiagrams.indexOf(diagramID);
       if (index !== -1) this.shownDiagrams.splice(index, 1);
+      if (this.shownDiagrams.length < 1) {
+        this.toggleHome(true);
+        this.toggleDiagramPanels(false);
+      }
     },
 
     async updateDatasets() {
