@@ -15,8 +15,9 @@ import InfoTool from "@/components/visualise/InfoTool.vue";
 import { Viewport } from 'pixi-viewport';
 
 type Settings = {
-  variety?: string, // "edge-frequency" or "sentiment"
-  hoverEdgeDirection?: string, // "incoming" or "outgoing" or "both"
+  variety: string, // "edge-frequency" or "sentiment"
+  hoverEdgeDirection: string, // "incoming" or "outgoing" or "both"
+  drawInnerLines: boolean, // true or false
 };
 
 export default defineComponent({
@@ -40,11 +41,12 @@ export default defineComponent({
       return;
     }
 
-    this.graph = await GlobalStorage.getDataset(this.diagram.graphID);
-    if (!this.graph) {
+    const dataset = await GlobalStorage.getDataset(this.diagram.graphID);
+    if (!dataset) {
       console.warn("Non-existent dataset:", this.diagram.graphID);
       return;
     }
+    this.graph = dataset.graph;
 
     this.infotool = this.$refs["info-tool"] as HTMLElement;
 
@@ -140,6 +142,10 @@ export default defineComponent({
       diagram: null as GlobalStorage.Diagram | null,
       canvas: null as null | HTMLCanvasElement,
 
+      lines: [] as PIXI.Graphics[],
+
+      nodeGap: 17,
+
       defaultStyle: new PIXI.TextStyle({
         fill: "#000000",
       }),
@@ -159,11 +165,7 @@ export default defineComponent({
         const text = new PIXI.Text(sourceString, this.defaultStyle);
         const rectangle = new PIXI.Graphics();
 
-        this.nodeMap.set(source, {
-          text: text,
-          rectangle: rectangle,
-          index: i,
-        });
+        this.nodeMap.set(source, { index: i, });
         i++;
       });
 
@@ -180,7 +182,8 @@ export default defineComponent({
 
           if (this.graph.edges(node_1, node_2).length < 1) return;
 
-          const rectangle = this.matrix[sourceData1.index][sourceData2.index];
+          const rectangle = new PIXI.Graphics();
+          this.matrix[sourceData1.index][sourceData2.index] = rectangle;
 
           rectangle.interactive = true;
           rectangle.buttonMode = true;
@@ -191,11 +194,11 @@ export default defineComponent({
             const direction = this.diagram.settings.highlightEdgeDirection;
             const color = 0xD2D2D2;
 
-            if(direction === "incoming" && this.matrix[1][sourceData2.index].tint != 0xB8B6B6) {
+            if(direction === "incoming" && this.matrix[1][sourceData2.index].tint != 0xB8B6B6 && this.graph.edges(node_1, node_2).length < 1) {
               for(let i = 0; i < this.graph.order; i++) {
                 this.matrix[i][sourceData2.index].tint = color;
               }
-            } else if(direction === "outgoing" && this.matrix[sourceData1.index][1].tint != 0xB8B6B6) {
+            } else if(direction === "outgoing" && this.matrix[sourceData1.index][1].tint != 0xB8B6B6 && this.graph.edges(node_1, node_2).length < 1) {
               for(let i = 0; i < this.graph.order; i++) {
                 this.matrix[sourceData1.index][i].tint = color;
               }
@@ -278,6 +281,32 @@ export default defineComponent({
       });
     },
 
+    drawLines(viewport: Viewport, settings: Settings, startX: number, startY: number) {
+      const numberOfLines = 2 * (this.graph.order + 1);
+      this.lines.length = numberOfLines;
+
+      for (let index = 0; index < numberOfLines; index++) {
+
+        if ((settings.drawInnerLines) || (index == 0) || (index == numberOfLines / 2 - 1) || (index == numberOfLines / 2) || (index == numberOfLines - 1)) {
+          this.lines[index] = new PIXI.Graphics();
+          this.lines[index].lineStyle(1, 0x000000);
+          this.lines[index].moveTo(0, 0);
+
+          if (index < numberOfLines / 2) { // Horizontal
+            this.lines[index].lineTo((this.nodeGap * this.graph.order), 0);
+            this.lines[index].x = startX;
+            this.lines[index].y = startY + (this.nodeGap * index);
+          } else { // Vertical
+            this.lines[index].lineTo(0, (this.nodeGap * this.graph.order));
+            this.lines[index].x = startX + (this.nodeGap * (index - (this.graph.order + 1)));
+            this.lines[index].y = startY;
+          }
+
+          viewport.addChild(this.lines[index]);
+        }
+      }
+    },
+
     draw(graph: Graph, app: PIXI.Application, settings: Settings, viewport: Viewport) {
       const canvas = this.canvas as HTMLCanvasElement;
       const textStyle = new PIXI.TextStyle({
@@ -291,12 +320,13 @@ export default defineComponent({
       });
       viewport.removeChildren();
 
-      const nodeY = canvas.height * 1/5;
       const nodeX = canvas.width * 1/10;
+      const nodeY = canvas.height * 1/5;
       const rectWidth = 17;
       const rectHeight = 17;
-      let gap = 17;
       let maxEdges = 0;
+
+      this.drawLines(viewport, settings, nodeX, nodeY);
 
       if (settings.variety === "edge-frequency") {
         graph.forEachNode((node_1: any) => {
@@ -318,8 +348,9 @@ export default defineComponent({
           const sourceData2 = this.nodeMap.get(node_2);
           if (!sourceData2) return; // not supposed to happen
 
+          if (this.graph.edges(node_1, node_2).length < 1) return;
+
           const rectangle = this.matrix[sourceData1.index][sourceData2.index];
-          rectangle.lineStyle(1);
 
           if (graph.hasEdge(node_1, node_2)) {
 
@@ -359,16 +390,22 @@ export default defineComponent({
 
             if(settings.hoverEdgeDirection === "both") {
               for(let i = 0; i < graph.order; i++) {
-                this.matrix[sourceData1.index][i].tint = 0xFE00EF;
-                this.matrix[i][sourceData2.index].tint = 0xFE00EF;
+                if (this.matrix[sourceData1.index][i] && this.matrix[i][sourceData2.index]) {
+                  this.matrix[sourceData1.index][i].tint = 0xFE00EF;
+                  this.matrix[i][sourceData2.index].tint = 0xFE00EF;
+                }
               }
             } else if(settings.hoverEdgeDirection === "incoming") {
               for(let i = 0; i < graph.order; i++) {
+                if (this.matrix[i][sourceData2.index]) {
                 this.matrix[i][sourceData2.index].tint = 0xFE00EF;
+                }
               }
             } else if(settings.hoverEdgeDirection === "outgoing") {
               for(let i = 0; i < graph.order; i++) {
-                this.matrix[sourceData1.index][i].tint = 0xFE00EF;
+                if (this.matrix[sourceData1.index][i]) {
+                  this.matrix[sourceData1.index][i].tint = 0xFE00EF;
+                }
               }
             }
           });
@@ -377,13 +414,17 @@ export default defineComponent({
             event.stopPropagation();
 
             for(let i = 0; i < graph.order; i++) {
-              this.matrix[sourceData1.index][i].tint = 0xFFFFFF;
-              this.matrix[i][sourceData2.index].tint = 0xFFFFFF;
+              if (this.matrix[sourceData1.index][i]) {
+                this.matrix[sourceData1.index][i].tint = 0xFFFFFF;
+              }
+              if (this.matrix[i][sourceData2.index]) {
+                this.matrix[i][sourceData2.index].tint = 0xFFFFFF;
+              }
             }
           });
 
-          rectangle.x = nodeX + (gap * sourceData2.index);
-          rectangle.y = nodeY + (gap * sourceData1.index);
+          rectangle.x = nodeX + (this.nodeGap * sourceData2.index);
+          rectangle.y = nodeY + (this.nodeGap * sourceData1.index);
 
           viewport.addChild(rectangle as PIXI.Graphics);
         });
@@ -397,7 +438,7 @@ export default defineComponent({
         const textX = new PIXI.Text(node);
         textX.style = textStyle;
         textX.x = nodeX - (rectWidth / 2);
-        textX.y = nodeY + (rectHeight / 2) + (gap * sourceData.index);
+        textX.y = nodeY + (rectHeight / 2) + (this.nodeGap * sourceData.index);
         textX.anchor.set(1, 0.5);
 
         viewport.addChild(textX);
@@ -410,7 +451,7 @@ export default defineComponent({
 
         const textY = new PIXI.Text(node);
         textY.style = textStyle;
-        textY.x = nodeX + (rectWidth / 2) + (gap * sourceData.index);
+        textY.x = nodeX + (rectWidth / 2) + (this.nodeGap * sourceData.index);
         textY.y = nodeY - (rectHeight / 2);
         textY.angle = 270;
         textY.anchor.set(0, 0.5);
@@ -420,13 +461,13 @@ export default defineComponent({
       const fromId = new PIXI.Text("From ID");
       fromId.style = labelStyle;
       fromId.x = nodeX - (rectWidth / 2) - 80;
-      fromId.y = nodeY + (rectHeight / 2) + (gap * (graph.order / 2)) + 20;
+      fromId.y = nodeY + (rectHeight / 2) + (this.nodeGap * (graph.order / 2)) + 20;
       fromId.angle = 270;
       viewport.addChild(fromId);
 
       const toId = new PIXI.Text("To ID");
       toId.style = labelStyle;
-      toId.x = nodeX + (rectWidth / 2) + (gap * (graph.order / 2)) - 35;
+      toId.x = nodeX + (rectWidth / 2) + (this.nodeGap * (graph.order / 2)) - 35;
       toId.y = nodeY - (rectHeight / 2) - 65;
       viewport.addChild(toId);
       });
@@ -486,9 +527,9 @@ export default defineComponent({
         }
 
       } else if (diagram.settings.variety === "edge-frequency") {
-        rectangle.beginFill(0x957DAD, 1);
+        rectangle.beginFill(0xFFFFFF, 1);
       } else if (diagram.settings.variety === "sentiment") {
-        rectangle.beginFill(0x9AB7D3, 1);
+        rectangle.beginFill(0xFFFFFF, 1);
       }
     },
 

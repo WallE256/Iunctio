@@ -46,6 +46,7 @@ export function getDefaultSettings(componentName: string): any {
       return {
         variety: "edge-frequency",
         hoverEdgeDirection: "outgoing",
+        drawInnerLines: true,
       };
     }
 
@@ -127,6 +128,9 @@ export function getVisibleSettings(diagram: GlobalStorage.Diagram, graph: Graph)
           { id: "hoverEdgeDirection", component: "SelectSetting", name: "Edge Direction", properties: {
             options: [ "incoming", "outgoing", "both" ],
             value: diagram.settings.hoverEdgeDirection,
+          } },
+          { id: "drawInnerLines", component: "CheckboxSetting", name: "Draw Inner Lines", properties: {
+            value: diagram.settings.drawInnerLines,
           } },
         ];
         break;

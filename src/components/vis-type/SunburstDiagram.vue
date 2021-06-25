@@ -70,6 +70,7 @@ export default defineComponent({
       console.warn("Non-existent diagram:", this.diagramid);
       return;
     }
+    
     const dataset = await GlobalStorage.getDataset(this.diagram.graphID);
     if (!dataset) {
       console.warn("Non-existent dataset:", this.diagram.graphID);
