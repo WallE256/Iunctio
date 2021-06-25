@@ -56,13 +56,13 @@ export default defineComponent({
       console.warn("Non-existent diagram:", this.diagramid);
       return;
     }
-    const graph = await GlobalStorage.getDataset(this.diagram.graphID);
-    if (!graph) {
+    const dataset = await GlobalStorage.getDataset(this.diagram.graphID);
+    if (!dataset) {
       console.warn("Non-existent data set:", this.diagram.graphID);
       return;
     }
 
-    this.settings = getVisibleSettings(this.diagram, graph);
+    this.settings = getVisibleSettings(this.diagram, dataset.graph);
   },
 
   methods: {

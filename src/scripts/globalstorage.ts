@@ -5,7 +5,11 @@
 
 import Graph from "graphology";
 import localforage from "localforage";
+import { sortEdgesByDate, sortNodesByCommunity } from "@/scripts/sorter";
 
+/// An object that stores a diagram's properties, e.g. its identifier, name
+/// and settings. The diagrams are usually stored in a global map and can be
+/// serialized to be stored in localstorage.
 export class Diagram {
   /// This diagram's unique identifier
   id: string;
@@ -52,13 +56,48 @@ export class Diagram {
   }
 }
 
+/// `Dataset` represents a dataset that the user has uploaded to the website.
+///
+/// Each dataset will be added to a global map as well as to the localstorage.
+///
+/// In addition to storing the graph object, it also stores how nodes are
+/// clustered and it stores the edges sorted by date, so this information does
+/// not have to be recalculated for every diagram.
+export class Dataset {
+  /// The graphology `Graph` object that stores all the nodes and edges of a
+  /// datset, and all additional data attached to them (attributes).
+  readonly graph: Graph;
+
+  ///
+  private clusteredNodes: string[];
+
+  ///
+  private sortedEdges: Map<string, string[]>;
+
+  constructor(graph: Graph) {
+    this.graph = graph;
+    this.clusteredNodes = sortNodesByCommunity(graph);
+    this.sortedEdges = sortEdgesByDate(graph);
+  }
+
+  ///
+  getClusteredNodes(): string[] {
+    return this.clusteredNodes;
+  }
+
+  ///
+  getSortedEdges(): Map<string, string[]> {
+    return this.sortedEdges;
+  }
+}
+
 export function createID(id: string): string {
   // this is unique enough and not too long
   return String(Math.floor(Date.now() % 1e5)) + "-" + id;
 }
 
 const diagrams = new Map<string, Diagram>();
-const datasets = new Map<string, Graph>();
+const datasets = new Map<string, Dataset>();
 
 // has to be a { value } object, because otherwise it cannot be reassigned
 const datasetList = { values: null as string[] | null };
@@ -105,24 +144,23 @@ export async function getDatasets(): Promise<string[]> {
 }
 
 /// `addDataset` adds a dataset to the global storage.
-export async function addDataset(id: string, graph: Graph): Promise<void> {
-  datasets.set(id, graph);
+export async function addDataset(id: string, dataset: Dataset): Promise<void> {
+  datasets.set(id, dataset);
   const storageKey = "dataset-" + id;
 
   // ...these could probably be updated in parallel, using Promise.all but that
   // doesn't seem to work
-  await localforage.setItem(storageKey, JSON.stringify(graph.export()));
+  await localforage.setItem(storageKey, JSON.stringify(dataset.graph.export()));
 
   await mutateStorageList("datasets", datasetList, (ids) => {
     ids.push(id);
   });
-  console.log("Finally:", datasetList);
 }
 
 /// `getDataset` returns the graph that corresponds to the given id, or
 /// `null` if it does not exist.
 /// It will be fetched from memory, or localStorage if that is not available.
-export async function getDataset(id: string): Promise<Graph | null> {
+export async function getDataset(id: string): Promise<Dataset | null> {
   // if it's in the memory, use that (so parsing JSON is not necessary)
   const inMemory = datasets.get(id);
   if (inMemory) {
@@ -134,8 +172,9 @@ export async function getDataset(id: string): Promise<Graph | null> {
     const storageKey = "dataset-" + id;
     const storageItem = (await localforage.getItem(storageKey)) as string;
     const graph = Graph.from(JSON.parse(storageItem));
-    datasets.set(id, graph);
-    return graph;
+    const dataset = new Dataset(graph);
+    datasets.set(id, dataset);
+    return dataset;
   } catch (error) {
     console.log(error);
     return null;

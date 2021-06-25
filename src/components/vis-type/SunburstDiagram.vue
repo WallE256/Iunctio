@@ -70,11 +70,12 @@ export default defineComponent({
       console.warn("Non-existent diagram:", this.diagramid);
       return;
     }
-    this.graph = await GlobalStorage.getDataset(this.diagram.graphID);
-    if (!this.graph) {
+    const dataset = await GlobalStorage.getDataset(this.diagram.graphID);
+    if (!dataset) {
       console.warn("Non-existent dataset:", this.diagram.graphID);
       return;
     }
+    this.graph = dataset.graph;
 
     this.infotool = this.$refs["info-tool"] as HTMLElement;
 
@@ -86,9 +87,6 @@ export default defineComponent({
     });
 
     // Create map for number of connections between nodes
-    this.bothConnections = new Map();
-    this.outConnections = new Map();
-
     [this.bothConnections, this.outConnections] = this.mapConnections(this.graph);
 
     const app = this.app as PIXI.Application;
