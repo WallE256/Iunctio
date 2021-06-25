@@ -152,6 +152,8 @@ export default defineComponent({
       horizontalHighlight: null as null | PIXI.Graphics,
       verticalHighlight: null as null | PIXI.Graphics,
 
+      brushAndLinkingHighlights: [] as PIXI.Graphics[],
+
       nodeSize: 17,
 
       minXPos: 0,
@@ -280,7 +282,7 @@ export default defineComponent({
 
         if (((this.diagram) && (this.diagram.settings.drawInnerLines)) || (index == 0) || (index == numberOfLines / 2 - 1) || (index == numberOfLines / 2) || (index == numberOfLines - 1)) {
           this.lines[index] = new PIXI.Graphics();
-          this.lines[index].lineStyle(1, 0x000000);
+          this.lines[index].lineStyle(0.5, 0x000000);
           this.lines[index].moveTo(0, 0);
 
           if (index < numberOfLines / 2) { // Horizontal
@@ -485,35 +487,37 @@ export default defineComponent({
       const diagram = this.diagram;
       if (!diagram) return;
 
-      const color = 0xB8B6B6;
+      const color = 0xFE00EF;
 
       const highlightNode = (node: string) => {
         const nodeData = this.nodeMap.get(node);
 
         if (!nodeData) return;
 
-        const nodeIndex = nodeData.index;
-
         if ((diagram.settings.edgeHighlightDirection === "incoming") || (diagram.settings.edgeHighlightDirection === "both")) {
 
-          if (!this.verticalHighlight) return;
+          const verticalHighlightBL = new PIXI.Graphics();
+          verticalHighlightBL.beginFill(color);
+          verticalHighlightBL.drawRect(0, this.minYPos, this.nodeSize, this.nodeSize * this.graph.order);
+          verticalHighlightBL.endFill();
+          verticalHighlightBL.x = this.minXPos + nodeData.index * this.nodeSize;
+          verticalHighlightBL.alpha = 0.5;
 
-          this.verticalHighlight.x = this.minXPos + nodeIndex * this.nodeSize;
-          this.verticalHighlight.alpha = 0.5;
+          (this.viewport as Viewport).addChild(verticalHighlightBL as PIXI.Graphics);
+          this.brushAndLinkingHighlights.push(verticalHighlightBL);
 
         }
         if ((diagram.settings.edgeHighlightDirection === "outgoing") || (diagram.settings.edgeHighlightDirection === "both")) {
 
-          if (!this.horizontalHighlight) return;
+          const horizontalHighlightBL = new PIXI.Graphics();
+          horizontalHighlightBL.beginFill(color);
+          horizontalHighlightBL.drawRect(this.minXPos, 0, this.nodeSize * this.graph.order, this.nodeSize);
+          horizontalHighlightBL.endFill();
+          horizontalHighlightBL.y = this.minYPos + nodeData.index * this.nodeSize;
+          horizontalHighlightBL.alpha = 0.5;
 
-          this.horizontalHighlight.y = this.minYPos + nodeIndex * this.nodeSize;
-          this.horizontalHighlight.alpha = 0.5;
-
-          for(let i = 0; i < this.graph.order; i++) {
-            if (this.matrix[nodeIndex][i]) {
-              this.matrix[nodeIndex][i].tint = color;
-            }
-          }
+          (this.viewport as Viewport).addChild(horizontalHighlightBL as PIXI.Graphics);
+          this.brushAndLinkingHighlights.push(horizontalHighlightBL);
         }
       };
 
@@ -530,18 +534,11 @@ export default defineComponent({
 
       const unhighlightNode = (node: string) => {
 
-        const nodeData = this.nodeMap.get(node);
-        if (!nodeData) return;
+        this.brushAndLinkingHighlights.forEach(blHighlight => {
+          blHighlight.clear();
+        });
+        this.brushAndLinkingHighlights = [];
 
-        const nodeIndex = nodeData.index;
-        for(let i = 0; i < this.graph.order; i++) {
-          if (this.matrix[i][nodeIndex]) {
-            this.matrix[i][nodeIndex].tint = color;
-          }
-          if (this.matrix[nodeIndex][i]) {
-            this.matrix[nodeIndex][i].tint = color;
-          }
-        }
       };
 
       for (const node of this.selectedNodes) {
