@@ -31,26 +31,25 @@ export default defineComponent({
   },
 
   async mounted() {
-    const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
-    this.canvas = canvas;
+    this.canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
     const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
 
-    const diagram = await GlobalStorage.getDiagram(this.diagramid);
-    if (!diagram) {
+    this.diagram = await GlobalStorage.getDiagram(this.diagramid);
+    if (!this.diagram) {
       console.warn("Non-existent diagram ID:", this.diagramid);
       return;
     }
-    this.diagram = diagram;
 
-    const graph = await GlobalStorage.getDataset(this.diagram.graphID);
-    if (!graph) {
+    this.graph = await GlobalStorage.getDataset(this.diagram.graphID);
+    if (!this.graph) {
       console.warn("Non-existent dataset:", this.diagram.graphID);
       return;
     }
-    this.graph = graph;
+
+    this.infotool = this.$refs["info-tool"] as HTMLElement;
 
     this.app = new PIXI.Application({
-      view: canvas,
+      view: this.canvas,
       antialias: true,
       backgroundAlpha: 0,
       resizeTo: canvasParent,
@@ -75,134 +74,7 @@ export default defineComponent({
     this.viewport.moveCenter(window.innerWidth / 2, window.innerHeight / 2)
     this.viewport.setZoom(0.5)
 
-    this.infotool = this.$refs["info-tool"] as HTMLElement;
-
-    const defaultStyle = new PIXI.TextStyle({
-      fill: "#000000",
-    });
-
-    // give each node a corresponding index
-    let i = 0;
-    this.graph.forEachNode((source: any, sourceAttr) => {
-      const sourceString = source.toString();
-      const text = new PIXI.Text(sourceString, defaultStyle);
-      const rectangle = new PIXI.Graphics();
-
-      this.nodeMap.set(source, {
-        text: text,
-        rectangle: rectangle,
-        index: i,
-      });
-      i++;
-    });
-
-    // create a matrix that stores graphic objects for each possible edge
-    this.matrix.length = graph.order;
-    for(let i = 0; i < graph.order; i++) {
-      this.matrix[i] = Array.from({ length: graph.order }, () => new PIXI.Graphics())
-    }
-
-    this.graph.forEachNode((node_1: any) => {
-      let sourceData1 = this.nodeMap.get(node_1);
-      this.graph.forEachNode((node_2: any) => {
-        let sourceData2 = this.nodeMap.get(node_2);
-
-        const rectangle = this.matrix[sourceData1.index][sourceData2.index];
-
-        rectangle.interactive = true;
-        rectangle.buttonMode = true;
-
-        rectangle.on("mouseover", (event) => {
-          event.stopPropagation();
-
-          const direction = diagram.settings.highlightEdgeDirection;
-          const color = 0xD2D2D2;
-
-          if(direction === "incoming" && this.matrix[1][sourceData2.index].tint != 0xB8B6B6) {
-            for(let i = 0; i < graph.order; i++) {
-              this.matrix[i][sourceData2.index].tint = color;
-            }
-          } else if(direction === "outgoing" && this.matrix[sourceData1.index][1].tint != 0xB8B6B6) {
-            for(let i = 0; i < graph.order; i++) {
-              this.matrix[sourceData1.index][i].tint = color;
-            }
-          }
-
-          // Reset HTML
-          this.infotool_value_list = [];
-
-
-          if(graph.hasEdge(node_1, node_2)) {
-
-            this.infotoolDisplay = "inline";
-
-            // Edge ID
-            this.infotool_value_list.push("<h2 style='font-size: 16px;'> Edge: " + node_1 + "->" + node_2 + "</h3>");
-            this.infotool_value_list.push("<hr>");
-
-            // Edge Frequency and Sentiment
-            this.infotool_value_list.push("<p> Edge Frequency: " + this.graph.outEdges(node_1, node_2).length + "</p>");
-            this.infotool_value_list.push("<p> Average Sentiment: " + this.avgSentiment(node_1, node_2) + "</p>");
-            this.infotool_value_list.push("<br>");
-
-            // Node 1 Attributes
-            this.infotool_value_list.push("<p> From Email: " + this.graph.getNodeAttributes(node_1)["email"] + "</p>");
-            this.infotool_value_list.push("<p> From Jobtitle: " + this.graph.getNodeAttributes(node_1)["jobtitle"] + "</p>");
-
-            this.infotool_value_list.push("<br>");
-
-            // Node 2 Attributes
-            this.infotool_value_list.push("<p> To Email: " + this.graph.getNodeAttributes(node_2)["email"] + "</p>");
-            this.infotool_value_list.push("<p> To Jobtitle: " + this.graph.getNodeAttributes(node_2)["jobtitle"] + "</p>");
-
-            const mouseEvent = event.data.originalEvent as MouseEvent;
-            const rectangle = canvasParent.getBoundingClientRect();
-
-            this.infotoolXPos = Math.min(
-              mouseEvent.clientX + 20,
-              rectangle.left + canvasParent.clientWidth - 250,
-            );
-            this.infotoolYPos = Math.min(
-              mouseEvent.clientY + 20,
-              rectangle.top + canvasParent.clientHeight - 250,
-            );
-          }
-
-        });
-
-        rectangle.on("mouseout", (event) => {
-          event.stopPropagation();
-
-          this.infotoolDisplay = "none";
-
-          const direction = diagram.settings.highlightEdgeDirection;
-          const color = 0xFFFFFF;
-
-          if(direction === "incoming" && this.matrix[1][sourceData2.index].tint != 0xB8B6B6) {
-            for(let i = 0; i < graph.order; i++) {
-              this.matrix[i][sourceData2.index].tint = color;
-            }
-          } else if(direction === "outgoing" && this.matrix[sourceData1.index][1].tint != 0xB8B6B6) {
-            for(let i = 0; i < graph.order; i++) {
-              this.matrix[sourceData1.index][i].tint = color;
-            }
-          }
-        });
-
-        //brush-and-linking interactivity
-        rectangle.on("click", (event) => {
-          if (!this.diagram) return;
-
-          const append = (event.data.originalEvent as MouseEvent).ctrlKey;
-          if (diagram.settings.highlightEdgeDirection === "outgoing") {
-            this.$emit("selected-node-change", this.diagram.graphID, node_1, append);
-          } else if (diagram.settings.highlightEdgeDirection === "incoming") {
-            this.$emit("selected-node-change", this.diagram.graphID, node_2, append);
-          }
-        });
-        this.matrix[sourceData1.index][sourceData2.index] = rectangle;
-      });
-    });
+    this.createMatrix();
 
     // this has to happen next tick, otherwise the elements do not have their
     // size yet (because they've not been renderd yet)
@@ -210,7 +82,7 @@ export default defineComponent({
       const app = this.app as PIXI.Application;
       app.resize();
 
-      diagram.onChange = (diagram, changedKey) => {
+      this.diagram.onChange = (diagram, changedKey) => {
         if (changedKey === "selectedNode") {
           // no need to redraw the entire diagram, just highlight some
           this.unhighlight();
@@ -228,9 +100,9 @@ export default defineComponent({
           return;
         }
 
-        this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
+        this.draw(this.graph, app, this.diagram.settings, this.viewport as Viewport);
       };
-      this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
+      this.draw(this.graph, app, this.diagram.settings, this.viewport as Viewport);
     });
   },
 
@@ -267,12 +139,143 @@ export default defineComponent({
 
       diagram: null as GlobalStorage.Diagram | null,
       canvas: null as null | HTMLCanvasElement,
+
+      defaultStyle: new PIXI.TextStyle({
+        fill: "#000000",
+      }),
     };
   },
 
   methods: {
     handleResize(e: any, graph: Graph, app: PIXI.Application, settings: Settings, viewport: Viewport) {
       this.draw(graph, app, settings, viewport);
+    },
+
+    createMatrix() {
+      // give each node a corresponding index
+      let i = 0;
+      this.graph.forEachNode((source: any, sourceAttr) => {
+        const sourceString = source.toString();
+        const text = new PIXI.Text(sourceString, this.defaultStyle);
+        const rectangle = new PIXI.Graphics();
+
+        this.nodeMap.set(source, {
+          text: text,
+          rectangle: rectangle,
+          index: i,
+        });
+        i++;
+      });
+
+      // create a matrix that stores graphic objects for each existing edge
+      this.matrix.length = this.graph.order;
+      for(let i = 0; i < this.graph.order; i++) {
+        this.matrix[i] = Array.from({ length: this.graph.order }, () => null)
+      }
+
+      this.graph.forEachNode((node_1: any) => {
+        let sourceData1 = this.nodeMap.get(node_1);
+        this.graph.forEachNode((node_2: any) => {
+          let sourceData2 = this.nodeMap.get(node_2);
+
+          if (this.graph.edges(node_1, node_2).length < 1) return;
+
+          const rectangle = this.matrix[sourceData1.index][sourceData2.index];
+
+          rectangle.interactive = true;
+          rectangle.buttonMode = true;
+
+          rectangle.on("mouseover", (event) => {
+            event.stopPropagation();
+
+            const direction = this.diagram.settings.highlightEdgeDirection;
+            const color = 0xD2D2D2;
+
+            if(direction === "incoming" && this.matrix[1][sourceData2.index].tint != 0xB8B6B6) {
+              for(let i = 0; i < this.graph.order; i++) {
+                this.matrix[i][sourceData2.index].tint = color;
+              }
+            } else if(direction === "outgoing" && this.matrix[sourceData1.index][1].tint != 0xB8B6B6) {
+              for(let i = 0; i < this.graph.order; i++) {
+                this.matrix[sourceData1.index][i].tint = color;
+              }
+            }
+
+            // Reset HTML
+            this.infotool_value_list = [];
+
+            if(this.graph.hasEdge(node_1, node_2)) {
+
+              this.infotoolDisplay = "inline";
+
+              // Edge ID
+              this.infotool_value_list.push("<h2 style='font-size: 16px;'> Edge: " + node_1 + "->" + node_2 + "</h3>");
+              this.infotool_value_list.push("<hr>");
+
+              // Edge Frequency and Sentiment
+              this.infotool_value_list.push("<p> Edge Frequency: " + this.graph.outEdges(node_1, node_2).length + "</p>");
+              this.infotool_value_list.push("<p> Average Sentiment: " + this.avgSentiment(node_1, node_2) + "</p>");
+              this.infotool_value_list.push("<br>");
+
+              // Node 1 Attributes
+              this.infotool_value_list.push("<p> From Email: " + this.graph.getNodeAttributes(node_1)["email"] + "</p>");
+              this.infotool_value_list.push("<p> From Jobtitle: " + this.graph.getNodeAttributes(node_1)["jobtitle"] + "</p>");
+
+              this.infotool_value_list.push("<br>");
+
+              // Node 2 Attributes
+              this.infotool_value_list.push("<p> To Email: " + this.graph.getNodeAttributes(node_2)["email"] + "</p>");
+              this.infotool_value_list.push("<p> To Jobtitle: " + this.graph.getNodeAttributes(node_2)["jobtitle"] + "</p>");
+
+              const mouseEvent = event.data.originalEvent as MouseEvent;
+              const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
+              const rectangle = canvasParent.getBoundingClientRect();
+
+              this.infotoolXPos = Math.min(
+                mouseEvent.clientX + 20,
+                rectangle.left + canvasParent.clientWidth - 250,
+              );
+              this.infotoolYPos = Math.min(
+                mouseEvent.clientY + 20,
+                rectangle.top + canvasParent.clientHeight - 250,
+              );
+            }
+
+          });
+
+          rectangle.on("mouseout", (event) => {
+            event.stopPropagation();
+
+            this.infotoolDisplay = "none";
+
+            const direction = this.diagram.settings.highlightEdgeDirection;
+            const color = 0xFFFFFF;
+
+            if(direction === "incoming" && this.matrix[1][sourceData2.index].tint != 0xB8B6B6) {
+              for(let i = 0; i < this.graph.order; i++) {
+                this.matrix[i][sourceData2.index].tint = color;
+              }
+            } else if(direction === "outgoing" && this.matrix[sourceData1.index][1].tint != 0xB8B6B6) {
+              for(let i = 0; i < this.graph.order; i++) {
+                this.matrix[sourceData1.index][i].tint = color;
+              }
+            }
+          });
+
+          //brush-and-linking interactivity
+          rectangle.on("click", (event) => {
+            if (!this.diagram) return;
+
+            const append = (event.data.originalEvent as MouseEvent).ctrlKey;
+            if (this.diagram.settings.highlightEdgeDirection === "outgoing") {
+              this.$emit("selected-node-change", this.diagram.graphID, node_1, append);
+            } else if (this.diagram.settings.highlightEdgeDirection === "incoming") {
+              this.$emit("selected-node-change", this.diagram.graphID, node_2, append);
+            }
+          });
+          this.matrix[sourceData1.index][sourceData2.index] = rectangle;
+        });
+      });
     },
 
     draw(graph: Graph, app: PIXI.Application, settings: Settings, viewport: Viewport) {
