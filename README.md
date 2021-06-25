@@ -2,6 +2,27 @@
 
 Website available [here](https://iunctio.radu.space).
 
+## Project Setup
+
+To locally host the project, just clone the source code and run the following commands from a terminal:
+
+```
+npm install
+npm run serve
+```
+
+To build the project for production, run the following:
+
+```
+npm run build
+```
+
+The project uses Vue with TypeScript; styling is done with SCSS. It also uses the javascript `graphology` package for
+the graph object and `PIXI.js` for drawing to canvases. There is no backend, files are served statically.
+
+The Vue source is in `src/views` (for the web pages) and in `src/components` (for individual components) and there are
+a couple of independent script files in `src/scripts` (TypeScript files).
+
 ## User Manual
 
 - [Uploading Datasets and Format](#uploading-datasets-and-format)
@@ -124,7 +145,3 @@ it more closely.
 When the diagram is made, a clustering algorithm is run on in. This means that groups of people that communicate a lot
 with each other are identified and the diagram is sorted in such a way that these groups are close together. This makes
 the diagrams less cluttered.
-
-## Project Setup
-
-...
