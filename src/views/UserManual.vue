@@ -1,6 +1,6 @@
 <template>
-  <div class="user-manual">
-    <main class="user-manual__content">
+  <div class="text-page">
+    <main class="text-page__content">
       <h2 id="contents"><a href="#contents">Contents</a></h2>
 
       <ol>
@@ -172,4 +172,4 @@
   </div>
 </template>
 
-<style scoped lang="scss" src="@/assets/styles/user-manual.scss"></style>
+<style scoped lang="scss" src="@/assets/styles/text-page.scss"></style>

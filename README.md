@@ -23,6 +23,42 @@ the graph object and `PIXI.js` for drawing to canvases. There is no backend, fil
 The Vue source is in `src/views` (for the web pages) and in `src/components` (for individual components) and there are
 a couple of independent script files in `src/scripts` (TypeScript files).
 
+## About
+
+- [About Us](#about-us)
+- [About the Project](#about-the-project)
+
+### About Us
+
+Hi! We are 6 first-year students (at the time of writing) from the [Technical University Eindhoven](https://www.tue.nl)
+(TU/e). For the Design-Based Learning course WebTech (2IOA0), we made this website for visualizing dynamic networks.
+
+We came from different backgrounds and had varying levels of expertise in these subjects, but we were all able to learn
+what we didn't know and contribute our own share. These are our group members:
+
+- Nidhish Shah: frontend developer, web designer & our dearest SCRUM master.
+- Stijn Harks: statistical/distribution diagram creator, sunburst diagram creator and bug reporting machine.
+- Chris D'Mello: creator of the adjacency matrix and fancy animations.
+- Vlad Plăiaşu: one of the arc diagram creators and interactivity expert.
+- Radu Pogonariu: creator of data parsing/storage and master of Git.
+- Wout Huynen: one of the arc diagram creators, interactivity contributor and helper to those in need.
+
+### About the Project
+
+`iunctio` is a user-friendly tool for visualizing dynamic networks. Many graphs/networks are dynamic (meaning, they
+change over time), and to get a feel for the structure of the network, visualizations are an essential tool. Our
+visualizations can also be used to investigate individual nodes more closely in addition to getting a global overview.
+
+Our goal for iunctio was to make an easy-to-understand tool that can visualize the Enron dataset (which encodes e-mail
+data, specifically), without requiring a heavy backend, which simplifies the process of hosting massively. The project
+uses Vue.js for the rendering, because it is a simple web framework and the group members were able to quickly learn
+it.
+
+This project was an excellent learning experience and it taught us a lot about Git, frontend development,
+JavaScript/TypeScript and Vue.js.
+
+In addition to this website, a project report/paper and an introductory video are available.
+
 ## User Manual
 
 - [Uploading Datasets and Format](#uploading-datasets-and-format)
