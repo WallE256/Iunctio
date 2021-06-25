@@ -74,7 +74,7 @@ export default defineComponent({
 
     this.viewport.moveCenter(window.innerWidth / 2, window.innerHeight / 2)
     this.viewport.setZoom(0.5)
-    
+
     this.infotool = this.$refs["info-tool"] as HTMLElement;
 
     const defaultStyle = new PIXI.TextStyle({
@@ -102,11 +102,18 @@ export default defineComponent({
       this.matrix[i] = Array.from({ length: graph.order }, () => new PIXI.Graphics())
     }
 
+    this.graph.forEachNode((node_1: any) => {
+      let sourceData1 = this.nodeMap.get(node_1);
+      this.graph.forEachNode((node_2: any) => {
+        let sourceData2 = this.nodeMap.get(node_2);
+
+        const rectangle = this.matrix[sourceData1.index][sourceData2.index];
+
         rectangle.interactive = true;
         rectangle.buttonMode = true;
-        
+
         rectangle.on("mouseover", (event) => {
-          event.stopPropagation(); 
+          event.stopPropagation();
 
           const direction = diagram.settings.highlightEdgeDirection;
           const color = 0xD2D2D2;
@@ -160,7 +167,7 @@ export default defineComponent({
               rectangle.top + canvasParent.clientHeight - 250,
             );
           }
-          
+
         });
 
         rectangle.on("mouseout", (event) => {
@@ -185,13 +192,13 @@ export default defineComponent({
         //brush-and-linking interactivity
         rectangle.on("click", (event) => {
           if (!this.diagram) return;
-          
+
           const append = (event.data.originalEvent as MouseEvent).ctrlKey;
           if (diagram.settings.highlightEdgeDirection === "outgoing") {
             this.$emit("selected-node-change", this.diagram.graphID, node_1, append);
-          } else if (diagram.settings.highlightEdgeDirection === "incoming") {  
+          } else if (diagram.settings.highlightEdgeDirection === "incoming") {
             this.$emit("selected-node-change", this.diagram.graphID, node_2, append);
-          }  
+          }
         });
         this.matrix[sourceData1.index][sourceData2.index] = rectangle;
       });
@@ -216,7 +223,7 @@ export default defineComponent({
             if (nodeData) {
               nodeData.rectangle.tint = 0xFFFFFF;
             }
-          }  
+          }
           this.highlight();
           return;
         }
@@ -254,8 +261,7 @@ export default defineComponent({
       infotoolYPos: 0,
       infotoolDisplay: "none",
       viewport: null as null | Viewport,
-      graph: new Graph({
-      }),
+      graph: new Graph({}),
 
       matrix: [] as PIXI.Graphics[][],
 
@@ -297,7 +303,7 @@ export default defineComponent({
               maxEdges = graph.outEdges(node_1, node_2).length;
             }
           });
-        }); 
+        });
         maxEdges = Math.log(maxEdges);
       }
 
@@ -313,14 +319,14 @@ export default defineComponent({
           rectangle.lineStyle(1);
 
           if (graph.hasEdge(node_1, node_2)) {
-            
+
             if (settings.variety === "edge-frequency") {
               rectangle.beginFill(0xAF1A1A, 1);
               rectangle.alpha = (Math.log(graph.outEdges(node_1, node_2).length) / maxEdges) * 0.8 + 0.2;
             } else if (settings.variety === "sentiment") {
 
               let avgSentiment = 0;
-              let sentimentSum = 0; 
+              let sentimentSum = 0;
               for(let edge of graph.outEdges(node_1, node_2)) {
                 sentimentSum += graph.getEdgeAttributes(edge)["sentiment"];
               }
@@ -377,7 +383,7 @@ export default defineComponent({
           rectangle.y = nodeY + (gap * sourceData1.index);
 
           viewport.addChild(rectangle as PIXI.Graphics);
-        });    
+        });
       });
 
       // Display fromId for the row node
@@ -389,10 +395,10 @@ export default defineComponent({
         textX.style = textStyle;
         textX.x = nodeX - (rectWidth / 2);
         textX.y = nodeY + (rectHeight / 2) + (gap * sourceData.index);
-        textX.anchor.set(1, 0.5); 
+        textX.anchor.set(1, 0.5);
 
         viewport.addChild(textX);
-      });  
+      });
 
       // Display fromId for the column node
       graph.forEachNode((node: any) => {
@@ -420,7 +426,7 @@ export default defineComponent({
       toId.x = nodeX + (rectWidth / 2) + (gap * (graph.order / 2)) - 35;
       toId.y = nodeY - (rectHeight / 2) - 65;
       viewport.addChild(toId);
-      });  
+      });
     },
 
     maxEdges() {
@@ -434,14 +440,14 @@ export default defineComponent({
               maxEdges = graph.outEdges(node_1, node_2).length;
             }
           });
-        }); 
+        });
       return Math.log(maxEdges);
     },
 
     avgSentiment(node_1: any, node_2 : any) : number{
       const graph = this.graph;
 
-      let sentimentSum = 0; 
+      let sentimentSum = 0;
       for(let edge of graph.outEdges(node_1, node_2)) {
         sentimentSum += parseFloat(graph.getEdgeAttributes(edge)["sentiment"]);
       }
@@ -454,7 +460,7 @@ export default defineComponent({
       if (!diagram) return;
 
       if (graph.hasEdge(node_1, node_2)) {
-      
+
         if (diagram.settings.variety === "edge-frequency") {
           rectangle.beginFill(0xC71585, 1);
           rectangle.alpha = (Math.log(graph.outEdges(node_1, node_2).length) / maxEdges) * 0.8 + 0.2;
@@ -471,7 +477,7 @@ export default defineComponent({
           }
 
           // Not really needed
-          // rectangle.alpha = Math.abs(avgSentiment * 100 + 0.2); 
+          // rectangle.alpha = Math.abs(avgSentiment * 100 + 0.2);
 
           rectangle.alpha = 1;
         }
@@ -482,7 +488,7 @@ export default defineComponent({
         rectangle.beginFill(0x9AB7D3, 1);
       }
     },
-    
+
     highlight() {
       const diagram = this.diagram;
       if (!diagram) return;
