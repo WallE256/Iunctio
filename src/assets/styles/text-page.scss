@@ -3,7 +3,7 @@
 @include font-face("Poppins", "Medium");
 @include font-face("Poppins", "Regular");
 @include font-face("JetBrainsMono", "Regular");
-.user-manual{
+.text-page {
   padding: 75px 50px;
   display: flex;
   flex-direction: column;
