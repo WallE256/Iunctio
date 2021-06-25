@@ -144,7 +144,10 @@ export default defineComponent({
 
       lines: [] as PIXI.Graphics[],
 
-      nodeGap: 17,
+      horizontalHighlight: null as PIXI.Graphics,
+      verticalHighlight: null as PIXI.Graphics,
+
+      nodeSize: 17,
 
       defaultStyle: new PIXI.TextStyle({
         fill: "#000000",
@@ -180,7 +183,7 @@ export default defineComponent({
         this.graph.forEachNode((node_2: any) => {
           let sourceData2 = this.nodeMap.get(node_2);
 
-          if (this.graph.edges(node_1, node_2).length < 1) return;
+          if (this.graph.outEdges(node_1, node_2).length < 1) return;
 
           const rectangle = new PIXI.Graphics();
           this.matrix[sourceData1.index][sourceData2.index] = rectangle;
@@ -194,11 +197,11 @@ export default defineComponent({
             const direction = this.diagram.settings.highlightEdgeDirection;
             const color = 0xD2D2D2;
 
-            if(direction === "incoming" && this.matrix[1][sourceData2.index].tint != 0xB8B6B6 && this.graph.edges(node_1, node_2).length < 1) {
+            if(direction === "incoming" && this.matrix[1][sourceData2.index].tint != 0xB8B6B6 && this.graph.outEdges(node_1, node_2).length < 1) {
               for(let i = 0; i < this.graph.order; i++) {
                 this.matrix[i][sourceData2.index].tint = color;
               }
-            } else if(direction === "outgoing" && this.matrix[sourceData1.index][1].tint != 0xB8B6B6 && this.graph.edges(node_1, node_2).length < 1) {
+            } else if(direction === "outgoing" && this.matrix[sourceData1.index][1].tint != 0xB8B6B6 && this.graph.outEdges(node_1, node_2).length < 1) {
               for(let i = 0; i < this.graph.order; i++) {
                 this.matrix[sourceData1.index][i].tint = color;
               }
@@ -267,6 +270,7 @@ export default defineComponent({
 
           //brush-and-linking interactivity
           rectangle.on("click", (event) => {
+
             if (!this.diagram) return;
 
             const append = (event.data.originalEvent as MouseEvent).ctrlKey;
@@ -276,7 +280,6 @@ export default defineComponent({
               this.$emit("selected-node-change", this.diagram.graphID, node_2, append);
             }
           });
-          this.matrix[sourceData1.index][sourceData2.index] = rectangle;
         });
       });
     },
@@ -293,12 +296,12 @@ export default defineComponent({
           this.lines[index].moveTo(0, 0);
 
           if (index < numberOfLines / 2) { // Horizontal
-            this.lines[index].lineTo((this.nodeGap * this.graph.order), 0);
+            this.lines[index].lineTo((this.nodeSize * this.graph.order), 0);
             this.lines[index].x = startX;
-            this.lines[index].y = startY + (this.nodeGap * index);
+            this.lines[index].y = startY + (this.nodeSize * index);
           } else { // Vertical
-            this.lines[index].lineTo(0, (this.nodeGap * this.graph.order));
-            this.lines[index].x = startX + (this.nodeGap * (index - (this.graph.order + 1)));
+            this.lines[index].lineTo(0, (this.nodeSize * this.graph.order));
+            this.lines[index].x = startX + (this.nodeSize * (index - (this.graph.order + 1)));
             this.lines[index].y = startY;
           }
 
@@ -322,11 +325,25 @@ export default defineComponent({
 
       const nodeX = canvas.width * 1/10;
       const nodeY = canvas.height * 1/5;
-      const rectWidth = 17;
-      const rectHeight = 17;
       let maxEdges = 0;
 
       this.drawLines(viewport, settings, nodeX, nodeY);
+
+      // Horizontal Highlight
+      this.horizontalHighlight = new PIXI.Graphics();
+      this.horizontalHighlight.beginFill(0xFE00EF);
+      this.horizontalHighlight.drawRect(nodeX, 0, this.nodeSize * this.graph.order, this.nodeSize);
+      this.horizontalHighlight.endFill();
+      this.horizontalHighlight.alpha = 0;
+      viewport.addChild(this.horizontalHighlight);
+
+      // Vertical Highlight
+      this.verticalHighlight = new PIXI.Graphics();
+      this.verticalHighlight.beginFill(0xFE00EF);
+      this.verticalHighlight.drawRect(0, nodeY, this.nodeSize, this.nodeSize * this.graph.order);
+      this.verticalHighlight.endFill();
+      this.verticalHighlight.alpha = 0;
+      viewport.addChild(this.verticalHighlight);
 
       if (settings.variety === "edge-frequency") {
         graph.forEachNode((node_1: any) => {
@@ -348,7 +365,7 @@ export default defineComponent({
           const sourceData2 = this.nodeMap.get(node_2);
           if (!sourceData2) return; // not supposed to happen
 
-          if (this.graph.edges(node_1, node_2).length < 1) return;
+          if (this.graph.outEdges(node_1, node_2).length < 1) return;
 
           const rectangle = this.matrix[sourceData1.index][sourceData2.index];
 
@@ -380,7 +397,7 @@ export default defineComponent({
           } else {
             rectangle.beginFill(0xC0C0C0, 1);
           }
-          rectangle.drawRect(0, 0, rectWidth, rectHeight);
+          rectangle.drawRect(0, 0, this.nodeSize, this.nodeSize);
           rectangle.endFill();
 
           rectangle.interactive = true;
@@ -388,43 +405,25 @@ export default defineComponent({
           rectangle.on("mouseover", (event) => {
             event.stopPropagation();
 
-            if(settings.hoverEdgeDirection === "both") {
-              for(let i = 0; i < graph.order; i++) {
-                if (this.matrix[sourceData1.index][i] && this.matrix[i][sourceData2.index]) {
-                  this.matrix[sourceData1.index][i].tint = 0xFE00EF;
-                  this.matrix[i][sourceData2.index].tint = 0xFE00EF;
-                }
-              }
-            } else if(settings.hoverEdgeDirection === "incoming") {
-              for(let i = 0; i < graph.order; i++) {
-                if (this.matrix[i][sourceData2.index]) {
-                this.matrix[i][sourceData2.index].tint = 0xFE00EF;
-                }
-              }
-            } else if(settings.hoverEdgeDirection === "outgoing") {
-              for(let i = 0; i < graph.order; i++) {
-                if (this.matrix[sourceData1.index][i]) {
-                  this.matrix[sourceData1.index][i].tint = 0xFE00EF;
-                }
-              }
+            if(settings.hoverEdgeDirection === "outgoing" || settings.hoverEdgeDirection === "both") {
+              this.horizontalHighlight.y = nodeY + (this.nodeSize * sourceData1.index);
+              this.horizontalHighlight.alpha = 0.5;
+            }
+            if(settings.hoverEdgeDirection === "incoming" || settings.hoverEdgeDirection === "both") {
+              this.verticalHighlight.x = nodeX + (this.nodeSize * sourceData2.index);
+              this.verticalHighlight.alpha = 0.5;
             }
           });
 
           rectangle.on("mouseout", (event) => {
             event.stopPropagation();
 
-            for(let i = 0; i < graph.order; i++) {
-              if (this.matrix[sourceData1.index][i]) {
-                this.matrix[sourceData1.index][i].tint = 0xFFFFFF;
-              }
-              if (this.matrix[i][sourceData2.index]) {
-                this.matrix[i][sourceData2.index].tint = 0xFFFFFF;
-              }
-            }
+            this.horizontalHighlight.alpha = 0;
+            this.verticalHighlight.alpha = 0;
           });
 
-          rectangle.x = nodeX + (this.nodeGap * sourceData2.index);
-          rectangle.y = nodeY + (this.nodeGap * sourceData1.index);
+          rectangle.x = nodeX + (this.nodeSize * sourceData2.index);
+          rectangle.y = nodeY + (this.nodeSize * sourceData1.index);
 
           viewport.addChild(rectangle as PIXI.Graphics);
         });
@@ -437,8 +436,8 @@ export default defineComponent({
 
         const textX = new PIXI.Text(node);
         textX.style = textStyle;
-        textX.x = nodeX - (rectWidth / 2);
-        textX.y = nodeY + (rectHeight / 2) + (this.nodeGap * sourceData.index);
+        textX.x = nodeX - (this.nodeSize / 2);
+        textX.y = nodeY + (this.nodeSize / 2) + (this.nodeSize * sourceData.index);
         textX.anchor.set(1, 0.5);
 
         viewport.addChild(textX);
@@ -451,26 +450,26 @@ export default defineComponent({
 
         const textY = new PIXI.Text(node);
         textY.style = textStyle;
-        textY.x = nodeX + (rectWidth / 2) + (this.nodeGap * sourceData.index);
-        textY.y = nodeY - (rectHeight / 2);
+        textY.x = nodeX + (this.nodeSize / 2) + (this.nodeSize * sourceData.index);
+        textY.y = nodeY - (this.nodeSize / 2);
         textY.angle = 270;
         textY.anchor.set(0, 0.5);
 
         viewport.addChild(textY);
+      });
 
       const fromId = new PIXI.Text("From ID");
       fromId.style = labelStyle;
-      fromId.x = nodeX - (rectWidth / 2) - 80;
-      fromId.y = nodeY + (rectHeight / 2) + (this.nodeGap * (graph.order / 2)) + 20;
+      fromId.x = nodeX - (this.nodeSize / 2) - 80;
+      fromId.y = nodeY + (this.nodeSize / 2) + (this.nodeSize * (graph.order / 2)) + 20;
       fromId.angle = 270;
       viewport.addChild(fromId);
 
       const toId = new PIXI.Text("To ID");
       toId.style = labelStyle;
-      toId.x = nodeX + (rectWidth / 2) + (this.nodeGap * (graph.order / 2)) - 35;
-      toId.y = nodeY - (rectHeight / 2) - 65;
+      toId.x = nodeX + (this.nodeSize / 2) + (this.nodeSize * (graph.order / 2)) - 35;
+      toId.y = nodeY - (this.nodeSize / 2) - 65;
       viewport.addChild(toId);
-      });
     },
 
     maxEdges() {
@@ -537,21 +536,19 @@ export default defineComponent({
       const diagram = this.diagram;
       if (!diagram) return;
 
-      const graph = this.graph;
       const color = 0xB8B6B6;
 
       const highlightNode = (node: string) => {
-        const direction = diagram.settings.highlightEdgeDirection;
         const nodeData = this.nodeMap.get(node);
         if (!nodeData) return;
         const nodeIndex = nodeData.index;
 
-        if(direction === "incoming") {
-          for(let i = 0; i < graph.order; i++) {
+        if (diagram.settings.highlightEdgeDirection === "incoming" || diagram.settings.highlightEdgeDirection === "both") {
+          for(let i = 0; i < this.graph.order; i++) {
             this.matrix[i][nodeIndex].tint = color;
           }
-        } else if(direction === "outgoing") {
-          for(let i = 0; i < graph.order; i++) {
+        } else if (diagram.settings.highlightEdgeDirection === "outgoing" || diagram.settings.highlightEdgeDirection === "both") {
+          for(let i = 0; i < this.graph.order; i++) {
             this.matrix[nodeIndex][i].tint = color;
           }
         }

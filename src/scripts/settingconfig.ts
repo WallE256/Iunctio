@@ -45,8 +45,8 @@ export function getDefaultSettings(componentName: string): any {
     case "AdjacencyMatrix": {
       return {
         variety: "edge-frequency",
-        hoverEdgeDirection: "outgoing",
-        drawInnerLines: true,
+        hoverEdgeDirection: "both",
+        drawInnerLines: false,
       };
     }
 
