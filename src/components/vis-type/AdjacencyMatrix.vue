@@ -21,6 +21,7 @@ type Settings = {
 };
 
 type NodeData = {
+  rectangle: PIXI.Graphics,
   index: number,
 };
 
@@ -39,11 +40,12 @@ export default defineComponent({
     this.canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
     const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
 
-    this.diagram = await GlobalStorage.getDiagram(this.diagramid);
-    if (!this.diagram) {
+    const diagram = await GlobalStorage.getDiagram(this.diagramid);
+    if (!diagram) {
       console.warn("Non-existent diagram ID:", this.diagramid);
       return;
     }
+    this.diagram = diagram;
 
     const dataset = await GlobalStorage.getDataset(this.diagram.graphID);
     if (!dataset) {
@@ -88,7 +90,7 @@ export default defineComponent({
       const app = this.app as PIXI.Application;
       app.resize();
 
-      this.diagram.onChange = (diagram, changedKey) => {
+      diagram.onChange = (diagram, changedKey) => {
         if (changedKey === "selectedNode") {
           // no need to redraw the entire diagram, just highlight some
           this.unhighlight();
@@ -98,7 +100,7 @@ export default defineComponent({
             .map((node) => node.nodeID);
           for (const node of this.selectedNodes) {
             const nodeData = this.nodeMap.get(node);
-            if (nodeData.rectangle) {
+            if (nodeData && nodeData.rectangle) {
               nodeData.rectangle.tint = 0xFFFFFF;
             }
           }
@@ -106,9 +108,9 @@ export default defineComponent({
           return;
         }
 
-        this.draw(this.graph, app, this.diagram.settings, this.viewport as Viewport);
+        this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
       };
-      this.draw(this.graph, app, this.diagram.settings, this.viewport as Viewport);
+      this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
     });
   },
 
@@ -126,9 +128,7 @@ export default defineComponent({
 
   data() {
     return {
-      nodeMap: new Map<number, {
-        index: number,
-      }>(),
+      nodeMap: new Map<string, NodeData>(),
 
       // the node that you're currently hovering over
       selectedNodes: [] as string[],
@@ -144,13 +144,13 @@ export default defineComponent({
 
       matrix: [] as PIXI.Graphics[][],
 
-      diagram: null as GlobalStorage.Diagram | null,
+      diagram: null as null | GlobalStorage.Diagram,
       canvas: null as null | HTMLCanvasElement,
 
       lines: [] as PIXI.Graphics[],
 
-      horizontalHighlight: null as PIXI.Graphics,
-      verticalHighlight: null as PIXI.Graphics,
+      horizontalHighlight: null as null | PIXI.Graphics,
+      verticalHighlight: null as null | PIXI.Graphics,
 
       nodeSize: 17,
 
@@ -176,7 +176,10 @@ export default defineComponent({
         const text = new PIXI.Text(sourceString, this.defaultStyle);
         const rectangle = new PIXI.Graphics();
 
-        this.nodeMap.set(source, { index: i, });
+        this.nodeMap.set(source, {
+          rectangle: rectangle,
+          index: i,
+        });
         i++;
       });
 
@@ -269,11 +272,13 @@ export default defineComponent({
 
     drawLines(viewport: Viewport) {
       const numberOfLines = 2 * (this.graph.order + 1);
+
+      this.lines = [];
       this.lines.length = numberOfLines;
 
       for (let index = 0; index < numberOfLines; index++) {
 
-        if ((this.diagram.settings.drawInnerLines) || (index == 0) || (index == numberOfLines / 2 - 1) || (index == numberOfLines / 2) || (index == numberOfLines - 1)) {
+        if (((this.diagram) && (this.diagram.settings.drawInnerLines)) || (index == 0) || (index == numberOfLines / 2 - 1) || (index == numberOfLines / 2) || (index == numberOfLines - 1)) {
           this.lines[index] = new PIXI.Graphics();
           this.lines[index].lineStyle(1, 0x000000);
           this.lines[index].moveTo(0, 0);
@@ -288,7 +293,7 @@ export default defineComponent({
             this.lines[index].y = this.minYPos;
           }
 
-          viewport.addChild(this.lines[index]);
+          viewport.addChild(this.lines[index] as PIXI.Graphics);
         }
       }
     },
@@ -318,7 +323,7 @@ export default defineComponent({
       this.horizontalHighlight.drawRect(this.minXPos, 0, this.nodeSize * this.graph.order, this.nodeSize);
       this.horizontalHighlight.endFill();
       this.horizontalHighlight.alpha = 0;
-      viewport.addChild(this.horizontalHighlight);
+      viewport.addChild(this.horizontalHighlight as PIXI.Graphics);
 
       // Vertical Highlight
       this.verticalHighlight = new PIXI.Graphics();
@@ -326,7 +331,7 @@ export default defineComponent({
       this.verticalHighlight.drawRect(0, this.minYPos, this.nodeSize, this.nodeSize * this.graph.order);
       this.verticalHighlight.endFill();
       this.verticalHighlight.alpha = 0;
-      viewport.addChild(this.verticalHighlight);
+      viewport.addChild(this.verticalHighlight as PIXI.Graphics);
 
       graph.forEachNode((node_1: any) => {
         const sourceData1 = this.nodeMap.get(node_1);
@@ -351,6 +356,8 @@ export default defineComponent({
           rectangle.on("mouseover", (event) => {
             event.stopPropagation();
 
+            if (!this.horizontalHighlight || !this.verticalHighlight) return;
+
             if (settings.edgeHighlightDirection === "outgoing" || settings.edgeHighlightDirection === "both") {
               this.horizontalHighlight.y = this.minYPos + (this.nodeSize * sourceData1.index);
               this.horizontalHighlight.alpha = 0.5;
@@ -363,6 +370,8 @@ export default defineComponent({
 
           rectangle.on("mouseout", (event) => {
             event.stopPropagation();
+
+            if (!this.horizontalHighlight || !this.verticalHighlight) return;
 
             this.horizontalHighlight.alpha = 0;
             this.verticalHighlight.alpha = 0;
@@ -485,21 +494,17 @@ export default defineComponent({
 
         const nodeIndex = nodeData.index;
 
-        console.log(this.diagram.settings.edgeHighlightDirection);
-
-
         if ((diagram.settings.edgeHighlightDirection === "incoming") || (diagram.settings.edgeHighlightDirection === "both")) {
+
+          if (!this.verticalHighlight) return;
 
           this.verticalHighlight.x = this.minXPos + nodeIndex * this.nodeSize;
           this.verticalHighlight.alpha = 0.5;
 
-          for(let i = 0; i < this.graph.order; i++) {
-            if (this.matrix[i][nodeIndex]) {
-              this.matrix[i][nodeIndex].tint = color;
-            }
-          }
         }
         if ((diagram.settings.edgeHighlightDirection === "outgoing") || (diagram.settings.edgeHighlightDirection === "both")) {
+
+          if (!this.horizontalHighlight) return;
 
           this.horizontalHighlight.y = this.minYPos + nodeIndex * this.nodeSize;
           this.horizontalHighlight.alpha = 0.5;
