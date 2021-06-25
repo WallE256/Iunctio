@@ -90,20 +90,16 @@ export default defineComponent({
       const app = this.app as PIXI.Application;
       app.resize();
 
-      diagram.onChange = (diagram, changedKey) => {
+      diagram.onChange = (diagram: GlobalStorage.Diagram, changedKey: string) => {
         if (changedKey === "selectedNode") {
+
           // no need to redraw the entire diagram, just highlight some
           this.unhighlight();
 
           this.selectedNodes = GlobalStorage.selectedNodes
             .filter((node) => node.datasetID === diagram.graphID)
             .map((node) => node.nodeID);
-          for (const node of this.selectedNodes) {
-            const nodeData = this.nodeMap.get(node);
-            if (nodeData && nodeData.rectangle) {
-              nodeData.rectangle.tint = 0xFFFFFF;
-            }
-          }
+
           this.highlight();
           return;
         }
@@ -260,7 +256,14 @@ export default defineComponent({
             if (!this.diagram) return;
 
             const append = (event.data.originalEvent as MouseEvent).ctrlKey;
-            if (this.diagram.settings.edgeHighlightDirection === "outgoing") {
+            if (this.diagram.settings.edgeHighlightDirection === "both") {
+              if (node_1 === node_2) {
+                this.$emit("selected-node-change", this.diagram.graphID, node_1, append);
+              }
+              // TODO: Figure out how to pass 2 nodes + direction
+              //this.$emit("selected-node-change", this.diagram.graphID, node_1, append);
+              //this.$emit("selected-node-change", this.diagram.graphID, node_2, true);
+            } else if (this.diagram.settings.edgeHighlightDirection === "outgoing") {
               this.$emit("selected-node-change", this.diagram.graphID, node_1, append);
             } else if (this.diagram.settings.edgeHighlightDirection === "incoming") {
               this.$emit("selected-node-change", this.diagram.graphID, node_2, append);
