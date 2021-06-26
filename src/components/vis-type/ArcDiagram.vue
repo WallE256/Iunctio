@@ -1,5 +1,6 @@
 <template>
   <div ref="diagram" style="height: 100%; width: 100%;">
+    <color-legend :colorScheme="jobMap"/>
     <div id="canvas-parent" ref="canvas-parent" style="height: 100%; width: 100%;">
       <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
     </div>
@@ -31,6 +32,8 @@ import { Cull } from '@pixi-essentials/cull';
 import * as d3 from "d3";
 import noUiSlider from "nouislider";
 
+import ColorLegend from "@/components/visualise/ColorLegend.vue";
+
 // see also scripts/settingconfig.ts
 type Settings = {
   variety: string, // "circle" or "line"
@@ -55,6 +58,8 @@ export default defineComponent({
     InfoTool,
     StatisticalDiagram,
   },
+
+  components: { InfoTool, ColorLegend},
 
   props: {
     diagramid: {
