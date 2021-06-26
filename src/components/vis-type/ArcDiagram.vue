@@ -57,12 +57,12 @@ export default defineComponent({
     }
     this.diagram = diagram;
 
-    const graph = await GlobalStorage.getDataset(this.diagram.graphID);
-    if (!graph) {
+    const dataset = await GlobalStorage.getDataset(this.diagram.graphID);
+    if (!dataset) {
       console.warn("Non-existent dataset:", this.diagram.graphID);
       return;
     }
-    this.graph = graph;
+    this.graph = dataset.graph;
 
     this.app = new PIXI.Application({
       view: canvas,
