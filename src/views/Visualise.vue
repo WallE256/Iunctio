@@ -1,6 +1,6 @@
 <template>
   <main class="visualise">
-    <section class="upload-dataset" v-show="show_home">
+    <section class="upload-dataset" v-if="show_home">
       <h3 class="upload-dataset__title">Upload a new data set.</h3>
       <div class="upload-dataset__tiles">
         <dataset-tile
@@ -19,7 +19,7 @@
         @upload="updateDatasets"
       />
     </section>
-    <section class="create-diagram" v-show="show_home">
+    <section class="create-diagram" v-if="show_home">
       <h3 class="create-diagram__title">Create a new diagram.</h3>
       <div class="create-diagram__tiles">
         <create-diagram-tile
@@ -31,14 +31,14 @@
         />
       </div>
     </section>
-    <section class="your-diagrams" v-show="show_home">
+    <section class="your-diagrams" v-if="show_home">
       <h3 class="your-diagrams__title">Your diagrams.</h3>
       <div class="your-diagrams__tiles">
         <your-diagrams-tile
           v-for="your_diag in diagram_list"
           :key="your_diag.id"
-          :id="your_diag.id"
-          :name="your_diag.name"
+          :id_name="your_diag.id"
+          :dataset="your_diag.dataset"
           :path="your_diag.path"
           @tile-click="openDiagram"
           @delete_diag="diagramDeleted"
@@ -108,7 +108,7 @@ export default defineComponent({
       // shown diagrams. Finally, toggle the homepage and display the diagram panels.
       const diagramID = GlobalStorage.createID(d_type);
       await this.createDiagram(diagramID, d_type);
-      this.updateDiagramList(diagramID, d_type);
+      await this.updateDiagramList(diagramID, d_type);
       this.toggleHome(false);
       this.toggleDiagramPanels(true);
     },
@@ -150,16 +150,23 @@ export default defineComponent({
       GlobalStorage.getDiagram(diagramID).then((diagram) => {
         if (!diagram) return;
 
-        this.diagram_list.push({ id: diagramID, name: diagram.name, path: this.getPNGPath(d_type) });
+        this.diagram_list.push({
+          id: diagramID,
+          name: diagram.name,
+          path: this.getPNGPath(d_type),
+          dataset: diagram.graphID
+        });
       });
     },
 
     async diagramDeleted() {
-      this.setDiagramList();
+      await this.setDiagramList();
       this.shownDiagrams = [];
     },
 
     async openDiagram(diagramID: string) {
+      console.log('open diagram.')
+
       // Add diagram to list of shown diagrams. Finally, toggle the homepage and display the diagram panels.
       let isShown = false;
 

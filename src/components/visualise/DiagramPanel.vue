@@ -139,12 +139,12 @@ export default defineComponent({
     }
 
     &:hover.diag-back::after {
-      background: $RED;
+      background: $BLUE_D;
       transform: translate(-50%, 10%) rotateZ(-45deg) scale(1.1);
     }
 
     &:hover.diag-back::before {
-      background: $RED;
+      background: $BLUE_D;
       transform: translate(-50%, -60%) rotateZ(45deg) scale(1.1);
     }
   }
