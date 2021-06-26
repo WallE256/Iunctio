@@ -165,8 +165,6 @@ export default defineComponent({
     },
 
     async openDiagram(diagramID: string) {
-      console.log('open diagram.')
-
       // Add diagram to list of shown diagrams. Finally, toggle the homepage and display the diagram panels.
       let isShown = false;
 

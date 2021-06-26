@@ -33,7 +33,6 @@ export default defineComponent({
     }
   },
   mounted() {
-    console.log(this.id_name);
     const re = /^(\d+)-(.*)/g;
     let id_name_split = re.exec(this.id_name);
     if (id_name_split) {
