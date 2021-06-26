@@ -7,11 +7,11 @@
   >
     <div class="diag-tile__bg" >
       <span class="diag-del" @click.stop="deleteDiagram"></span>
-      <img :src="path" :alt="name" class="diag-tile__icon" @click="openDiagram"/>
+      <img :src="path" :alt="diag.name" class="diag-tile__icon" @click="openDiagram"/>
     </div>
     <div class="diag-tile__data">
-      <h4 class="diag-tile__name">{{ name }}</h4>
-      <h4 class="diag-tile__id">ID: {{ id }}</h4>
+      <h4 class="diag-tile__name">{{ diag.name }}</h4>
+      <h4 class="diag-tile__id">Dataset: {{ dataset.id }}</h4>
     </div>
   </div>
 </template>
@@ -24,25 +24,17 @@ export default defineComponent({
   props: {
     id_name: { required: true, type: String },
     path: { required: true, type: String },
-    dataset: {required: true, type: String}
+    graphID: {required: true, type: String}
   },
   data() {
     return {
-      id: "",
-      name: ""
+      diag : {id: "", name: ""},
+      dataset: {id: "", name: ""}
     }
   },
   mounted() {
-    const re = /^(\d+)-(.*)/g;
-    let id_name_split = re.exec(this.id_name);
-    if (id_name_split) {
-      this.id = "#" + id_name_split[1];
-      // Add space between each capital letter.
-      id_name_split[2] = id_name_split[2].replace(/([a-z])([A-Z])/g, '$1 $2');
-      this.name = id_name_split[2].replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
-    } else {
-      console.log("Invalid id_name.");
-    }
+    this.diag = this.split_id_name(this.id_name);
+    this.dataset = this.split_id_name(this.graphID);
   },
   methods: {
     deleteDiagram() {
@@ -53,6 +45,22 @@ export default defineComponent({
     openDiagram() {
       this.$emit("tile-click", this.id_name.replaceAll(" ", ""));
     },
+
+    split_id_name(id_name:string) {
+      const re = /^(\d+)-(.*)/g;
+      let id_name_split = re.exec(id_name);
+      let id="", name="";
+      if (id_name_split) {
+        id = "#" + id_name_split[1];
+        // Add space between each capital letter.
+        id_name_split[2] = id_name_split[2].replace(/([a-z])([A-Z])/g, '$1 $2');
+        name = id_name_split[2].replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
+      } else {
+        console.log("Invalid id_name.");
+      }
+
+      return {id: id, name: name};
+    }
   },
 });
 </script>
@@ -62,7 +70,7 @@ export default defineComponent({
 @include font-face("Poppins", "Medium");
 
 .diag-tile {
-  $SIZE: 140px;
+  $SIZE: 145px;
   width: $SIZE;
   margin: 10px;
   cursor: pointer;

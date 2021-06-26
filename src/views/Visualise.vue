@@ -38,7 +38,7 @@
           v-for="your_diag in diagram_list"
           :key="your_diag.id"
           :id_name="your_diag.id"
-          :dataset="your_diag.dataset"
+          :graphID="your_diag.graphID"
           :path="your_diag.path"
           @tile-click="openDiagram"
           @delete_diag="diagramDeleted"
@@ -139,7 +139,12 @@ export default defineComponent({
           GlobalStorage.getDiagram(diagramID).then((diagram) => {
             if (!diagram) return;
 
-            this.diagram_list.push({ id: diagramID, name: diagram.name, path: this.getPNGPath(diagram.type) });
+            this.diagram_list.push({
+              id: diagramID,
+              name: diagram.name,
+              path: this.getPNGPath(diagram.type),
+              graphID: diagram.graphID
+            });
           });
         });
       });
@@ -154,7 +159,7 @@ export default defineComponent({
           id: diagramID,
           name: diagram.name,
           path: this.getPNGPath(d_type),
-          dataset: diagram.graphID
+          graphID: diagram.graphID
         });
       });
     },

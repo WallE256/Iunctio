@@ -101,7 +101,7 @@ export default defineComponent({
   }
 
   &__title {
-    padding: 7px 3px;
+    padding: 7px 5px;
     @include font-sans("Poppins", 0.8rem, "Medium", $BLACK_DDD);
   }
 }

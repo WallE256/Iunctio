@@ -33,7 +33,7 @@ export default defineComponent({
 @include font-face("Poppins", "Medium");
 
 .diag-tile {
-  $SIZE: 140px;
+  $SIZE: 145px;
   text-align: center;
   width: $SIZE;
   margin: 10px;
@@ -72,7 +72,7 @@ export default defineComponent({
   }
 
   &__title {
-    padding: 7px 3px;
+    padding: 10px 5px;
     @include font-sans("Poppins", 0.8rem, "Medium", $BLACK_DDD);
   }
 }
