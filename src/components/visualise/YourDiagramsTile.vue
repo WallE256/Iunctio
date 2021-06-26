@@ -10,7 +10,7 @@
       <img :src="path" :alt="name" class="diag-tile__icon" @click="openDiagram"/>
     </div>
     <div class="diag-tile__data">
-      <h4 class="diag_tile__name">{{ name }}</h4>
+      <h4 class="diag-tile__name">{{ name }}</h4>
       <h4 class="diag-tile__id">ID: {{ id }}</h4>
     </div>
   </div>
@@ -136,9 +136,11 @@ export default defineComponent({
     text-align: center;
     width: $SIZE;
     padding: 10px 5px;
-    @include font-sans("Poppins", 0.8rem, "Medium", $BLACK_DDD);
     .diag-tile__id {
-      color: $GREY;
+      @include font-sans("Poppins", 0.8rem, "Medium", $GREY);
+    }
+    .diag-tile__name {
+      @include font-sans("Poppins", 0.8rem, "Medium", $BLACK_DDD);
     }
   }
 }

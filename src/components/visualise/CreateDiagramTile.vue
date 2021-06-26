@@ -38,6 +38,9 @@ export default defineComponent({
   width: $SIZE;
   margin: 10px;
   cursor: pointer;
+  background-color: $WHITE;
+  box-shadow: 2px 2px 3px rgba($BLACK_DDD, 0.15);
+  border-radius: 5px;
 
   &:hover,
   &:focus {
@@ -58,7 +61,6 @@ export default defineComponent({
     padding: 5px;
     border-radius: 5px;
     overflow: hidden;
-    margin-bottom: 5px;
     box-shadow: 2px 2px 4px rgba($BLACK_DDD, 0.25);
     @include transition(transform border, 0.3s, $ease2);
 
@@ -70,6 +72,7 @@ export default defineComponent({
   }
 
   &__title {
+    padding: 7px 3px;
     @include font-sans("Poppins", 0.8rem, "Medium", $BLACK_DDD);
   }
 }
