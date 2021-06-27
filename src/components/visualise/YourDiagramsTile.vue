@@ -30,13 +30,11 @@ export default defineComponent({
 
   data() {
     return {
-      diag : {id: "", name: ""},
       dataset: {id: "", name: ""}
     }
   },
 
   mounted() {
-    this.diag = this.split_id_name(this.id_name);
     this.dataset = this.split_id_name(this.graphID);
   },
 
