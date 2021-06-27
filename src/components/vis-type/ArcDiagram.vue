@@ -200,7 +200,7 @@ export default defineComponent({
       const app = this.app as PIXI.Application;
       app.resize();
 
-      diagram.onChange = (diagram, changedKey) => {
+      diagram.addOnChange((diagram, changedKey) => {
         if (changedKey === "selectedNode") {
           // no need to redraw the entire diagram, just highlight some
           this.unhighlight();
@@ -220,7 +220,7 @@ export default defineComponent({
         }
 
         this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
-      };
+      });
       this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
       //culling
       this.culling(this.app as PIXI.Application, this.viewport as Viewport, this.graph);

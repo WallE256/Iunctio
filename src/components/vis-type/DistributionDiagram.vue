@@ -29,11 +29,12 @@ export default defineComponent({
     this.canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
     const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
 
-    this.diagram = await GlobalStorage.getDiagram(this.diagramid);
-    if (!this.diagram) {
+    const diagram = await GlobalStorage.getDiagram(this.diagramid);
+    if (!diagram) {
       console.warn("Non-existent diagram:", this.diagramid);
       return;
     }
+    this.diagram = diagram;
     const dataset = await GlobalStorage.getDataset(this.diagram.graphID);
     if (!dataset) {
       console.warn("Non-existent dataset:", this.diagram.graphID);
@@ -58,12 +59,12 @@ export default defineComponent({
     // correct yet (because they've not been rendered yet)
     this.$nextTick(() => {
       app.resize();
-      this.diagram.onChange = (diagram: GlobalStorage.Diagram, changedKey: string) => {
+      diagram.addOnChange((diagram: GlobalStorage.Diagram, changedKey: string) => {
         app.stage.removeChildren();
-        this.draw(app, this.diagram.settings);
-      };
+        this.draw(app, diagram.settings);
+      });
 
-      this.draw(app, this.diagram.settings);
+      this.draw(app, diagram.settings);
     });
   },
 
@@ -84,7 +85,7 @@ export default defineComponent({
       // the node that you're currently hovering over
       hoverNode: null as string | null,
       graph: null as any,
-      diagram: null as any,
+      diagram: null as GlobalStorage.Diagram | null,
       app: null as null | PIXI.Application,
       canvas: null as null | HTMLCanvasElement,
       interval: [] as Date[],

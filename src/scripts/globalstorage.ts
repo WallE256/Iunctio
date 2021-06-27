@@ -33,7 +33,9 @@ export class Diagram {
 
   /// The change listener, which is called when a setting is changed using
   /// `changeSetting()`.
-  onChange?: (diagram: Diagram, changedKey: string) => void;
+  /// NOTE: do not access this yourself, use `update()` and `addOnChange`
+  /// instead.
+  onChange: ((diagram: Diagram, changedKey: string) => void)[];
 
   ///
   constructor(
@@ -41,7 +43,7 @@ export class Diagram {
     graphID: string,
     type: string,
     settings?: any,
-    onChange?: (diagram: Diagram, changedKey: string) => void
+    name?: string,
   ) {
     this.id = id;
     this.graphID = graphID;
@@ -51,8 +53,25 @@ export class Diagram {
     } else {
       this.settings = {};
     }
-    this.onChange = onChange;
-    this.name = type + "_" + id;
+    this.onChange = [];
+    if (name) {
+      this.name = name;
+    } else {
+      this.name = type + "_" + id;
+    }
+  }
+
+  /// Adds an on-change listener to this diagram. Each on-change listener that
+  /// was added, will be called whenever a setting or other property on the
+  /// diagram is changed.
+  addOnChange(listener: (diagram: Diagram, changedKey: string) => void): void {
+    this.onChange.push(listener);
+  }
+
+  update(changedKey: string): void {
+    for (const listener of this.onChange) {
+      listener(this, changedKey);
+    }
   }
 }
 
@@ -266,16 +285,14 @@ export function removeDiagramByID(diagramID: string): void {
   });
 }
 
-/// `changeSetting` updates a diagram's setting(s) and will call the `onChange`
-/// handler so visualizations can be redrawn.
+/// `changeSetting` updates a diagram's setting(s) and will `update` the
+/// diagram, so the visualizations can be redrawn.
 /// updates multiple settings if multiple are provided
 export function changeSetting(diagram: Diagram, ...values: any[]): void {
   for (let index = 0; index < values.length; index += 2) {
     diagram.settings[values[index]] = values[index + 1];
   }
-  if (diagram.onChange) {
-    diagram.onChange(diagram, values[0]);
-  }
+  diagram.update(values[0]);
   const storageKey = "dia-" + diagram.id;
 
   // local storage needs to be updated (which is still pretty cheap,
