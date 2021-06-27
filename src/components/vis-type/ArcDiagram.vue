@@ -130,7 +130,8 @@ export default defineComponent({
           this.infotool_value_list.push("<p>" + Object.keys(this.graph.getNodeAttributes(node))[index] + ": " + Object.values(this.graph.getNodeAttributes(node))[index] + "</p>");
         }
 
-        this.infotool_value_list.push("<br><hr><p style='font-style: italic'> Click for brush-and-link </p>");
+
+        this.infotool_value_list.push("<br><hr><p style='font-style: italic'> Click for brush-and-link selection </p><p style='font-style: italic'> Ctrl+Click for multiple nodes </p>");
 
         const mouseEvent = event.data.originalEvent as MouseEvent;
         const rectangle = canvasParent.getBoundingClientRect();
@@ -374,7 +375,7 @@ export default defineComponent({
             text.y = centerY + (vertexRadius + textDistance) * Math.sin(sourceData.index * angle);
 
             viewport.addChild(text);
-            
+
             if(drawOutgoing) {
               nodeRadius = Math.min(30, Math.max(5 * Math.log(sourceData.outboundDegree), 5));
             } else {
@@ -382,7 +383,7 @@ export default defineComponent({
             }
 
             const circleColor = this.jobMap.get(sourceAttr.jobtitle)?.assignedColor;
-            
+
             const circle = sourceData.circle;
             circle.clear();
             circle.lineStyle(1);
@@ -402,13 +403,13 @@ export default defineComponent({
             // draw outgoing edges
             const callback = (target: any, attributes: any) => {
               const targetData = this.nodeMap.get(target);
-              
+
               if (typeof targetData === "undefined") return;
               if(settings.filterJobtitle === "None" || targetData.jobTitle === settings.filterJobtitle) {
 
                 const toX = centerX + vertexRadius * Math.cos(targetData.index * angle);
                 const toY = centerY + vertexRadius * Math.sin(targetData.index * angle);
-  
+
                 edgeGraphics
                   .lineStyle(2, 0xE06776, alpha)
                   .moveTo(fromX, fromY)
@@ -422,7 +423,7 @@ export default defineComponent({
               graph.forEachInboundNeighbor(source, callback);
             }
 
-            viewport.addChild(edgeGraphics); 
+            viewport.addChild(edgeGraphics);
           };
         });
       } else if (settings.variety === "line") {
@@ -443,7 +444,7 @@ export default defineComponent({
             } else {
               nodeRadius = Math.min(30, Math.max(5 * Math.log(sourceData.inboundDegree), 5));
             }
-  
+
             const circleColor = this.jobMap.get(sourceAttr.jobtitle)?.assignedColor;
             const circle = sourceData.circle;
             circle.clear();
@@ -453,13 +454,13 @@ export default defineComponent({
             circle.endFill();
             circle.x = nodeLineX + gap * sourceData.index;
             circle.y = nodeLineY;
-  
+
             // node's value
             const text = sourceData.text;
             text.style = textStyle;
             text.x = circle.x;
             text.y = circle.y + nodeRadius + text.height;
-  
+
             viewport.addChild(circle, text);
           };
         });
@@ -472,7 +473,7 @@ export default defineComponent({
 
             const edgeGraphics = sourceData.edgeGraphics;
             edgeGraphics.clear();
-  
+
             const sourceX = sourceData.circle.x;
             const sourceY = sourceData.circle.y;
             const callback = (target: any, targetAttributes: any) => {
@@ -483,7 +484,7 @@ export default defineComponent({
                 const targetX = targetData.circle.x;
                 const radius = Math.abs(sourceX - targetX) / 2;
                 const xArcCenter = (sourceX + targetX) / 2;
-    
+
                 edgeGraphics
                   .lineStyle(2, 0xE06776, alpha)
                   .arc(xArcCenter, sourceY, radius, Math.PI, 2 * Math.PI);
@@ -495,7 +496,7 @@ export default defineComponent({
             if (drawIncoming) {
               graph.forEachInboundNeighbor(source, callback);
             }
-  
+
             viewport.addChild(edgeGraphics);
           }
         });

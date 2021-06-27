@@ -70,7 +70,7 @@ export default defineComponent({
       console.warn("Non-existent diagram:", this.diagramid);
       return;
     }
-    
+
     const dataset = await GlobalStorage.getDataset(this.diagram.graphID);
     if (!dataset) {
       console.warn("Non-existent dataset:", this.diagram.graphID);
@@ -518,7 +518,7 @@ export default defineComponent({
         }
       }
 
-      this.infotool_value_list.push("<br><hr><p style='font-style: italic'> Click for brush-and-link </p>");
+      this.infotool_value_list.push("<br><hr><p style='font-style: italic'> Click for brush-and-link selection </p><p style='font-style: italic'> Ctrl+Click for multiple nodes </p><br>");
 
       if (level == 0) {
         this.infotool_value_list.push("<p style='font-style: italic'> Shift click to reset root </p>");
