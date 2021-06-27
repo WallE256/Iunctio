@@ -103,7 +103,7 @@ export default defineComponent({
       GlobalStorage.changeSetting(diagram, setting, value);
     },
 
-    async onNameChanged(name: string) {
+    onNameChanged(name: string) {
       this.$emit("name-changed", name);
     },
 

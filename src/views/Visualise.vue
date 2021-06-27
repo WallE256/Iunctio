@@ -100,8 +100,8 @@ export default defineComponent({
   },
 
   methods: {
-    async onNameChanged(name: string) {
-      await this.setDiagramList();
+    onNameChanged(name: string) {
+      this.setDiagramList();
     },
 
     async selectDiagram(d_type: string) {
