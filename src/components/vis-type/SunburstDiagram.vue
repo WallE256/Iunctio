@@ -512,9 +512,17 @@ export default defineComponent({
       for (let index = 0; index < Object.keys(this.graph.getNodeAttributes(node)).length; index++) {
 
         if (Object.keys(this.graph.getNodeAttributes(node))[index] === settings.colourType) {
-          this.infotool_value_list.push("<p style='text-decoration: underline;'>" + Object.keys(this.graph.getNodeAttributes(node))[index] + ": " + Object.values(this.graph.getNodeAttributes(node))[index] + "</p>");
+          if (Object.keys(this.graph.getNodeAttributes(node))[index] === "community") {
+            this.infotool_value_list.push("<p style='text-decoration: underline;'> Clustering Community: " + Object.values(this.graph.getNodeAttributes(node))[index] + "</p>");
+          } else {
+            this.infotool_value_list.push("<p style='text-decoration: underline;'>" + Object.keys(this.graph.getNodeAttributes(node))[index] + ": " + Object.values(this.graph.getNodeAttributes(node))[index] + "</p>");
+          }
         } else {
-          this.infotool_value_list.push("<p>" + Object.keys(this.graph.getNodeAttributes(node))[index] + ": " + Object.values(this.graph.getNodeAttributes(node))[index] + "</p>");
+          if (Object.keys(this.graph.getNodeAttributes(node))[index] === "community") {
+            this.infotool_value_list.push("<p> Clustering Community: " + Object.values(this.graph.getNodeAttributes(node))[index] + "</p>");
+          } else {
+            this.infotool_value_list.push("<p>" + Object.keys(this.graph.getNodeAttributes(node))[index] + ": " + Object.values(this.graph.getNodeAttributes(node))[index] + "</p>");
+          }
         }
       }
 

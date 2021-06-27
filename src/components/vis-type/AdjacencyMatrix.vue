@@ -217,10 +217,24 @@ export default defineComponent({
             this.infotool_value_list.push("<p> Edge Frequency: " + this.graph.outEdges(node_1, node_2).length + "</p><p> Average Sentiment: " + this.avgSentiment(node_1, node_2) + "</p><br>");
 
             // Node 1 Attributes
-            this.infotool_value_list.push("<p> From Email: " + this.graph.getNodeAttributes(node_1)["email"] + "</p><p> From Jobtitle: " + this.graph.getNodeAttributes(node_1)["jobtitle"] + "</p><br>");
+            this.infotool_value_list.push("<h3> From: </h3>");
+            for (let index = 0; index < Object.keys(this.graph.getNodeAttributes(node_1)).length; index++) {
+              if (Object.keys(this.graph.getNodeAttributes(node_1))[index] === "community") {
+                this.infotool_value_list.push("<p> Clustering Community: " + Object.values(this.graph.getNodeAttributes(node_1))[index] + "</p>");
+              } else {
+                this.infotool_value_list.push("<p>" + Object.keys(this.graph.getNodeAttributes(node_1))[index] + ": " + Object.values(this.graph.getNodeAttributes(node_1))[index] + "</p>");
+              }
+            }
 
             // Node 2 Attributes
-            this.infotool_value_list.push("<p> To Email: " + this.graph.getNodeAttributes(node_2)["email"] + "</p><p> To Jobtitle: " + this.graph.getNodeAttributes(node_2)["jobtitle"] + "</p>");
+            this.infotool_value_list.push("<br><h3> To: </h3>");
+            for (let index = 0; index < Object.keys(this.graph.getNodeAttributes(node_2)).length; index++) {
+              if (Object.keys(this.graph.getNodeAttributes(node_2))[index] === "community") {
+                this.infotool_value_list.push("<p> Clustering Community: " + Object.values(this.graph.getNodeAttributes(node_2))[index] + "</p>");
+              } else {
+                this.infotool_value_list.push("<p>" + Object.keys(this.graph.getNodeAttributes(node_2))[index] + ": " + Object.values(this.graph.getNodeAttributes(node_2))[index] + "</p>");
+              }
+            }
 
             this.infotool_value_list.push("<br><hr><p style='font-style: italic'> Click for brush-and-link selection </p><p style='font-style: italic'> Ctrl+Click for multiple nodes </p>");
 
