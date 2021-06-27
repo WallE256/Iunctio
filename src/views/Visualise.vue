@@ -37,6 +37,7 @@
         <your-diagrams-tile
           v-for="your_diag in diagram_list"
           :key="your_diag.id"
+          :name="your_diag.name"
           :id_name="your_diag.id"
           :graphID="your_diag.graphID"
           :path="your_diag.path"
@@ -52,6 +53,7 @@
         :key="diag"
         :diagram_id="diag"
         @selected-node-change="onSelectedNodeChange"
+        @name-changed="onNameChanged"
         @close="closeDiagram"
         @back="
           toggleHome(true);
@@ -98,6 +100,10 @@ export default defineComponent({
   },
 
   methods: {
+    async onNameChanged(name: string) {
+      await this.setDiagramList();
+    },
+
     async selectDiagram(d_type: string) {
       // If the number of datasets is less than 1, first request upload.
       if (this.datasets.length < 1) {
@@ -109,7 +115,7 @@ export default defineComponent({
       // shown diagrams. Finally, toggle the homepage and display the diagram panels.
       const diagramID = GlobalStorage.createID(d_type);
       await this.createDiagram(diagramID, d_type);
-      await this.updateDiagramList(diagramID, d_type);
+      await this.addToDiagramList(diagramID);
       this.toggleHome(false);
       this.toggleDiagramPanels(true);
     },
@@ -141,29 +147,19 @@ export default defineComponent({
       GlobalStorage.getDiagrams().then((diagrams) => {
         if (!diagrams) return;
         diagrams.forEach(diagramID => {
-          GlobalStorage.getDiagram(diagramID).then((diagram) => {
-            if (!diagram) return;
-
-            this.diagram_list.push({
-              id: diagramID,
-              name: diagram.name,
-              path: this.getPNGPath(diagram.type),
-              graphID: diagram.graphID
-            });
-          });
+          this.addToDiagramList(diagramID);
         });
       });
     },
 
-    async updateDiagramList(diagramID: string, d_type: string) {
-
+    async addToDiagramList(diagramID: string) {
       GlobalStorage.getDiagram(diagramID).then((diagram) => {
         if (!diagram) return;
 
         this.diagram_list.push({
           id: diagramID,
           name: diagram.name,
-          path: this.getPNGPath(d_type),
+          path: this.getPNGPath(diagram.type),
           graphID: diagram.graphID
         });
       });

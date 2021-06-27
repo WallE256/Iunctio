@@ -4,7 +4,7 @@
     <span class="diag-close" @click="$emit('close', diagram_id)" title="Close Diagram View"></span>
     <component
       class="diagram"
-      :is="componentName"
+      :is="componentType"
       :diagramid="diagram_id"
       @selected-node-change="onSelectedNodeChange"
     />
@@ -27,7 +27,9 @@
       <div class="diagram-panel__settings" v-show="showSettings">
         <diagram-settings
           :diagramid="diagram_id"
+          :diagramname="diagram_name"
           @setting-changed="onSettingChanged"
+          @name-changed="onNameChanged"
           @close-settings="toggleSettings"
         />
       </div>
@@ -65,7 +67,8 @@ export default defineComponent({
 
   data() {
     return {
-      componentName: "",
+      diagram_name: "",
+      componentType: "",
       showSettings: false,
       datasets: [] as string[],
     };
@@ -78,8 +81,8 @@ export default defineComponent({
       console.warn("Non-existent diagram", this.diagram_id);
       return;
     }
-    this.componentName = diagram.type;
-
+    this.diagram_name = diagram.name;
+    this.componentType = diagram.type;
     const diagram_panel = document.getElementsByClassName("diagram-panel");
     diagram_panel[0].addEventListener("resize", debounce((event) => {
       const diagrams = document.getElementsByClassName("diagram");
@@ -90,13 +93,18 @@ export default defineComponent({
   },
 
   methods: {
-    async onSettingChanged(id: string, value: any) {
+    async onSettingChanged(setting: string, value: any) {
       const diagram = await GlobalStorage.getDiagram(this.diagram_id);
       if (!diagram) {
         console.warn("Non-existent diagram:", this.diagram_id);
         return;
       }
-      GlobalStorage.changeSetting(diagram, id, value);
+
+      GlobalStorage.changeSetting(diagram, setting, value);
+    },
+
+    async onNameChanged(name: string) {
+      this.$emit("name-changed", name);
     },
 
     toggleSettings() {

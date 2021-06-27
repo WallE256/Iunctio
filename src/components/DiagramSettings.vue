@@ -2,9 +2,9 @@
   <div>
     <h1>{{ settingsName(type) }} Settings</h1>
     <span class="settings-close" @click="$emit('close-settings')" title="Close Settings"></span>
-    <label CLASS="text-input" for="diagramName">
+    <label CLASS="text-input">
       <span class="text-input__label">{{ "Diagram Name" }}</span>
-      <input class="text-input__input" type="Diagram Name" name="diagramName" v-on:change="onNameChange" :value="this?.diagram.name" placeholder="Diagram Name Placeholder" />
+      <input class="text-input__input" type="Diagram Name" name="diagramName" @change="onNameChanged($event.target.value)" :value="diagramname" placeholder="Diagram Name Placeholder" />
     </label>
     <component
       v-for="setting in settings"
@@ -43,6 +43,10 @@ export default defineComponent({
       type: String,
       required: true,
     },
+    diagramname: {
+      type: String,
+      required: true,
+    },
   },
 
   data() {
@@ -74,6 +78,16 @@ export default defineComponent({
       this.$emit("setting-changed", id, value);
     },
 
+    onNameChanged(name: string) {
+      if (!this.diagram) {
+        console.warn("Non-existent diagram:", this.diagramid);
+        return;
+      }
+
+      GlobalStorage.changeName(this.diagram, name);
+      this.$emit("name-changed", name);
+    },
+
     settingsName(type: string) {
       let diag_type = "";
       switch (type) {
@@ -100,14 +114,6 @@ export default defineComponent({
 
       return diag_type;
     },
-
-    onNameChange(event: Event, value_name: string) {
-      if (!this.diagram) {
-        console.warn("Non-existent diagram:", this.diagramid);
-        return;
-      }
-      this.diagram.name = value_name;
-    }
   },
 });
 </script>
