@@ -24,3 +24,18 @@ export function findMinMaxDates(dataset: Dataset): [Date, Date] {
   });
   return [new Date(min), new Date(max)];
 }
+
+/// `containsEdgeInRange` checks whether any of the edges between `source` and
+/// `target` are in the given `timeRange`.
+export function containsEdgeInRange(dataset: Dataset, source: string, target: string, timeRange: [string, string]): boolean {
+  // TODO: this could probably be done faster by using this.sortedEdges
+  let found = false;
+  dataset.graph.forEachEdgeUntil(source, target, (edge, edgeAttributes: any) => {
+    if (dateIsBetween(edgeAttributes.date, timeRange)) {
+      found = true;
+      return true; // break
+    }
+    return false;
+  });
+  return found;
+}

@@ -26,7 +26,7 @@ import { getDefaultSettings } from "@/scripts/settingconfig";
 import * as GlobalStorage from "@/scripts/globalstorage";
 import { sortEdgesByDate } from "@/scripts/sorter";
 import InfoTool from "@/components/visualise/InfoTool.vue";
-import { dateIsBetween, findMinMaxDates } from "@/scripts/util";
+import { containsEdgeInRange, findMinMaxDates } from "@/scripts/util";
 import { Viewport } from 'pixi-viewport';
 import { Cull } from '@pixi-essentials/cull';
 import * as d3 from "d3";
@@ -95,16 +95,15 @@ export default defineComponent({
     }
     this.diagram = diagram;
 
-    const dataset = await GlobalStorage.getDataset(this.diagram.graphID);
-    if (!dataset) {
+    this.dataset = await GlobalStorage.getDataset(this.diagram.graphID);
+    if (!this.dataset) {
       console.warn("Non-existent dataset:", this.diagram.graphID);
       return;
     }
-    this.graph = dataset.graph;
+    this.graph = this.dataset.graph;
 
     // initialize time slider
-    this.sortedEdges = sortEdgesByDate(this.graph);
-    [this.minDate, this.maxDate] = findMinMaxDates(dataset);
+    [this.minDate, this.maxDate] = findMinMaxDates(this.dataset);
 
     const maxValue = (this.maxDate.getFullYear() - this.minDate.getFullYear()) * 12
         - this.minDate.getMonth() + this.maxDate.getMonth();
@@ -163,7 +162,7 @@ export default defineComponent({
     // give each node a corresponding index and corresponding text element
     let i = 0;
     let colorIndex = 0;
-    const sortedNodes = dataset.getClusteredNodes();
+    const sortedNodes = this.dataset.getClusteredNodes();
     for (const node of sortedNodes) {
       const attributes = this.graph.getNodeAttributes(node);
       const text = new PIXI.Text(attributes.email.substring(0, attributes.email.indexOf("@")), defaultStyle);
@@ -358,10 +357,12 @@ export default defineComponent({
       infotoolYPos: 0,
       infotoolDisplay: "none",
       viewport: null as null | Viewport,
+
       graph: new Graph({
         //options
       }),
-      sortedEdges: new Map<string, string[]>(),
+      dataset: null as GlobalStorage.Dataset | null,
+
       minDate: new Date("1000-01-01"),
       maxDate: new Date("9999-12-31"),
       diagram: null as GlobalStorage.Diagram | null,
@@ -463,6 +464,9 @@ export default defineComponent({
     ) {
       const canvas = this.canvas as HTMLCanvasElement;
 
+      const dataset = this.dataset;
+      if (!dataset) return;
+
       //node radius has to be fixed size otherwise they become very small when adding too many nodes
       //const nodeRadius = graph.order == 0 ? 200 : Math.floor(500 / graph.order);
       let nodeRadius = 10;
@@ -528,7 +532,7 @@ export default defineComponent({
 
             // draw outgoing edges
             const callback = (target: any, attributes: any) => {
-              if (!this.shouldDrawEdges(source, target, settings.timeRange)) return;
+              if (!containsEdgeInRange(dataset, source, target, settings.timeRange)) return;
 
               const targetData = this.nodeMap.get(target);
 
@@ -608,7 +612,7 @@ export default defineComponent({
               // TODO: this is pretty slow, because it makes the algorithm
               // O(edges) in the worst case... a solution would be to store the
               // edges sorted by date
-              if (!this.shouldDrawEdges(source, target, settings.timeRange)) return;
+              if (!containsEdgeInRange(dataset, source, target, settings.timeRange)) return;
 
               const targetData = this.nodeMap.get(target);
               if (!targetData) return; // shouldn't happen
@@ -639,7 +643,8 @@ export default defineComponent({
 
     highlight() {
       const diagram = this.diagram;
-      if (!diagram) return;
+      const dataset = this.dataset;
+      if (!diagram || !dataset) return;
 
       const highlightNode = (node: string) => {
         const nodeData = this.nodeMap.get(node);
@@ -651,7 +656,7 @@ export default defineComponent({
         nodeData.edgeGraphics.zIndex = 1;
 
         const callback = (target: any, targetAttributes: any) => {
-          if (!this.shouldDrawEdges(node, target, diagram.settings.timeRange)) return;
+          if (!containsEdgeInRange(dataset, node, target, diagram.settings.timeRange)) return;
 
           const targetData = this.nodeMap.get(target);
           if (!targetData) return;
@@ -712,21 +717,6 @@ export default defineComponent({
       if (this.hoverNode) {
         unhighlightNode(this.hoverNode);
       }
-    },
-
-    shouldDrawEdges(source: string, target: string, timeRange: [string, string]) {
-      if (!this.graph) return;
-
-      // TODO: this could probably be done faster by using this.sortedEdges
-      let found = false;
-      this.graph.forEachEdgeUntil(source, target, (edge, edgeAttributes) => {
-        if (dateIsBetween(edgeAttributes.date, timeRange)) {
-          found = true;
-          return true; // break
-        }
-        return false;
-      });
-      return found;
     },
   },
 });
