@@ -57,7 +57,7 @@ export class Diagram {
     if (name) {
       this.name = name;
     } else {
-      this.name = type + "_" + id;
+      this.name = type + "-" + id;
     }
   }
 
@@ -306,14 +306,11 @@ export function changeSetting(diagram: Diagram, ...values: any[]): void {
   localforage.setItem(storageKey, diagramToJSON(diagram));
 }
 
-/// `changeName` updates a diagram's name and will call the `onChange`
-/// handler so visualizations can be redrawn.
-/// updates multiple settings if multiple are provided
+/// `changeName` updates a diagram's name and will update the diagram,
+/// so the visualizations can be redrawn.
 export function changeName(diagram: Diagram, name: string): void {
   diagram.name = name;
-  if (diagram.onChange) {
-    diagram.onChange(diagram, "name");
-  }
+  diagram.update("name");
   const storageKey = "dia-" + diagram.id;
 
   // local storage needs to be updated (which is still pretty cheap,

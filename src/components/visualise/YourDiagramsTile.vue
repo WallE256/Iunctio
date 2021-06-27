@@ -39,7 +39,7 @@ export default defineComponent({
     this.diag = this.split_id_name(this.id_name);
     this.dataset = this.split_id_name(this.graphID);
   },
-  
+
   methods: {
     deleteDiagram() {
       GlobalStorage.removeDiagramByID(this.id_name);
@@ -50,10 +50,10 @@ export default defineComponent({
       this.$emit("tile-click", this.id_name.replaceAll(" ", ""));
     },
 
-    split_id_name(id_name:string) {
+    split_id_name(id_name: string) {
       const re = /^(\d+)-(.*)/g;
       let id_name_split = re.exec(id_name);
-      let id="", name="";
+      let id = "", name = "";
       if (id_name_split) {
         id = "#" + id_name_split[1];
         // Add space between each capital letter.
