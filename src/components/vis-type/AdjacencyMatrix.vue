@@ -211,23 +211,18 @@ export default defineComponent({
             this.infotoolDisplay = "inline";
 
             // Edge ID
-            this.infotool_value_list.push("<h2 style='font-size: 16px;'> Edge: " + node_1 + "->" + node_2 + "</h3>");
-            this.infotool_value_list.push("<hr>");
+            this.infotool_value_list.push("<h2 style='font-size: 16px;'> Edge: " + node_1 + "->" + node_2 + "</h2><hr><br>");
 
             // Edge Frequency and Sentiment
-            this.infotool_value_list.push("<p> Edge Frequency: " + this.graph.outEdges(node_1, node_2).length + "</p>");
-            this.infotool_value_list.push("<p> Average Sentiment: " + this.avgSentiment(node_1, node_2) + "</p>");
-            this.infotool_value_list.push("<br>");
+            this.infotool_value_list.push("<p> Edge Frequency: " + this.graph.outEdges(node_1, node_2).length + "</p><p> Average Sentiment: " + this.avgSentiment(node_1, node_2) + "</p><br>");
 
             // Node 1 Attributes
-            this.infotool_value_list.push("<p> From Email: " + this.graph.getNodeAttributes(node_1)["email"] + "</p>");
-            this.infotool_value_list.push("<p> From Jobtitle: " + this.graph.getNodeAttributes(node_1)["jobtitle"] + "</p>");
-
-            this.infotool_value_list.push("<br>");
+            this.infotool_value_list.push("<p> From Email: " + this.graph.getNodeAttributes(node_1)["email"] + "</p><p> From Jobtitle: " + this.graph.getNodeAttributes(node_1)["jobtitle"] + "</p><br>");
 
             // Node 2 Attributes
-            this.infotool_value_list.push("<p> To Email: " + this.graph.getNodeAttributes(node_2)["email"] + "</p>");
-            this.infotool_value_list.push("<p> To Jobtitle: " + this.graph.getNodeAttributes(node_2)["jobtitle"] + "</p>");
+            this.infotool_value_list.push("<p> To Email: " + this.graph.getNodeAttributes(node_2)["email"] + "</p><p> To Jobtitle: " + this.graph.getNodeAttributes(node_2)["jobtitle"] + "</p>");
+
+            this.infotool_value_list.push("<br><hr><p style='font-style: italic'> Click for brush-and-link selection </p><p style='font-style: italic'> Ctrl+Click for multiple nodes </p>");
 
             const mouseEvent = event.data.originalEvent as MouseEvent;
             const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
