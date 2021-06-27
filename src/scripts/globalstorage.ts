@@ -310,7 +310,6 @@ export function changeSetting(diagram: Diagram, ...values: any[]): void {
 /// so the visualizations can be redrawn.
 export function changeName(diagram: Diagram, name: string): void {
   diagram.name = name;
-  diagram.update("name");
   const storageKey = "dia-" + diagram.id;
 
   // local storage needs to be updated (which is still pretty cheap,
