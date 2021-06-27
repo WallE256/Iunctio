@@ -116,7 +116,7 @@ export class Dataset {
 
 export function createID(id: string): string {
   // this is unique enough and not too long
-  return String(Math.floor(Date.now() % 1e5)) + "-" + id;
+  return String(Math.floor(Date.now() % 1e5));
 }
 
 const diagrams = new Map<string, Diagram>();
@@ -298,6 +298,22 @@ export function changeSetting(diagram: Diagram, ...values: any[]): void {
     diagram.settings[values[index]] = values[index + 1];
   }
   diagram.update(values[0]);
+  const storageKey = "dia-" + diagram.id;
+
+  // local storage needs to be updated (which is still pretty cheap,
+  // considering that the diagram's dataset is stored separately and is
+  // never updated)
+  localforage.setItem(storageKey, diagramToJSON(diagram));
+}
+
+/// `changeName` updates a diagram's name and will call the `onChange`
+/// handler so visualizations can be redrawn.
+/// updates multiple settings if multiple are provided
+export function changeName(diagram: Diagram, name: string): void {
+  diagram.name = name;
+  if (diagram.onChange) {
+    diagram.onChange(diagram, "name");
+  }
   const storageKey = "dia-" + diagram.id;
 
   // local storage needs to be updated (which is still pretty cheap,

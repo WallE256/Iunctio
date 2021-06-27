@@ -7,10 +7,10 @@
   >
     <div class="diag-tile__bg" >
       <span class="diag-del" @click.stop="deleteDiagram"></span>
-      <img :src="path" :alt="diag.name" class="diag-tile__icon" @click="openDiagram"/>
+      <img :src="path" :alt="name" class="diag-tile__icon" @click="openDiagram"/>
     </div>
     <div class="diag-tile__data">
-      <h4 class="diag-tile__name">{{ diag.name }}</h4>
+      <h4 class="diag-tile__name">{{ name }}</h4>
       <h4 class="diag-tile__id">Dataset: {{ dataset.id }}</h4>
     </div>
   </div>
@@ -22,20 +22,24 @@ import * as GlobalStorage from "@/scripts/globalstorage";
 
 export default defineComponent({
   props: {
+    name: { required: true, type: String },
     id_name: { required: true, type: String },
     path: { required: true, type: String },
-    graphID: {required: true, type: String}
+    graphID: { required: true, type: String }
   },
+
   data() {
     return {
       diag : {id: "", name: ""},
       dataset: {id: "", name: ""}
     }
   },
+
   mounted() {
     this.diag = this.split_id_name(this.id_name);
     this.dataset = this.split_id_name(this.graphID);
   },
+  
   methods: {
     deleteDiagram() {
       GlobalStorage.removeDiagramByID(this.id_name);
