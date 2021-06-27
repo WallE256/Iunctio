@@ -288,9 +288,7 @@ export default defineComponent({
           if (!diagram) return;
           if (diagram.graphID !== datasetID) return;
 
-          if (diagram.onChange) {
-            diagram.onChange(diagram, "selectedNode");
-          }
+          diagram.update("selectedNode");
         });
       }
     },

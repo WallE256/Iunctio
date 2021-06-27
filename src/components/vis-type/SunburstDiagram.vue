@@ -95,8 +95,7 @@ export default defineComponent({
     // correct yet (because they've not been rendered yet)
     this.$nextTick(() => {
       app.resize();
-      this.diagram.onChange = (diagram: GlobalStorage.Diagram, changedKey: string) => {
-
+      this.diagram.addOnChange((diagram: GlobalStorage.Diagram, changedKey: string) => {
         if (changedKey === "name") {
           return;
         }
@@ -128,7 +127,7 @@ export default defineComponent({
         }
 
         this.draw(app, this.diagram.settings);
-      };
+      });
     });
 
     this.draw(app, this.diagram.settings);
