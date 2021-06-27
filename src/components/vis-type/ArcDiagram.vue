@@ -100,7 +100,9 @@ export default defineComponent({
     // give each node a corresponding index and corresponding text element
     let i = 0;
     let colorIndex = 0;
-    this.graph.forEachNode((node: any, attributes) => {
+    const sortedNodes = dataset.getClusteredNodes();
+    for (const node of sortedNodes) {
+      const attributes = this.graph.getNodeAttributes(node);
       const sourceString = node.toString();
       const text = new PIXI.Text(sourceString, defaultStyle);
       text.anchor.set(0.5, 0.5);
@@ -191,9 +193,7 @@ export default defineComponent({
         })
       }
       i++;
-    });
-
-
+    }
 
     // this has to happen next tick, otherwise the elements do not have their
     // size yet (because they've not been renderd yet)
