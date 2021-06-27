@@ -90,7 +90,7 @@ export default defineComponent({
       const app = this.app as PIXI.Application;
       app.resize();
 
-      diagram.onChange = (diagram: GlobalStorage.Diagram, changedKey: string) => {
+      this.diagram.addOnChange((diagram: GlobalStorage.Diagram, changedKey: string) => {
         if (changedKey === "selectedNode") {
 
           // no need to redraw the entire diagram, just highlight some
@@ -105,7 +105,7 @@ export default defineComponent({
         }
 
         this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
-      };
+      });
       this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
     });
   },
