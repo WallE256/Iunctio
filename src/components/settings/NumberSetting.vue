@@ -28,7 +28,7 @@
   margin: 10px 0;
 
   &__label {
-    margin: 0 15px 0 5px;
+    margin: 0 15px 0 0px;
   }
 
   &__container{

@@ -7,8 +7,9 @@
 .visualise {
   // Occupy entire viewport height.
   height: 100%;
+  overflow-y: auto;
   // Prevent content under nav-bar
-  padding: 50px 25px;
+  padding: 50px 25px 25px 25px;
   position: relative;
 
   &__back {
@@ -72,6 +73,18 @@
   }
 
   .create-diagram {
+    padding: 0 40px;
+    &__title {
+      @include font-sans("Poppins", 1.25rem, "Medium", $BLACK_DDD);
+    }
+
+    &__tiles {
+      display: flex;
+      flex-flow: row wrap;
+    }
+  }
+
+  .your-diagrams {
     padding: 0 40px;
     &__title {
       @include font-sans("Poppins", 1.25rem, "Medium", $BLACK_DDD);

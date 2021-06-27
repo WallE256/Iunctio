@@ -35,7 +35,7 @@ export default defineComponent({
   methods: {
     deleteDataset() {
       GlobalStorage.removeDataset(this.id_name);
-      this.$emit("delete", this.id_name);
+      this.$emit("delete_data", this.id_name);
     },
   },
 });
@@ -49,6 +49,9 @@ export default defineComponent({
   text-align: center;
   margin: 10px;
   white-space: pre-wrap;
+  background-color: $WHITE;
+  box-shadow: 2px 2px 3px rgba($BLACK_DDD, 0.15);
+  border-radius: 5px;
 
   &__bg {
     height: 80px;
@@ -56,7 +59,6 @@ export default defineComponent({
     background-color: $BLACK_L;
     padding: 5px;
     border-radius: 5px;
-    margin-bottom: 5px;
     box-shadow: 2px 2px 4px rgba($BLACK_DDD, 0.25);
     @include transition(transform border, 0.3s, $ease2);
     position: relative;
@@ -99,6 +101,7 @@ export default defineComponent({
   }
 
   &__title {
+    padding: 7px 5px;
     @include font-sans("Poppins", 0.8rem, "Medium", $BLACK_DDD);
   }
 }

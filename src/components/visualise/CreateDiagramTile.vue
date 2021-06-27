@@ -6,9 +6,9 @@
     class="diag-tile"
   >
     <div class="diag-tile__bg">
-      <img :src="path" :alt="name" class="diag-tile__icon" />
+      <img :src="path" :alt="type" class="diag-tile__icon" />
     </div>
-    <h4 class="diag-tile__title">{{ name }}</h4>
+    <h4 class="diag-tile__title">{{ type }}</h4>
   </div>
 </template>
 
@@ -17,12 +17,12 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
   props: {
-    name: { required: true, type: String },
+    type: { required: true, type: String },
     path: { required: true, type: String },
   },
   methods: {
     onClick() {
-      this.$emit("tile-click", this.name.replaceAll(" ", ""));
+      this.$emit("tile-click", this.type.replaceAll(" ", ""));
     },
   },
 });
@@ -33,11 +33,14 @@ export default defineComponent({
 @include font-face("Poppins", "Medium");
 
 .diag-tile {
-  $SIZE: 140px;
+  $SIZE: 145px;
   text-align: center;
   width: $SIZE;
   margin: 10px;
   cursor: pointer;
+  background-color: $WHITE;
+  box-shadow: 2px 2px 3px rgba($BLACK_DDD, 0.15);
+  border-radius: 5px;
 
   &:hover,
   &:focus {
@@ -58,7 +61,6 @@ export default defineComponent({
     padding: 5px;
     border-radius: 5px;
     overflow: hidden;
-    margin-bottom: 5px;
     box-shadow: 2px 2px 4px rgba($BLACK_DDD, 0.25);
     @include transition(transform border, 0.3s, $ease2);
 
@@ -70,6 +72,7 @@ export default defineComponent({
   }
 
   &__title {
+    padding: 10px 5px;
     @include font-sans("Poppins", 0.8rem, "Medium", $BLACK_DDD);
   }
 }
