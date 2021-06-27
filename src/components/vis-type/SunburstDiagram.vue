@@ -119,10 +119,6 @@ export default defineComponent({
     this.$nextTick(() => {
       app.resize();
       this.diagram.addOnChange((diagram: GlobalStorage.Diagram, changedKey: string) => {
-        if (changedKey === "name") {
-          return;
-        }
-
         if (changedKey === "selectedNode") {
           // un-highlight old nodes
           this.unhighlight();
