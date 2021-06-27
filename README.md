@@ -36,12 +36,16 @@ Hi! We are 6 first-year students (at the time of writing) from the [Technical Un
 We came from different backgrounds and had varying levels of expertise in these subjects, but we were all able to learn
 what we didn't know and contribute our own share. These are our group members:
 
-- Nidhish Shah: frontend developer, web designer & our dearest SCRUM master.
-- Stijn Harks: statistical/distribution diagram creator, sunburst diagram creator and bug reporting machine.
+- Nidhish Shah: frontend developer, web designer & our dearest SCRUM master
+([LinkedIn](https://www.linkedin.com/in/nidhish-s-shah/), [Github](https://nidhishs.github.io/)).
+- Stijn Harks: statistical/distribution diagram creator, sunburst diagram creator and bug reporting machine
+([LinkedIn](https://www.linkedin.com/in/stijn-harks/), [Github](https://github.com/njitsh)).
 - Chris D'Mello: creator of the adjacency matrix and fancy animations.
-- Vlad Plăiaşu: one of the arc diagram creators and interactivity expert.
+- Vlad Plăiaşu: one of the arc diagram creators and interactivity expert
+([LinkedIn](https://www.linkedin.com/in/vlad-g-plaiasu/), [Github](https://github.com/NeaGogu)).
 - Radu Pogonariu: creator of data parsing/storage and master of Git.
-- Wout Huynen: one of the arc diagram creators, interactivity contributor and helper to those in need.
+- Wout Huynen: one of the arc diagram creators, interactivity contributor and helper to those in need
+([LinkedIn](https://www.linkedin.com/in/wout-huynen), [Github](https://github.com/w2ptr)).
 
 ### About the Project
 

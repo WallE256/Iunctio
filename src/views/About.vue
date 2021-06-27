@@ -27,22 +27,30 @@
       <!-- Link to LinkedIn/github maybe? -->
       <ol>
         <li>
-          Nidhish Shah: frontend developer, web designer &amp; our dearest SCRUM master.
+          Nidhish Shah: frontend developer, web designer &amp; our dearest SCRUM master
+          (<a href="https://www.linkedin.com/in/nidhish-s-shah/">LinkedIn</a>,
+          <a href="https://nidhishs.github.io/">Github</a>).
         </li>
         <li>
-          Stijn Harks: statistical/distribution diagram creator, sunburst diagram creator and bug reporting machine.
+          Stijn Harks: statistical/distribution diagram creator, sunburst diagram creator and bug reporting machine
+          (<a href="https://www.linkedin.com/in/stijn-harks/">LinkedIn</a>,
+          <a href="https://github.com/njitsh">Github</a>).
         </li>
         <li>
           Chris D'Mello: creator of the adjacency matrix and fancy animations.
         </li>
         <li>
-          Vlad Plăiaşu: one of the arc diagram creators and interactivity expert.
+          Vlad Plăiaşu: one of the arc diagram creators and interactivity expert
+          (<a href="https://www.linkedin.com/in/vlad-g-plaiasu/">LinkedIn</a>,
+          <a href="https://github.com/NeaGogu">Github</a>).
         </li>
         <li>
           Radu Pogonariu: creator of data parsing/storage and master of Git.
         </li>
         <li>
-          Wout Huynen: one of the arc diagram creators, interactivity contributor and helper to those in need.
+          Wout Huynen: one of the arc diagram creators, interactivity contributor and helper to those in need
+          (<a href="https://www.linkedin.com/in/wout-huynen">LinkedIn</a>,
+          <a href="https://github.com/w2ptr">Github</a>).
         </li>
       </ol>
 
