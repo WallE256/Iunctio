@@ -91,10 +91,10 @@ export class Dataset {
   name: string;
 
   ///
-  private clusteredNodes: string[];
+  readonly clusteredNodes: string[];
 
   ///
-  private sortedEdges: Map<string, string[]>;
+  readonly sortedEdges: Map<string, string[]>;
 
   constructor(graph: Graph, name: string) {
     this.graph = graph;
