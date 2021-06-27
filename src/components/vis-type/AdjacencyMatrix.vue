@@ -90,7 +90,7 @@ export default defineComponent({
       const app = this.app as PIXI.Application;
       app.resize();
 
-      this.diagram.addOnChange((diagram: GlobalStorage.Diagram, changedKey: string) => {
+      diagram.addOnChange((diagram: GlobalStorage.Diagram, changedKey: string) => {
         if (changedKey === "selectedNode") {
 
           // no need to redraw the entire diagram, just highlight some
