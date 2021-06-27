@@ -211,7 +211,7 @@ export default defineComponent({
             this.infotoolDisplay = "inline";
 
             // Edge ID
-            this.infotool_value_list.push("<h2 style='font-size: 16px;'> Edge: " + node_1 + "->" + node_2 + "</h2><hr><br>");
+            this.infotool_value_list.push("<h2 style='font-size: 16px;'> Edge: " + node_1 + " -> " + node_2 + "</h2><hr><br>");
 
             // Edge Frequency and Sentiment
             this.infotool_value_list.push("<p> Edge Frequency: " + this.graph.outEdges(node_1, node_2).length + "</p><p> Average Sentiment: " + this.avgSentiment(node_1, node_2) + "</p><br>");
