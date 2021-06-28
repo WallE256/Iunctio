@@ -101,6 +101,7 @@ export class Dataset {
     this.name = name;
     this.clusteredNodes = sortNodesByCommunity(graph);
     this.sortedEdges = sortEdgesByDate(graph);
+    this.name = name;
   }
 
   ///

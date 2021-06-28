@@ -20,7 +20,6 @@ export function parse(file: File, id: string, onFinish: (graph: Graph) => void):
 }
 
 function processData(data: string): Graph {
-  const t0 = performance.now();
   const lines = data.split("\n");
   for (let i = 0; i < lines.length; i++) lines[i] = lines[i].trim();
   const options = lines[0].split(",");
@@ -43,10 +42,5 @@ function processData(data: string): Graph {
   // Add communities to the graph
   louvain.assign(graph);
 
-  // console.log(graph);
-  const t1 = performance.now();
-  console.log("Parsing took " + (t1 - t0) + " milliseconds.");
-
-  // console.log(graph.export());
   return graph;
 }

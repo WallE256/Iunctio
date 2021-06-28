@@ -4,9 +4,10 @@
       <h3 class="upload-dataset__title">Your datasets</h3>
       <div class="upload-dataset__tiles">
         <dataset-tile
-          v-for="dataset in datasets"
-          :key="dataset"
-          :id_name="dataset"
+          v-for="dataset in dataset_list"
+          :key="dataset.id"
+          :id="dataset.id"
+          :name="dataset.name"
           @delete_data="datasetDeleted"
         />
         <div class="upload-dataset__btn-container">
@@ -16,7 +17,7 @@
       <upload-panel
         v-if="show_upload"
         @toggle="toggleUpload"
-        @upload="updateDatasets"
+        @upload="setDatasets"
       />
     </section>
     <section class="create-diagram" v-if="show_home">
@@ -39,7 +40,7 @@
           :key="your_diag.id"
           :name="your_diag.name"
           :id_name="your_diag.id"
-          :graphID="your_diag.graphID"
+          :datasetID="your_diag.graphID.id"
           :path="your_diag.path"
           @tile-click="openDiagram"
           @delete_diag="diagramDeleted"
@@ -90,13 +91,13 @@ export default defineComponent({
         { d_type: "Adjacency Matrix", path: "img/vis/adjacency-matrix.png" },
       ],
       diagram_list: [] as any[],
-      datasets: [] as string[],
+      dataset_list: [] as any[],
     };
   },
   async created() {
     await this.setDiagramList();
     // Retrieve the list of datasets from
-    await this.updateDatasets();
+    await this.setDatasets();
   },
 
   methods: {
@@ -106,7 +107,7 @@ export default defineComponent({
 
     async selectDiagram(d_type: string) {
       // If the number of datasets is less than 1, first request upload.
-      if (this.datasets.length < 1) {
+      if (this.dataset_list.length < 1) {
         this.toggleUpload(true);
         this.requested_diag = d_type;
         return;
@@ -126,7 +127,7 @@ export default defineComponent({
       const defaultSettings = getDefaultSettings(diag_type);
 
       // The most recent dataset upload is considered.
-      const graphID = this.datasets[this.datasets.length - 1];
+      const graphID = this.dataset_list[this.dataset_list.length - 1];
 
       // Add the diagram to GlobalStorage.
       await GlobalStorage.addDiagram(
@@ -255,7 +256,15 @@ export default defineComponent({
     },
 
     async updateDatasets() {
-      this.datasets = await GlobalStorage.getDatasets();
+      this.dataset_list = [];
+
+      GlobalStorage.getDatasets().then((datasets) => {
+        if (!datasets) return;
+        datasets.forEach(datasetID => {
+        });
+          this.addToDatasetList(datasetID);
+      });
+
       // Force an update, otherwise Vue doesn't remove the dataset-tile.
       this.$forceUpdate();
       this.toggleUpload(false);
@@ -267,6 +276,17 @@ export default defineComponent({
         this.requested_diag = '';
         await this.selectDiagram(diag);
       }
+    },
+
+    async addToDatasetList(datasetID: string) {
+      GlobalStorage.getDataset(datasetID).then((dataset) => {
+        if (!dataset) return;
+
+        this.dataset_list.push({
+          id: datasetID,
+          name: dataset.name,
+        });
+      });
     },
 
     toggleUpload(visibility?: boolean) {
