@@ -1,7 +1,7 @@
 <template>
   <main class="visualise">
     <section class="upload-dataset" v-if="show_home">
-      <h3 class="upload-dataset__title">Upload a new data set.</h3>
+      <h3 class="upload-dataset__title">Your datasets</h3>
       <div class="upload-dataset__tiles">
         <dataset-tile
           v-for="dataset in datasets"
@@ -20,7 +20,7 @@
       />
     </section>
     <section class="create-diagram" v-if="show_home">
-      <h3 class="create-diagram__title">Create a new diagram.</h3>
+      <h3 class="create-diagram__title">Create a new diagram</h3>
       <div class="create-diagram__tiles">
         <create-diagram-tile
           v-for="diag in diagram_types"
@@ -31,8 +31,8 @@
         />
       </div>
     </section>
-    <section class="your-diagrams" v-if="show_home">
-      <h3 class="your-diagrams__title">Your diagrams.</h3>
+    <section class="your-diagrams" v-if="show_home && (diagram_list.length > 0)">
+      <h3 class="your-diagrams__title">Your diagrams</h3>
       <div class="your-diagrams__tiles">
         <your-diagrams-tile
           v-for="your_diag in diagram_list"
