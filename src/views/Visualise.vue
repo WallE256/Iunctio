@@ -99,7 +99,7 @@ export default defineComponent({
       diagram_types: [
         { d_type: "Arc Diagram", path: "img/vis/arc-diagram.png" },
         { d_type: "Sunburst Diagram", path: "img/vis/sunburst.png" },
-        { d_type: "Distribution Diagram", path: "img/vis/distribution.png" },
+        { d_type: "Statistical Diagram", path: "img/vis/distribution.png" },
         { d_type: "Adjacency Matrix", path: "img/vis/adjacency-matrix.png" },
       ],
       diagram_list: [] as DiagramInfo[],
@@ -226,7 +226,7 @@ export default defineComponent({
           diagram_png_path = "img/vis/sunburst.png"
           break;
 
-        case "DistributionDiagram":
+        case "StatisticalDiagram":
           diagram_png_path = "img/vis/distribution.png"
           break;
 
