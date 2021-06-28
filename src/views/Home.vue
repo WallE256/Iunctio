@@ -3,7 +3,7 @@
 
     <transition appear name="fade">
       <background-blobs />
-    </transition>  
+    </transition>
 
     <div class="home_container">
       <div class="brand">
@@ -12,17 +12,22 @@
           <h1 class="brand__title">iunctio</h1>
         </transition>
 
-        <transition appear name="slide">
+        <transition appear name="fade">
           <h3 class="brand__subtitle">NETWORK VISUALISER</h3>
-        </transition>  
+        </transition>
 
       </div>
-      <router-link class="cta-visualise" :to="{ name: 'Visualise' }"
-        >VISUALISE</router-link
-      >
-      <router-link class="cta-tour" :to="{ name: 'About' }"
-        >...or explore our journey?</router-link
-      >
+      <transition appear name="slide">
+        <router-link class="cta-visualise" :to="{ name: 'Visualise' }"
+          >VISUALISE
+        </router-link>
+      </transition>
+      <transition appear name="slide">
+        <router-link class="cta-tour" :to="{ name: 'About' }"
+          >...or explore our journey?
+        </router-link>
+      </transition>
+
     </div>
   </main>
 </template>
@@ -39,28 +44,30 @@ export default defineComponent({
 
 <style lang="scss" src="@/assets/styles/home.scss"></style>
 
-
 <style>
   .slide-enter-active {
-    animation: coming 1s;
-    animation-delay: 2.175s;
+    animation: coming .7s ease-out;
+    animation-delay: .75s;
     opacity: 0;
   }
 
   @keyframes coming {
-    from {
-      transform: translateX(-100%);
-      opacity: 0; 
+    0% {
+      transform: translateX(-75%);
+      opacity: 0;
     }
-    to {
+    50% {
+      opacity: .4;
+    }
+    100% {
       transform: translateX(0);
       opacity: 1;
     }
   }
 
   .bounce-enter-active{
-    animation: bounce-in .7s ease-in;
-    animation-delay: 1.3s;
+    animation: bounce-in .4s ease-in;
+    animation-delay: 0s;
     opacity: 0;
   }
 
@@ -69,8 +76,8 @@ export default defineComponent({
       transform: scale(0);
     }
 
-    50% {
-      transform: scale(1.2);
+    65% {
+      transform: scale(1.1);
     }
 
     100% {
@@ -80,14 +87,14 @@ export default defineComponent({
   }
 
   .fade-enter-active {
-    animation: fadeIn .4s ease-in;
-    animation-delay: 1s;
+    animation: fadeIn 1s ease-in-out;
+    animation-delay: 0.25s;
     opacity: 0;
   }
 
   @keyframes fadeIn {
     from {
-      opacity: 0; 
+      opacity: 0;
     }
     to {
       opacity: 1;

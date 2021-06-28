@@ -4,7 +4,7 @@
   <router-view v-show="show_item" v-slot="{ Component }">
     <transition name="route" mode="out-in">
       <component :is="Component"></component>
-    </transition>  
+    </transition>
   </router-view>
 
   <deny-access v-if="!show_item" />
@@ -42,29 +42,31 @@ export default defineComponent({
 <style>
   .route-enter-active,
   .route-leave-active {
-    transition-property: opacity, transform;
+    transition-property: opacity;
     transition-timing-function: ease-in-out;
   }
 
   .route-enter-active {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    transform: translate3d(0, 100vh, 0);
-     transition-duration: .8s;
+    transition-duration: .2s;
   }
 
   .route-leave-active {
-    transition-duration: .4s;
+    transition-duration: .1s;
+  }
+
+  .route-leave-from {
+    opacity: 1;
   }
 
   .route-leave-to {
-    opacity: 0.2;
-    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+
+  .route-enter-from {
+    opacity: 0;
   }
 
   .route-enter-to {
-    transform: translate3d(0, 0, 0);
+    opacity: 1;
   }
 </style>

@@ -27,7 +27,7 @@
 
   .brand {
     position: relative;
-    margin-bottom: 60px;
+    margin-bottom: 50px;
 
     &__title {
       @include font-serif("Prata", 6rem, "Regular", $BLACK_DDD, $lh: 100%);
@@ -35,6 +35,7 @@
     }
 
     &__subtitle {
+      margin-top: -10px;
       @include font-sans("JetBrainsMono", 1.1rem, "Regular", $BLACK_DDD);
       z-index: ind("home", "subtitle");
     }
@@ -44,7 +45,7 @@
     @include center_item();
     @include font-sans("Poppins", 1.1rem, "Medium", $BLACK_DDD);
     position: relative;
-    margin-bottom: 25px;
+    margin-bottom: 10px;
     @include transition(background, 0.35s, $ease1);
     @include setSize(200px, 50px);
 
@@ -93,7 +94,3 @@
     }
   }
 }
-
-
-
-
