@@ -1,8 +1,10 @@
 <template>
-  <div id="canvas-parent" ref="canvas-parent" style="height: 100%; width: 100%">
-    <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
+  <div ref="diagram" style="height: 100%; width: 100%;">
+    <div id="canvas-parent" ref="canvas-parent" style="height: 100%; width: 100%;">
+      <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
+    </div>
+    <info-tool id="info-tool" ref="info-tool" v-bind:values="this.infotool_value_list" v-bind:style="'left: ' + this.infotoolXPos + 'px; top: ' + this.infotoolYPos + 'px; display: ' + this.infotoolDisplay + ';'"/>
   </div>
-  <info-tool id="info-tool" ref="info-tool" v-bind:values="this.infotool_value_list" v-bind:style="'left: ' + this.infotoolXPos + 'px; top: ' + this.infotoolYPos + 'px; display: ' + this.infotoolDisplay + ';'"/>
 </template>
 
 <script lang="ts">
@@ -49,6 +51,25 @@ export default defineComponent({
     const canvas = this.$refs["drawing-canvas"] as HTMLCanvasElement;
     this.canvas = canvas;
     const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
+    const diagramDiv = this.$refs["diagram"] as HTMLElement;
+
+    diagramDiv.addEventListener(
+      "resize",
+      debounce((event) => {
+
+        if (!this.diagram) {
+          return;
+        }
+
+        canvas.height = canvasParent.offsetHeight;
+        canvas.width = canvasParent.offsetWidth;
+
+        this.handleResize(event, this.graph, this.app as PIXI.Application, this.diagram.settings as Settings, this.viewport as Viewport);
+
+        const application = this.app as PIXI.Application;
+        application.resize();
+      }, 250)
+    )
 
     const diagram = await GlobalStorage.getDiagram(this.diagramid);
     if (!diagram) {

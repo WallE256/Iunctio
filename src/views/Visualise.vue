@@ -47,6 +47,7 @@
     </section>
     <section class="diagram-panels" v-show="show_panels">
       <diagram-panel
+        class="diagram-panel"
         v-for="diag in shownDiagrams"
         :key="diag"
         :diagram_id="diag"
@@ -222,6 +223,12 @@ export default defineComponent({
       if (this.shownDiagrams.length < 1) {
         this.toggleHome(true);
         this.toggleDiagramPanels(false);
+      } else {
+        const diagram_panels = document.getElementsByClassName("diagram-panel");
+        const resize_event = new Event("resize");
+        Array.from(diagram_panels).forEach(element => {
+          element.dispatchEvent(resize_event);
+        });
       }
     },
 
