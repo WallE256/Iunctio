@@ -214,7 +214,11 @@ export default defineComponent({
             this.infotool_value_list.push("<h2 style='font-size: 16px;'> Edge: " + node_1 + " -> " + node_2 + "</h2><hr><br>");
 
             // Edge Frequency and Sentiment
-            this.infotool_value_list.push("<p> Edge Frequency: " + this.graph.outEdges(node_1, node_2).length + "</p><p> Average Sentiment: " + this.avgSentiment(node_1, node_2) + "</p><br>");
+            let avgSentiment = "0";
+            if (this.avgSentiment(node_1, node_2) != 0) {
+              avgSentiment = this.avgSentiment(node_1, node_2).toFixed(6);
+            }  
+            this.infotool_value_list.push("<p> Edge Frequency: " + this.graph.outEdges(node_1, node_2).length + "</p><p> Average Sentiment: " + avgSentiment + "</p><br>");
 
             // Node 1 Attributes
             this.infotool_value_list.push("<h3> From: </h3>");
