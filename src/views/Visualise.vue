@@ -184,6 +184,14 @@ export default defineComponent({
         this.shownDiagrams.push(diagramID);
       }
 
+      if (this.shownDiagrams.length > 1) {
+        const diagram_panels = document.getElementsByClassName("diagram-panel");
+        const resize_event = new Event("resize");
+        Array.from(diagram_panels).forEach(element => {
+          element.dispatchEvent(resize_event);
+        });
+      }
+
       this.toggleHome(false);
       this.toggleDiagramPanels(true);
     },
