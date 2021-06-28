@@ -3,6 +3,7 @@
     <span class="diag-back" @click="$emit('back')" title="Back To Visualise Page"></span>
     <span class="diag-close" @click="$emit('close', diagram_id)" title="Close Diagram View"></span>
     <component
+      class="diagram"
       :is="componentName"
       :diagramid="diagram_id"
       @selected-node-change="onSelectedNodeChange"
@@ -43,6 +44,7 @@ import AdjacencyMatrix from "@/components/vis-type/AdjacencyMatrix.vue";
 import DiagramSettings from "@/components/DiagramSettings.vue";
 import SelectSetting from "@/components/settings/SelectSetting.vue";
 import * as GlobalStorage from "@/scripts/globalstorage";
+import { debounce } from "lodash";
 
 export default defineComponent({
   name: "DiagramPanel",
@@ -77,6 +79,14 @@ export default defineComponent({
       return;
     }
     this.componentName = diagram.type;
+
+    const diagram_panel = document.getElementsByClassName("diagram-panel");
+    diagram_panel[0].addEventListener("resize", debounce((event) => {
+      const diagrams = document.getElementsByClassName("diagram");
+      Array.from(diagrams).forEach(element => {
+        element.dispatchEvent(event);
+      });
+    }, 250));
   },
 
   methods: {
