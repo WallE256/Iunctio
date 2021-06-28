@@ -2,7 +2,7 @@
   <div class="dataset-tile">
     <div class="dataset-tile__bg">
       <span class="data-del" @click="deleteDataset"></span>
-      <span class="data-id">{{ id }}</span>
+      <span class="data-id">#{{ id }}</span>
     </div>
     <h4 class="dataset-tile__title">{{ name }}</h4>
   </div>
@@ -13,29 +13,15 @@ import { defineComponent } from "vue";
 import * as GlobalStorage from "@/scripts/globalstorage";
 
 export default defineComponent({
-  data() {
-    return {
-      id: "",
-      name: "",
-    };
-  },
   props: {
-    id_name: { required: true, type: String },
+    id: { required: true, type: String },
+    name: { required: true, type: String },
   },
-  mounted() {
-    const re = /^(\d+)-(.*)/g;
-    let id_name_split = re.exec(this.id_name);
-    if (id_name_split) {
-      this.id = "#" + id_name_split[1];
-      this.name = id_name_split[2];
-    } else {
-      console.log("Invalid dataset-id.");
-    }
-  },
+
   methods: {
     deleteDataset() {
-      GlobalStorage.removeDataset(this.id_name);
-      this.$emit("delete_data", this.id_name);
+      GlobalStorage.removeDataset(this.id);
+      this.$emit("delete_data", this.id);
     },
   },
 });

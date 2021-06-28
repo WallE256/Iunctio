@@ -11,7 +11,7 @@
     </div>
     <div class="diag-tile__data">
       <h4 class="diag-tile__name">{{ name }}</h4>
-      <h4 class="diag-tile__id">Dataset: {{ dataset.id }}</h4>
+      <h4 class="diag-tile__id">Dataset: #{{ datasetID }}</h4>
     </div>
   </div>
 </template>
@@ -20,22 +20,17 @@
 import { defineComponent } from "vue";
 import * as GlobalStorage from "@/scripts/globalstorage";
 
+type DatasetInfo = {
+  id: string,
+  name: string,
+};
+
 export default defineComponent({
   props: {
     name: { required: true, type: String },
     id_name: { required: true, type: String },
     path: { required: true, type: String },
-    graphID: { required: true, type: String }
-  },
-
-  data() {
-    return {
-      dataset: {id: "", name: ""}
-    }
-  },
-
-  mounted() {
-    this.dataset = this.split_id_name(this.graphID);
+    datasetID: { required: true, type: String }
   },
 
   methods: {
@@ -46,22 +41,6 @@ export default defineComponent({
 
     openDiagram() {
       this.$emit("tile-click", this.id_name.replaceAll(" ", ""));
-    },
-
-    split_id_name(id_name: string) {
-      const re = /^(\d+)-(.*)/g;
-      let id_name_split = re.exec(id_name);
-      let id = "", name = "";
-      if (id_name_split) {
-        id = "#" + id_name_split[1];
-        // Add space between each capital letter.
-        id_name_split[2] = id_name_split[2].replace(/([a-z])([A-Z])/g, '$1 $2');
-        name = id_name_split[2].replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
-      } else {
-        console.log("Invalid id_name.");
-      }
-
-      return {id: id, name: name};
     }
   },
 });
