@@ -99,8 +99,8 @@ export default defineComponent({
           diag_type = "Sunburst Diagram"
           break;
 
-        case "DistributionDiagram":
-          diag_type = "Distribution Diagram"
+        case "StatisticalDiagram":
+          diag_type = "Statistical Diagram"
           break;
 
         case "AdjacencyMatrix":

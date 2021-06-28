@@ -35,7 +35,7 @@ export function getDefaultSettings(componentName: string): any {
       };
     }
 
-    case "StatisticsDiagram": {
+    case "StatisticalDiagram": {
       return {
         variety: "distribution",
         logarithmic: false,
@@ -107,10 +107,10 @@ export function getVisibleSettings(diagram: GlobalStorage.Diagram, graph: Graph)
       ];
     }
 
-    case "StatisticsDiagram": {
+    case "StatisticalDiagram": {
       return [
         { id: "variety", component: "SelectSetting", name: "Diagram Variety", properties: {
-          options: [ "distribution", "histogram"],
+          options: [ "distribution", "histogram", "average"],
           value: diagram.settings.variety,
         } },
         { id: "logarithmic", component: "CheckboxSetting", name: "Logarithmic", properties: {
