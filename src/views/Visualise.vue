@@ -7,7 +7,7 @@
           v-for="dataset in datasets"
           :key="dataset"
           :id_name="dataset"
-          @delete_data="updateDatasets"
+          @delete_data="datasetDeleted"
         />
         <div class="upload-dataset__btn-container">
           <button class="upload-dataset__btn" @click="toggleUpload(true)" />
@@ -223,6 +223,20 @@ export default defineComponent({
         this.toggleHome(true);
         this.toggleDiagramPanels(false);
       }
+    },
+
+    async datasetDeleted(id: string) {
+      await this.updateDatasets();
+      await this.deleteDiagramByDataset(id);
+    },
+
+    async deleteDiagramByDataset(id: string) {
+      this.diagram_list.forEach(diagram => {
+        if (diagram.graphID === id) {
+          GlobalStorage.removeDiagramByID(diagram.id);
+        }
+      });
+      this.diagramDeleted();
     },
 
     async updateDatasets() {
