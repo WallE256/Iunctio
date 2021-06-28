@@ -10,8 +10,11 @@ html, body, #app {
   height: 100%;
 }
 
+#app {
+   overflow-y: auto;
+}
+
 a {
   text-decoration: none;
   color: #f8f8f8;
 }
-
