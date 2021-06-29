@@ -88,13 +88,17 @@ export class Dataset {
   readonly graph: Graph;
 
   ///
+  name: string;
+
+  ///
   private clusteredNodes: string[];
 
   ///
   private sortedEdges: Map<string, string[]>;
 
-  constructor(graph: Graph) {
+  constructor(graph: Graph, name: string) {
     this.graph = graph;
+    this.name = name;
     this.clusteredNodes = sortNodesByCommunity(graph);
     this.sortedEdges = sortEdgesByDate(graph);
   }
@@ -169,7 +173,10 @@ export async function addDataset(id: string, dataset: Dataset): Promise<void> {
 
   // ...these could probably be updated in parallel, using Promise.all but that
   // doesn't seem to work
-  await localforage.setItem(storageKey, JSON.stringify(dataset.graph.export()));
+  await localforage.setItem(storageKey, `{
+    "name": ${dataset.name},
+    "graph": ${JSON.stringify(dataset.graph.export())}
+  }`);
 
   await mutateStorageList("datasets", datasetList, (ids) => {
     ids.push(id);
@@ -190,8 +197,8 @@ export async function getDataset(id: string): Promise<Dataset | null> {
   try {
     const storageKey = "dataset-" + id;
     const storageItem = (await localforage.getItem(storageKey)) as string;
-    const graph = Graph.from(JSON.parse(storageItem));
-    const dataset = new Dataset(graph);
+    const deserialized = JSON.parse(storageItem);
+    const dataset = new Dataset(Graph.from(deserialized.graph), deserialized.name);
     datasets.set(id, dataset);
     return dataset;
   } catch (error) {

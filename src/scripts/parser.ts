@@ -14,7 +14,7 @@ export function parse(file: File, id: string, onFinish: (graph: Graph) => void):
     if (extension == "gexf") graph = gexf.parse(Graph, reader.result as string);
     else graph = processData(reader.result as string);
     // file name variable stores the name without the extension
-    await GlobalStorage.addDataset(id, new GlobalStorage.Dataset(graph));
+    await GlobalStorage.addDataset(id, new GlobalStorage.Dataset(graph, file.name));
     onFinish(graph);
   };
 }
