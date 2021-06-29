@@ -26,7 +26,7 @@
     box-shadow: 1px 1px 2px rgba($BLACK_DDD, 0.2);
     margin-left: auto;
     margin-right: 0;
-    width: 190px;
+    width: 200px;
   }
 }
 </style>
