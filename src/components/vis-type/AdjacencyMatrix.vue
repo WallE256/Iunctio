@@ -217,26 +217,26 @@ export default defineComponent({
             let avgSentiment = "0";
             if (this.avgSentiment(node_1, node_2) != 0) {
               avgSentiment = this.avgSentiment(node_1, node_2).toFixed(6);
-            }  
+            }
             this.infotool_value_list.push("<p> Edge Frequency: " + this.graph.outEdges(node_1, node_2).length + "</p><p> Average Sentiment: " + avgSentiment + "</p><br>");
 
             // Node 1 Attributes
             this.infotool_value_list.push("<h3> From: </h3>");
-            for (let index = 0; index < Object.keys(this.graph.getNodeAttributes(node_1)).length; index++) {
-              if (Object.keys(this.graph.getNodeAttributes(node_1))[index] === "community") {
-                this.infotool_value_list.push("<p> Clustering Community: " + Object.values(this.graph.getNodeAttributes(node_1))[index] + "</p>");
+            for (const [key, attribute] of Object.entries(this.graph.getNodeAttributes(node_1))) {
+              if (key === "community") {
+                this.infotool_value_list.push("<p> Clustering Community: " + attribute + "</p>");
               } else {
-                this.infotool_value_list.push("<p>" + Object.keys(this.graph.getNodeAttributes(node_1))[index] + ": " + Object.values(this.graph.getNodeAttributes(node_1))[index] + "</p>");
+                this.infotool_value_list.push("<p>" + key + ": " + attribute + "</p>");
               }
             }
 
             // Node 2 Attributes
             this.infotool_value_list.push("<br><h3> To: </h3>");
-            for (let index = 0; index < Object.keys(this.graph.getNodeAttributes(node_2)).length; index++) {
-              if (Object.keys(this.graph.getNodeAttributes(node_2))[index] === "community") {
-                this.infotool_value_list.push("<p> Clustering Community: " + Object.values(this.graph.getNodeAttributes(node_2))[index] + "</p>");
+            for (const [key, attribute] of Object.entries(this.graph.getNodeAttributes(node_2))) {
+              if (key === "community") {
+                this.infotool_value_list.push("<p> Clustering Community: " + attribute + "</p>");
               } else {
-                this.infotool_value_list.push("<p>" + Object.keys(this.graph.getNodeAttributes(node_2))[index] + ": " + Object.values(this.graph.getNodeAttributes(node_2))[index] + "</p>");
+                this.infotool_value_list.push("<p>" + key + ": " + attribute + "</p>");
               }
             }
 
