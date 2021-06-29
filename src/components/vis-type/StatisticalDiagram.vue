@@ -231,9 +231,6 @@ export default defineComponent({
       var dateMap = null;
 
       if (settings.dataType === "avg-sentiment") {
-        let signPos = 0;
-        let signNeg = 0;
-        let zeros = 0;
 
         for (let [key, value] of valMap) {
           let edgeVal = edgeMap.get(key);
@@ -247,16 +244,9 @@ export default defineComponent({
           }
 
           valMap.set(key, finalVal);
-
-          if (valMap.get(key) > 0) signPos += 1;
-          else if (valMap.get(key) < 0) signNeg += 1;
-          else if (valMap.get(key) == 0) zeros += 1;
-          else console.log("??? " + valMap.get(key));
-
         }
-        dateMap = new Map(valMap);
 
-        console.log("Pos: " + signPos + " Neg: " + signNeg + " Zero: " + zeros);
+        dateMap = new Map(valMap);
 
       } else if (settings.dataType === "tot-sentiment") {
         if (settings.logarithmic) {
