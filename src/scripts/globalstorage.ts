@@ -135,7 +135,7 @@ function diagramToJSON(diagram: Diagram): any {
     name: diagram.name,
     graphID: diagram.graphID,
     type: diagram.type,
-    settings: diagram.settings,
+    settings: Object.assign({}, diagram.settings),
   };
 }
 
