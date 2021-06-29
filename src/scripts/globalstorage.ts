@@ -126,16 +126,16 @@ const datasets = new Map<string, Dataset>();
 const datasetList = { values: null as string[] | null };
 const diagramList = { values: null as string[] | null };
 
-function diagramToJSON(diagram: Diagram): string {
+function diagramToJSON(diagram: Diagram): any {
   // unfortunately this function is necessary, or it will try to serialize the
   // onChange field as well
-  return `{
-    "id": ${JSON.stringify(diagram.id)},
-    "name": ${JSON.stringify(diagram.name)},
-    "graphID": ${JSON.stringify(diagram.graphID)},
-    "type": ${JSON.stringify(diagram.type)},
-    "settings": ${JSON.stringify(diagram.settings)}
-  }`;
+  return {
+    id: diagram.id,
+    name: diagram.name,
+    graphID: diagram.graphID,
+    type: diagram.type,
+    settings: diagram.settings,
+  };
 }
 
 async function mutateStorageList(
@@ -173,10 +173,10 @@ export async function addDataset(id: string, dataset: Dataset): Promise<void> {
 
   // ...these could probably be updated in parallel, using Promise.all but that
   // doesn't seem to work
-  await localforage.setItem(storageKey, `{
-    "name": ${dataset.name},
-    "graph": ${JSON.stringify(dataset.graph.export())}
-  }`);
+  await localforage.setItem(storageKey, {
+    name: dataset.name,
+    graph: dataset.graph.export(),
+  });
 
   await mutateStorageList("datasets", datasetList, (ids) => {
     ids.push(id);
@@ -196,9 +196,8 @@ export async function getDataset(id: string): Promise<Dataset | null> {
   // otherwise, look for the dataset in localStorage
   try {
     const storageKey = "dataset-" + id;
-    const storageItem = (await localforage.getItem(storageKey)) as string;
-    const deserialized = JSON.parse(storageItem);
-    const dataset = new Dataset(Graph.from(deserialized.graph), deserialized.name);
+    const storageItem = (await localforage.getItem(storageKey)) as any;
+    const dataset = new Dataset(Graph.from(storageItem.graph), storageItem.name);
     datasets.set(id, dataset);
     return dataset;
   } catch (error) {
@@ -253,14 +252,13 @@ export async function getDiagram(id: string): Promise<Diagram | null> {
   // otherwise, try to get it from localStorage
   try {
     const storageKey = "dia-" + id;
-    const storageItem = (await localforage.getItem(storageKey)) as string;
-    const deserialized = JSON.parse(storageItem);
+    const storageItem = await localforage.getItem(storageKey) as any;
     const diagram = new Diagram(
-      deserialized.id,
-      deserialized.graphID,
-      deserialized.type,
-      deserialized.settings,
-      deserialized.name
+      storageItem.id,
+      storageItem.graphID,
+      storageItem.type,
+      storageItem.settings,
+      storageItem.name,
     );
     diagrams.set(id, diagram);
     return diagram;
@@ -283,7 +281,7 @@ export function removeDiagram(diagram: Diagram): void {
   });
 }
 
-/// `removeDiagram` deletes a diagram/visualization from the memory AND from
+/// `removeDiagramByID` deletes a diagram/visualization from the memory AND from
 /// the local storage
 export function removeDiagramByID(diagramID: string): void {
   getDiagram(diagramID).then((diagram) => {
