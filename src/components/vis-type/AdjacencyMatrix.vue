@@ -22,11 +22,6 @@ type Settings = {
   drawInnerLines: boolean, // true or false
 };
 
-type NodeData = {
-  rectangle: PIXI.Graphics,
-  index: number,
-};
-
 export default defineComponent({
 
   components: { InfoTool, },
@@ -69,12 +64,12 @@ export default defineComponent({
     }
     this.diagram = diagram;
 
-    const dataset = await GlobalStorage.getDataset(this.diagram.graphID);
-    if (!dataset) {
+    this.dataset = await GlobalStorage.getDataset(this.diagram.graphID);
+    if (!this.dataset) {
       console.warn("Non-existent dataset:", this.diagram.graphID);
       return;
     }
-    this.graph = dataset.graph;
+    this.graph = this.dataset.graph;
 
     this.infotool = this.$refs["info-tool"] as HTMLElement;
 
@@ -152,7 +147,7 @@ export default defineComponent({
 
   data() {
     return {
-      nodeMap: new Map<string, NodeData>(),
+      nodeMap: new Map<string, number>(),
 
       // the node that you're currently hovering over
       selectedNodes: [] as string[],
@@ -164,7 +159,9 @@ export default defineComponent({
       infotoolYPos: 0,
       infotoolDisplay: "none",
       viewport: null as null | Viewport,
+
       graph: new Graph({}),
+      dataset: null as GlobalStorage.Dataset | null,
 
       matrix: [] as PIXI.Graphics[][],
 
@@ -197,33 +194,32 @@ export default defineComponent({
     },
 
     createMatrix() {
+      if (!this.dataset) {
+        console.warn("Missing dataset");
+        return;
+      }
+
       // give each node a corresponding index
       let i = 0;
-      this.graph.forEachNode((source: any, sourceAttr) => {
-        const sourceString = source.toString();
-        const text = new PIXI.Text(sourceString, this.defaultStyle);
-        const rectangle = new PIXI.Graphics();
-
-        this.nodeMap.set(source, {
-          rectangle: rectangle,
-          index: i,
-        });
+      const sortedNodes = this.dataset.getClusteredNodes();
+      for (const node of sortedNodes) {
+        this.nodeMap.set(node, i);
         i++;
-      });
+      }
 
       // create a matrix that stores graphic objects for each existing edge
       this.matrix.length = this.graph.order;
 
       this.graph.forEachNode((node_1: any) => {
-        const sourceData1 = this.nodeMap.get(node_1);
-        if (!sourceData1) return;
+        const sourceIndex = this.nodeMap.get(node_1);
+        if (!sourceIndex) return;
 
-        this.matrix[sourceData1.index] = [];
-        this.matrix[sourceData1.index].length = this.graph.order;
+        this.matrix[sourceIndex] = [];
+        this.matrix[sourceIndex].length = this.graph.order;
 
         this.graph.forEachNode((node_2: any) => {
-          const sourceData2 = this.nodeMap.get(node_2);
-          if (!sourceData2) return;
+          const targetIndex = this.nodeMap.get(node_2);
+          if (!targetIndex) return;
 
           if (!this.graph.hasEdge(node_1, node_2)) return;
 
@@ -313,7 +309,7 @@ export default defineComponent({
             }
           });
 
-          this.matrix[sourceData1.index][sourceData2.index] = rectangle;
+          this.matrix[sourceIndex][targetIndex] = rectangle;
         });
       });
     },
@@ -366,14 +362,14 @@ export default defineComponent({
       this.drawLines(viewport);
 
       graph.forEachNode((node_1: any) => {
-        const sourceData1 = this.nodeMap.get(node_1);
-        if (!sourceData1) return;
+        const sourceIndex = this.nodeMap.get(node_1);
+        if (!sourceIndex) return;
 
         graph.forEachNode((node_2: any) => {
-          const sourceData2 = this.nodeMap.get(node_2);
-          if (!sourceData2 || !this.graph.hasEdge(node_1, node_2)) return;
+          const targetIndex = this.nodeMap.get(node_2);
+          if (!targetIndex || !this.graph.hasEdge(node_1, node_2)) return;
 
-          const rectangle = this.matrix[sourceData1.index][sourceData2.index];
+          const rectangle = this.matrix[sourceIndex][targetIndex];
           rectangle.clear();
 
           this.colour(node_1, node_2, maxEdges, rectangle as PIXI.Graphics);
@@ -381,8 +377,8 @@ export default defineComponent({
           rectangle.drawRect(0, 0, this.nodeSize, this.nodeSize);
           rectangle.endFill();
 
-          rectangle.x = this.minXPos + (this.nodeSize * sourceData2.index);
-          rectangle.y = this.minYPos + (this.nodeSize * sourceData1.index);
+          rectangle.x = this.minXPos + (this.nodeSize * targetIndex);
+          rectangle.y = this.minYPos + (this.nodeSize * sourceIndex);
 
           // rectangle.buttonMode = true;
           rectangle.on("mouseover", (event) => {
@@ -391,11 +387,11 @@ export default defineComponent({
             if (!this.horizontalHighlight || !this.verticalHighlight) return;
 
             if (settings.edgeHighlightDirection === "outgoing" || settings.edgeHighlightDirection === "both") {
-              this.horizontalHighlight.y = this.minYPos + (this.nodeSize * sourceData1.index);
+              this.horizontalHighlight.y = this.minYPos + (this.nodeSize * sourceIndex);
               this.horizontalHighlight.alpha = 0.5;
             }
             if (settings.edgeHighlightDirection === "incoming" || settings.edgeHighlightDirection === "both") {
-              this.verticalHighlight.x = this.minXPos + (this.nodeSize * sourceData2.index);
+              this.verticalHighlight.x = this.minXPos + (this.nodeSize * targetIndex);
               this.verticalHighlight.alpha = 0.5;
             }
           });
@@ -431,13 +427,13 @@ export default defineComponent({
 
       // Display fromId for the row node
       graph.forEachNode((node: any) => {
-        const sourceData = this.nodeMap.get(node);
-        if (!sourceData) return;
+        const nodeIndex = this.nodeMap.get(node);
+        if (!nodeIndex) return;
 
         const textX = new PIXI.Text(node);
         textX.style = textStyle;
         textX.x = this.minXPos - (this.nodeSize / 2);
-        textX.y = this.minYPos + (this.nodeSize / 2) + (this.nodeSize * sourceData.index);
+        textX.y = this.minYPos + (this.nodeSize / 2) + (this.nodeSize * nodeIndex);
         textX.anchor.set(1, 0.5);
 
         viewport.addChild(textX);
@@ -445,12 +441,12 @@ export default defineComponent({
 
       // Display toId for the column node
       graph.forEachNode((node: any) => {
-        const sourceData = this.nodeMap.get(node);
-        if (!sourceData) return;
+        const nodeIndex = this.nodeMap.get(node);
+        if (!nodeIndex) return;
 
         const textY = new PIXI.Text(node);
         textY.style = textStyle;
-        textY.x = this.minXPos + (this.nodeSize / 2) + (this.nodeSize * sourceData.index);
+        textY.x = this.minXPos + (this.nodeSize / 2) + (this.nodeSize * nodeIndex);
         textY.y = this.minYPos - (this.nodeSize / 2);
         textY.angle = 270;
         textY.anchor.set(0, 0.5);
@@ -536,9 +532,9 @@ export default defineComponent({
       const color = 0xFE00EF;
 
       const highlightNode = (node: string) => {
-        const nodeData = this.nodeMap.get(node);
+        const nodeIndex = this.nodeMap.get(node);
 
-        if (!nodeData) return;
+        if (!nodeIndex) return;
 
         if ((diagram.settings.edgeHighlightDirection === "incoming") || (diagram.settings.edgeHighlightDirection === "both")) {
 
@@ -546,7 +542,7 @@ export default defineComponent({
           verticalHighlightBL.beginFill(color);
           verticalHighlightBL.drawRect(0, this.minYPos, this.nodeSize, this.nodeSize * this.graph.order);
           verticalHighlightBL.endFill();
-          verticalHighlightBL.x = this.minXPos + nodeData.index * this.nodeSize;
+          verticalHighlightBL.x = this.minXPos + nodeIndex * this.nodeSize;
           verticalHighlightBL.alpha = 0.5;
 
           (this.viewport as Viewport).addChild(verticalHighlightBL as PIXI.Graphics);
@@ -559,7 +555,7 @@ export default defineComponent({
           horizontalHighlightBL.beginFill(color);
           horizontalHighlightBL.drawRect(this.minXPos, 0, this.nodeSize * this.graph.order, this.nodeSize);
           horizontalHighlightBL.endFill();
-          horizontalHighlightBL.y = this.minYPos + nodeData.index * this.nodeSize;
+          horizontalHighlightBL.y = this.minYPos + nodeIndex * this.nodeSize;
           horizontalHighlightBL.alpha = 0.5;
 
           (this.viewport as Viewport).addChild(horizontalHighlightBL as PIXI.Graphics);
