@@ -17,7 +17,7 @@
       <upload-panel
         v-if="show_upload"
         @toggle="toggleUpload"
-        @upload="setDatasets"
+        @upload="updateDatasets"
       />
     </section>
     <section class="create-diagram" v-if="show_home">
@@ -40,7 +40,7 @@
           :key="your_diag.id"
           :name="your_diag.name"
           :id_name="your_diag.id"
-          :datasetID="your_diag.graphID.id"
+          :datasetID="your_diag.graphID"
           :path="your_diag.path"
           @tile-click="openDiagram"
           @delete_diag="diagramDeleted"
@@ -109,7 +109,7 @@ export default defineComponent({
   async created() {
     await this.setDiagramList();
     // Retrieve the list of datasets from
-    await this.setDatasets();
+    await this.updateDatasets();
   },
 
   methods: {
@@ -271,8 +271,8 @@ export default defineComponent({
       GlobalStorage.getDatasets().then((datasets) => {
         if (!datasets) return;
         datasets.forEach(datasetID => {
-        });
           this.addToDatasetList(datasetID);
+        });
       });
 
       // Force an update, otherwise Vue doesn't remove the dataset-tile.
