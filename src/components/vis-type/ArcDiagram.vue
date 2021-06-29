@@ -126,11 +126,11 @@ export default defineComponent({
         this.infotool_value_list.push("<p> Incoming Degree: " + this.graph.inDegree(node) + "</p><p> Incoming Neighbours: " + this.graph.inNeighbors(node).length + "</p><br><p> Outgoing Degree: " + this.graph.outDegree(node) + "</p><p> Outgoing Neighbours: " + this.graph.outNeighbors(node).length + "</p><br>");
 
         // Attributes
-        for (let index = 0; index < Object.keys(this.graph.getNodeAttributes(node)).length; index++) {
-          if (Object.keys(this.graph.getNodeAttributes(node))[index] === "community") {
-            this.infotool_value_list.push("<p> Clustering Community: " + Object.values(this.graph.getNodeAttributes(node))[index] + "</p>");
+        for (const [key, attribute] of Object.entries(this.graph.getNodeAttributes(node))) {
+          if (key === "community") {
+            this.infotool_value_list.push("<p> Clustering Community: " + attribute + "</p>");
           } else {
-            this.infotool_value_list.push("<p>" + Object.keys(this.graph.getNodeAttributes(node))[index] + ": " + Object.values(this.graph.getNodeAttributes(node))[index] + "</p>");
+            this.infotool_value_list.push("<p>" + key + ": " + attribute + "</p>");
           }
         }
 
