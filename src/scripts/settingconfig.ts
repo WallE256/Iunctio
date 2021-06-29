@@ -115,7 +115,7 @@ export function getVisibleSettings(diagram: GlobalStorage.Diagram, graph: Graph)
           value: diagram.settings.variety,
         } },
         { id: "dataType", component: "SelectSetting", name: "Data Type", properties: {
-          options: [ "edge-frequency", "sentiment"],
+          options: [ "edge-frequency", "avg-sentiment", "tot-sentiment"],
           value: diagram.settings.dataType,
         } },
         { id: "logarithmic", component: "CheckboxSetting", name: "Logarithmic", properties: {

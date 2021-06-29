@@ -113,6 +113,11 @@ export default defineComponent({
       canvas: null as null | HTMLCanvasElement,
       interval: [] as Date[],
       window: [] as number[],
+      minX: 0,
+      minY: 0,
+      maxX: 0,
+      maxY: 0,
+      dateY: 0,
     };
   },
 
@@ -123,7 +128,7 @@ export default defineComponent({
 
     getInterval() {
       var minDate = new Date('9999-12-31 00:00');
-        var maxDate = new Date('0000-01-01 00:00');
+      var maxDate = new Date('0000-01-01 00:00');
       this.graph.forEachEdge((edge: any) => {
         if (this.graph.hasEdgeAttribute(edge, 'date')) {
           var newDate = this.attrDateToDate(this.graph.getEdgeAttribute(edge, 'date'));
@@ -186,16 +191,19 @@ export default defineComponent({
 
       const borderPerc = 0.1;
 
-      const minX = canvas.width * borderPerc;
-      const minY = canvas.height * borderPerc;
-      const maxX = canvas.width * (1 - borderPerc);
-      const maxY = canvas.height * (1 - borderPerc);
+      this.minX = canvas.width * borderPerc;
+      this.minY = canvas.height * borderPerc;
+      this.maxX = canvas.width * (1 - borderPerc);
+      this.maxY = canvas.height * (1 - borderPerc);
+      this.dateY = this.maxY;
+
+      if (settings.dataType === "avg-sentiment" || settings.dataType === "tot-sentiment") this.maxY /= 2;
 
       var intervalUTC = [this.dateToUTC(this.interval[0]), this.dateToUTC(this.interval[1])];
       var intervalTimeUTC = intervalUTC[1] - intervalUTC[0];
 
       const secondsPerDay = 1000 * 60 * 60 * 24;
-      const dayWidth = secondsPerDay / intervalTimeUTC * (maxX - minX);
+      const dayWidth = secondsPerDay / intervalTimeUTC * (this.maxX - this.minX);
 
       const windowSize = this.window.length * secondsPerDay;
       const startPosition = intervalUTC[0] - windowSize;
@@ -204,30 +212,75 @@ export default defineComponent({
       var mapValue = 0;
       var maxHeight = 0;
 
-      let dateMap = new Map();
+      let edgeMap = new Map();
+      let valMap = new Map();
 
+      // Put graph info on timeline (map)
       this.graph.forEachEdge((edge: any) => {
         var edgeDate = this.dateToUTC(this.attrDateToDate(this.graph.getEdgeAttribute(edge, 'date')));
-        var mapValue = dateMap.get(edgeDate);
+        var mapValue = edgeMap.get(edgeDate);
         if (isNaN(mapValue)) {
-          dateMap.set(edgeDate, 1);
+          edgeMap.set(edgeDate, 1);
+          if (settings.dataType === "tot-sentiment" || settings.dataType === "avg-sentiment") valMap.set(edgeDate, parseFloat(this.graph.getEdgeAttribute(edge, 'sentiment')));
         } else {
-          dateMap.set(edgeDate, mapValue + 1);
+          edgeMap.set(edgeDate, mapValue + 1);
+          if (settings.dataType === "tot-sentiment" || settings.dataType === "avg-sentiment") valMap.set(edgeDate, mapValue + parseFloat(this.graph.getEdgeAttribute(edge, 'sentiment')));
         }
       });
 
-      if (settings.logarithmic) {
-        for (let [key, value] of dateMap) {
-          dateMap.set(key, Math.log(value));
+      var dateMap = null;
+
+      if (settings.dataType === "avg-sentiment") {
+        let signPos = 0;
+        let signNeg = 0;
+        let zeros = 0;
+
+        for (let [key, value] of valMap) {
+          let edgeVal = edgeMap.get(key);
+          let finalVal = value / edgeVal;
+
+          if (isNaN(value)) finalVal = 0;
+
+          if (settings.logarithmic) {
+            if (finalVal > 0) finalVal = Math.log(finalVal) * -1;
+            else if (finalVal < 0) finalVal = Math.log(finalVal * -1);
+          }
+
+          valMap.set(key, finalVal);
+
+          if (valMap.get(key) > 0) signPos += 1;
+          else if (valMap.get(key) < 0) signNeg += 1;
+          else if (valMap.get(key) == 0) zeros += 1;
+          else console.log("??? " + valMap.get(key));
+
         }
-      }
+        dateMap = new Map(valMap);
+
+        console.log("Pos: " + signPos + " Neg: " + signNeg + " Zero: " + zeros);
+
+      } else if (settings.dataType === "tot-sentiment") {
+        if (settings.logarithmic) {
+          for (let [key, value] of valMap) {
+            if (value > 0) valMap.set(key, Math.log(value));
+            else if (value < 0) valMap.set(key, Math.log(value * -1) * -1);
+          }
+        }
+        dateMap = new Map(valMap);
+
+      } else if (settings.logarithmic) {
+        for (let [key, value] of edgeMap) {
+          if (!isNaN(value) && (value != 0)) {
+            edgeMap.set(key, Math.log(value));
+          }
+        }
+        dateMap = new Map(edgeMap);
+
+      } else dateMap = new Map(edgeMap);
 
       if (settings.variety === "distribution") {
 
         var points = [] as any[];
-        points.push(minX, maxY);
-
-        const distribution = new PIXI.Graphics();
+        points.push(this.minX, this.maxY);
 
         for (let i = intervalUTC[0]; i <= intervalUTC[1]; i += secondsPerDay) {
           mapValue = 0;
@@ -238,8 +291,8 @@ export default defineComponent({
             }
           }
 
-          if (mapValue > maxHeight) {
-            maxHeight = mapValue;
+          if (Math.abs(mapValue) > maxHeight) {
+            maxHeight = Math.abs(mapValue);
           }
         }
 
@@ -253,56 +306,94 @@ export default defineComponent({
           }
 
           if (!isNaN(mapValue)) {
-            var newXPos = (i - intervalUTC[0]) / intervalTimeUTC * (maxX - minX) + minX;
-            var newYPos = maxY - ((mapValue / maxHeight) * (maxY - minY));
+            var newXPos = (i - intervalUTC[0]) / intervalTimeUTC * (this.maxX - this.minX) + this.minX;
+            var newYPos = this.maxY - ((mapValue / maxHeight) * (this.maxY - this.minY));
 
             points.push(newXPos, newYPos);
           }
         }
 
-        points.push(maxX, maxY);
+        points.push(this.maxX, this.maxY);
 
-        distribution.beginFill(0x4287f5);
-        distribution.drawPolygon(points);
-        distribution.endFill();
+        if (settings.dataType === "edge-frequency") {
 
-        app.stage.addChild(distribution);
+          const distribution = new PIXI.Graphics();
+
+          distribution.beginFill(0x4287f5);
+          distribution.drawPolygon(points);
+          distribution.endFill();
+
+          app.stage.addChild(distribution);
+
+        } else {
+
+          const distribution_positive = new PIXI.Graphics();
+          const distribution_negative = new PIXI.Graphics();
+
+          var positive_points = [] as any[];
+          var negative_points = [] as any[];
+
+          for (let index = 0; index < points.length; index += 2) {
+            if (points[index + 1] <= this.maxY) {
+              positive_points.push(points[index], points[index + 1]);
+              negative_points.push(points[index], this.maxY);
+            } else {
+              positive_points.push(points[index], this.maxY);
+              negative_points.push(points[index], points[index + 1]);
+            }
+          }
+
+          distribution_positive.beginFill(0x2ea043);
+          distribution_positive.drawPolygon(positive_points);
+          distribution_positive.endFill();
+
+          distribution_negative.beginFill(0xda3633);
+          distribution_negative.drawPolygon(negative_points);
+          distribution_negative.endFill();
+
+          app.stage.addChild(distribution_positive);
+          app.stage.addChild(distribution_negative);
+        }
       } else {
         for (let value of dateMap.values()) {
-          if (value > maxHeight) {
-            maxHeight = value;
+          if (Math.abs(value) > maxHeight) {
+            maxHeight = Math.abs(value);
           }
         }
 
         for (let i = intervalUTC[0]; i <= intervalUTC[1]; i += secondsPerDay) {
           mapValue = dateMap.get(i);
 
-          if (!isNaN(mapValue)) {
-            var newX = (i - intervalUTC[0]) / intervalTimeUTC * (maxX - minX) + minX;
-            var newY = maxY - ((mapValue / maxHeight) * (maxY - minY));
+          if (!isNaN(mapValue) && mapValue != 0) {
+            var newX = (i - intervalUTC[0]) / intervalTimeUTC * (this.maxX - this.minX) + this.minX;
+            var newY = this.maxY - ((mapValue / maxHeight) * (this.maxY - this.minY));
 
-            const distribution = new PIXI.Graphics();
-            distribution.beginFill(0x4287f5);
-            distribution.drawRect(newX, newY, dayWidth, maxY - newY);
-            distribution.endFill();
+            const histogramBar = new PIXI.Graphics();
 
-            app.stage.addChild(distribution);
+            if (settings.dataType === "edge-frequency") histogramBar.beginFill(0x4287f5);
+            else if (mapValue > 0) histogramBar.beginFill(0x2ea043);
+            else if (mapValue < 0) histogramBar.beginFill(0xda3633);
+
+            histogramBar.drawRect(newX, newY, dayWidth, this.maxY - newY);
+            histogramBar.endFill();
+
+            app.stage.addChild(histogramBar);
           }
         }
       }
 
       const stepSize = intervalTimeUTC / 5;
 
-      this.drawDate(app, intervalUTC[0], minX, maxY);
+      this.drawDate(app, intervalUTC[0], this.minX, this.dateY);
       //this.drawLine(app, minX, maxY, minX, minY);
 
       for (let time = intervalUTC[0] + stepSize; time <= intervalUTC[1] - stepSize; time += stepSize) {
-        const drawXPos = (time - intervalUTC[0]) / intervalTimeUTC * (maxX - minX) + minX;
-        this.drawDate(app, time, drawXPos, maxY);
+        const drawXPos = (time - intervalUTC[0]) / intervalTimeUTC * (this.maxX - this.minX) + this.minX;
+        this.drawDate(app, time, drawXPos, this.dateY);
         //this.drawLine(app, drawXPos, maxY, drawXPos, minY);
       }
 
-      this.drawDate(app, intervalUTC[1], maxX, maxY);
+      this.drawDate(app, intervalUTC[1], this.maxX, this.dateY);
       //this.drawLine(app, maxX, maxY, maxX, minY);
     }
 },
