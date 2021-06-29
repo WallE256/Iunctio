@@ -5,7 +5,7 @@
     @click="openDiagram"
     @keypress.enter="openDiagram"
   >
-    <div class="diag-tile__bg" >
+    <div class="diag-tile__bg">
       <span class="diag-del" @click.stop="deleteDiagram"></span>
       <img :src="path" :alt="name" class="diag-tile__icon" @click="openDiagram"/>
     </div>
@@ -53,6 +53,10 @@ export default defineComponent({
   background-color: $WHITE;
   box-shadow: 2px 2px 3px rgba($BLACK_DDD, 0.15);
   border-radius: 5px;
+
+  &__name {
+    overflow-wrap: break-word;
+  }
 
   &:hover,
   &:focus {

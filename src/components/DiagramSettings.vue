@@ -4,7 +4,7 @@
     <span class="settings-close" @click="$emit('close-settings')" title="Close Settings"></span>
     <label CLASS="text-input">
       <span class="text-input__label">{{ "Diagram Name" }}</span>
-      <input class="text-input__input" type="Diagram Name" name="diagramName" @change="onNameChanged($event.target.value)" :value="diagramname" placeholder="Diagram Name Placeholder" maxlength="30"/>
+      <input class="text-input__input" type="Diagram Name" name="diagramName" @change="onNameChanged($event.target.value)" :value="diagramname" placeholder="Diagram Name Placeholder"/>
     </label>
     <component
       v-for="setting in settings"
