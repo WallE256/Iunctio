@@ -74,6 +74,18 @@ import DatasetTile from "@/components/visualise/DatasetTile.vue";
 import { getDefaultSettings } from "@/scripts/settingconfig";
 import * as GlobalStorage from "@/scripts/globalstorage";
 
+type DiagramInfo = {
+  id: string,
+  name: string,
+  path: string,
+  graphID: string,
+};
+
+type DatasetInfo = {
+  id: string,
+  name: string,
+};
+
 export default defineComponent({
   name: "Visualise",
   components: { CreateDiagramTile, YourDiagramsTile, UploadPanel, DatasetTile, DiagramPanel },
@@ -90,8 +102,8 @@ export default defineComponent({
         { d_type: "Distribution Diagram", path: "img/vis/distribution.png" },
         { d_type: "Adjacency Matrix", path: "img/vis/adjacency-matrix.png" },
       ],
-      diagram_list: [] as any[],
-      dataset_list: [] as any[],
+      diagram_list: [] as DiagramInfo[],
+      dataset_list: [] as DatasetInfo[],
     };
   },
   async created() {
@@ -127,11 +139,9 @@ export default defineComponent({
       const defaultSettings = getDefaultSettings(diag_type);
 
       // The most recent dataset upload is considered.
-      const graphID = this.dataset_list[this.dataset_list.length - 1];
-
       // Add the diagram to GlobalStorage.
       await GlobalStorage.addDiagram(
-        new GlobalStorage.Diagram(diagramID, graphID, diag_type, defaultSettings)
+        new GlobalStorage.Diagram(diagramID, this.dataset_list[this.dataset_list.length - 1].id, diag_type, defaultSettings)
       );
 
       // Add the diagram to list of shown diagrams.
