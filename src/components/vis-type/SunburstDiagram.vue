@@ -14,7 +14,7 @@ import * as PIXI from "pixi.js";
 import * as GlobalStorage from "@/scripts/globalstorage";
 import InfoTool from "@/components/visualise/InfoTool.vue";
 
-// stolen from https://pixijs.download/dev/docs/packages_graphics-extras_src_drawTorus.ts.html
+// from https://pixijs.download/dev/docs/packages_graphics-extras_src_drawTorus.ts.html
 function drawTorus(graphics: PIXI.Graphics,
     x: number,
     y: number,
@@ -402,14 +402,12 @@ export default defineComponent({
 
   // Check if node is in the list of predecessors
   isPredecessor(predecessors: any, neighbour: any) {
-    var predecessor = false;
-
     for (let index = 0; index < predecessors.length; index++) {
       if (predecessors[index] == neighbour) {
-        predecessor = true;
+        return true;
       }
     }
-    return predecessor;
+    return false;
   },
 
   // Draw node
@@ -426,8 +424,6 @@ export default defineComponent({
 
     drawnNode.beginFill(nodeColour);
     drawnNode.lineStyle(1, 0xFFFFFF);
-
-    const canvas = this.canvas as HTMLCanvasElement;
 
     if (settings.variety === "sunburst") {
 
