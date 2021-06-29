@@ -30,7 +30,7 @@ import StatisticalDiagram from "@/components/vis-type/StatisticalDiagram.vue";
 import { Viewport } from 'pixi-viewport';
 
 type Settings = {
-  variety: string, // "edge-frequency" or "sentiment"
+  variety: string, // "edge-frequency" or "sentiment" or "email-type"
   edgeHighlightDirection: string, // "incoming" or "outgoing" or "both"
   drawInnerLines: boolean, // true or false
   showTimeline: boolean,
@@ -289,7 +289,7 @@ export default defineComponent({
             if (this.avgSentiment(node_1, node_2) != 0) {
               avgSentiment = this.avgSentiment(node_1, node_2).toFixed(6);
             }
-            this.infotool_value_list.push("<p> Edge Frequency: " + this.graph.outEdges(node_1, node_2).length + "</p><p> Average Sentiment: " + avgSentiment + "</p><br>");
+            this.infotool_value_list.push("<p> Edge Frequency: " + this.graph.outEdges(node_1, node_2).length + "</p><p> Average Sentiment: " + avgSentiment + "</p><p> Most Frequent Email Type: " + this.messageType(node_1, node_2) + "</p><br>");
 
             // Node 1 Attributes
             this.infotool_value_list.push("<h3> From: </h3>");
@@ -563,6 +563,28 @@ export default defineComponent({
       return length == 0 ? 0 : sentimentSum / length;
     },
 
+    messageType(node_1: any, node_2 : any) {
+      const graph = this.graph;
+      let to = 0;
+      let cc = 0;
+
+      for (let edge of graph.outEdges(node_1, node_2)) {
+        if (graph.getEdgeAttributes(edge)["messageType"] == "TO") {
+          to++;
+        } else if (graph.getEdgeAttributes(edge)["messageType"] == "CC") {
+          cc++;
+        }
+      }
+
+      if (to > cc) {
+        return "TO";
+      } else if (to < cc) {
+        return "CC";
+      } else if (to == cc) {
+        return "-";
+      }
+    },
+
     colour(node_1: any, node_2 : any, maxEdges: number, rectangle: PIXI.Graphics) {
       const graph = this.graph;
       const diagram = this.diagram;
@@ -585,8 +607,17 @@ export default defineComponent({
             rectangle.beginFill(0xFEF4BE, 1);
           }
 
-          // Not really needed
-          // rectangle.alpha = Math.abs(avgSentiment * 100 + 0.2);
+          rectangle.alpha = 1;
+        } else if (diagram.settings.variety === "email-type") {
+
+          let messageType = this.messageType(node_1, node_2);
+          if (messageType == "TO") {
+            rectangle.beginFill(0x8e58ad, 1);
+          } else if (messageType == "CC") {
+            rectangle.beginFill(0x006EE6, 1);
+          } else if (messageType == "-") {
+            rectangle.beginFill(0xFF80CE, 1);
+          }
 
           rectangle.alpha = 1;
         }

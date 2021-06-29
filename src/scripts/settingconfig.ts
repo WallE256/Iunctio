@@ -136,12 +136,12 @@ export function getVisibleSettings(diagram: GlobalStorage.Diagram, graph: Graph)
       ];
     }
 
-    case "AdjacencyMatrix":
-        return [
-          { id: "variety", component: "SelectSetting", name: "Adjacency Matrix Variety", properties: {
-            options: [ "edge-frequency", "sentiment" ],
-            value: diagram.settings.variety,
-          } },
+    case "AdjacencyMatrix": {
+      return [
+        { id: "variety", component: "SelectSetting", name: "Adjacency Matrix Variety", properties: {
+          options: [ "edge-frequency", "sentiment", "email-type" ],
+          value: diagram.settings.variety,
+        } },
           { id: "edgeHighlightDirection", component: "SelectSetting", name: "Highlight Edge Direction", properties: {
             options: [ "incoming", "outgoing", "both" ],
             value: diagram.settings.edgeHighlightDirection,
@@ -153,7 +153,7 @@ export function getVisibleSettings(diagram: GlobalStorage.Diagram, graph: Graph)
             value: diagram.settings.showTimeline,
           } },
         ];
-        break;
+    }
 
     default: {
       console.warn("Non-existent diagram type:", diagram.type);
