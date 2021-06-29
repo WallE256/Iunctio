@@ -250,10 +250,10 @@ export default defineComponent({
       });
 
       if(!this.jobMap.has(attributes.jobtitle)) {
-        const color = d3.schemeSet3[colorIndex++];
+        const color = this.schemeSet[colorIndex++];
         this.jobMap.set(attributes.jobtitle, {
           id: colorIndex,
-          assignedColor: parseInt(this.cssToHex(color), 16)
+          assignedColor: color,
         })
       }
       i++;
@@ -352,6 +352,7 @@ export default defineComponent({
       maxDate: new Date("9999-12-31"),
       diagram: null as GlobalStorage.Diagram | null,
       canvas: null as null | HTMLCanvasElement,
+      schemeSet: [0x8dd3c7, 0xffffb3, 0xbebada, 0xfb8072, 0x80b1d3, 0xfdb462, 0xb3de69, 0xfccde5, 0xd9d9d9, 0xbc80bd,0xccebc5, 0xffed6f],
       
       showTimeline: false,
       timelineDiagram: null as GlobalStorage.Diagram | null,
