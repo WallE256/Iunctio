@@ -38,6 +38,7 @@ export function getDefaultSettings(componentName: string): any {
     case "StatisticalDiagram": {
       return {
         variety: "distribution",
+        dataType: "edge-frequency",
         logarithmic: false,
       };
     }
@@ -79,7 +80,7 @@ export function getVisibleSettings(diagram: GlobalStorage.Diagram, graph: Graph)
 
     case "SunburstDiagram": {
       return [
-        { id: "variety", component: "SelectSetting", name: "Hierarchical Diagram Variety", properties: {
+        { id: "variety", component: "SelectSetting", name: "Diagram Variety", properties: {
           options: [ "sunburst", "flame", "icicle" ],
           value: diagram.settings.variety,
         } },
@@ -110,8 +111,12 @@ export function getVisibleSettings(diagram: GlobalStorage.Diagram, graph: Graph)
     case "StatisticalDiagram": {
       return [
         { id: "variety", component: "SelectSetting", name: "Diagram Variety", properties: {
-          options: [ "distribution", "histogram", "average"],
+          options: [ "distribution", "histogram"],
           value: diagram.settings.variety,
+        } },
+        { id: "dataType", component: "SelectSetting", name: "Data Type", properties: {
+          options: [ "edge-frequency", "sentiment"],
+          value: diagram.settings.dataType,
         } },
         { id: "logarithmic", component: "CheckboxSetting", name: "Logarithmic", properties: {
           value: diagram.settings.logarithmic,

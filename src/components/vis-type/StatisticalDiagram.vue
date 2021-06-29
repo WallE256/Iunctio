@@ -16,6 +16,7 @@ import * as GlobalStorage from "@/scripts/globalstorage";
 
 type Settings = {
   variety: string,
+  dataType: string,
   logarithmic: boolean,
 };
 
@@ -163,7 +164,7 @@ export default defineComponent({
       app.stage.addChild(dateText);
     },
 
-    drawLine(app: PIXI.Application, startX: number, startY: number, endX: number, endY: number) {
+    /*drawLine(app: PIXI.Application, startX: number, startY: number, endX: number, endY: number) {
 
       const line = new PIXI.Graphics();
 
@@ -172,7 +173,7 @@ export default defineComponent({
       line.moveTo(startX, startY).lineTo(endX, endY);
 
       app.stage.addChild(line);
-    },
+    },*/
 
     // Draw the diagram
     draw(
@@ -293,16 +294,16 @@ export default defineComponent({
       const stepSize = intervalTimeUTC / 5;
 
       this.drawDate(app, intervalUTC[0], minX, maxY);
-      this.drawLine(app, minX, maxY, minX, minY);
+      //this.drawLine(app, minX, maxY, minX, minY);
 
       for (let time = intervalUTC[0] + stepSize; time <= intervalUTC[1] - stepSize; time += stepSize) {
         const drawXPos = (time - intervalUTC[0]) / intervalTimeUTC * (maxX - minX) + minX;
         this.drawDate(app, time, drawXPos, maxY);
-        this.drawLine(app, drawXPos, maxY, drawXPos, minY);
+        //this.drawLine(app, drawXPos, maxY, drawXPos, minY);
       }
 
       this.drawDate(app, intervalUTC[1], maxX, maxY);
-      this.drawLine(app, maxX, maxY, maxX, minY);
+      //this.drawLine(app, maxX, maxY, maxX, minY);
     }
 },
 });

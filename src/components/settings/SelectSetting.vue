@@ -35,7 +35,7 @@
         border: 0;
         padding: 0.5rem 4rem 0.5rem 2rem;
         box-shadow: 1px 1px 2px rgba($BLACK_DDD, 0.2);
-        width: 190px;
+        width: 200px;
       }
 
       &::after{
