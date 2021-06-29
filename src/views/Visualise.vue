@@ -129,6 +129,10 @@ export default defineComponent({
 
       // Add the diagram to list of shown diagrams.
       this.shownDiagrams.push(diagramID);
+
+      if (this.shownDiagrams.length > 1) {
+        this.createResizeEvent();
+      }
     },
 
     async setDiagramList() {
@@ -170,6 +174,14 @@ export default defineComponent({
       this.shownDiagrams = [];
     },
 
+    createResizeEvent() {
+      const diagram_panels = document.getElementsByClassName("diagram-panel");
+      const resize_event = new Event("resize");
+      Array.from(diagram_panels).forEach(element => {
+        element.dispatchEvent(resize_event);
+      });
+    },
+
     async openDiagram(diagramID: string) {
       // Add diagram to list of shown diagrams. Finally, toggle the homepage and display the diagram panels.
       let isShown = false;
@@ -185,11 +197,7 @@ export default defineComponent({
       }
 
       if (this.shownDiagrams.length > 1) {
-        const diagram_panels = document.getElementsByClassName("diagram-panel");
-        const resize_event = new Event("resize");
-        Array.from(diagram_panels).forEach(element => {
-          element.dispatchEvent(resize_event);
-        });
+        this.createResizeEvent();
       }
 
       this.toggleHome(false);
@@ -232,11 +240,7 @@ export default defineComponent({
         this.toggleHome(true);
         this.toggleDiagramPanels(false);
       } else {
-        const diagram_panels = document.getElementsByClassName("diagram-panel");
-        const resize_event = new Event("resize");
-        Array.from(diagram_panels).forEach(element => {
-          element.dispatchEvent(resize_event);
-        });
+        this.createResizeEvent();
       }
     },
 
