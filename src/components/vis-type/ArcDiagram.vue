@@ -252,6 +252,7 @@ export default defineComponent({
       if(!this.jobMap.has(attributes.jobtitle)) {
         const color = this.schemeSet[colorIndex++];
         this.jobMap.set(attributes.jobtitle, {
+          title: attributes.jobtitle,
           id: colorIndex,
           assignedColor: color,
         })
@@ -260,7 +261,7 @@ export default defineComponent({
     }
 
     // this has to happen next tick, otherwise the elements do not have their
-    // size yet (because they've not been renderd yet)
+    // size yet (because they've not been rendered yet)
     this.$nextTick(() => {
       const app = this.app as PIXI.Application;
       app.resize();
@@ -326,6 +327,7 @@ export default defineComponent({
   data() {
     return {
       jobMap: new Map<string, {
+        title: string,
         id: number,
         assignedColor: number
       }>(),
