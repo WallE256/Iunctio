@@ -1,6 +1,6 @@
 <template>
   <div class="legend">
-    <div class="toggleLegend" title="Toggle Legend" @click="showLegend=!showLegend">
+    <div class="toggleLegend" title="Toggle Legend" @click="showLegend=!showLegend" v-show="!showLegend">
       <svg class="toggleLegend__icon" viewBox="0 0 128 90"><path d="M92,8.2h31v31H92Z" fill="#12E2A3"/><rect x="4.99" y="18.09" width="58.29" height="11.21" rx="1.5" fill="#f8f8f8"/><rect x="4.99" y="60.7" width="72.86" height="11.21" rx="1.5" fill="#f8f8f8"/><path d="M92,50.81h31v31H92Z" fill="#f49d6a"/></svg>
     </div>
     <transition name="slide-fade">
@@ -55,10 +55,19 @@ export default defineComponent({
 .panel {
   @include abs(10px 0 0 10px);
   min-width: 175px;
-  background: darken($WHITE_D, 5%);
   box-shadow: 0 0 5px rgba($BLUE_D, 0.2);
   border-radius: 5px;
   padding: 30px 10px 10px 10px;
+
+  background: darken($WHITE_D, 5%);
+  background: $CREAM;
+  background: linear-gradient(
+      to bottom right,
+      rgba(darken($WHITE_D, 5%), 0.5),
+      rgba(darken($WHITE_D, 20%), 0.15)
+  );
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(white, 0.75);
 
   &__entry {
     display: flex;
