@@ -101,8 +101,8 @@ export default defineComponent({
         .wheel()
         .clampZoom({maxScale:1});
 
-    this.viewport.moveCenter(window.innerWidth / 2, window.innerHeight / 2)
-    this.viewport.setZoom(0.5)
+    this.viewport.moveCenter(window.innerWidth / 2, window.innerHeight / 2);
+    this.viewport.setZoom(0.5);
 
     this.createMatrix();
 
