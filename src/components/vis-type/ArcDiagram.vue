@@ -88,8 +88,8 @@ export default defineComponent({
         //.decelerate() //this might lower perfomance a lot
         .clampZoom({maxScale:1});
 
-    this.viewport.moveCenter(window.innerWidth / 2, window.innerHeight / 2)
-    this.viewport.setZoom(0.4)
+    this.viewport.moveCenter(window.innerWidth / 2, window.innerHeight / 2);
+    this.viewport.setZoom(0.4);
 
     this.infotool = this.$refs["info-tool"] as HTMLElement;
 
@@ -445,8 +445,10 @@ export default defineComponent({
           };
         });
       } else if (settings.variety === "line") {
-        const nodeLineY = (canvas.height * 5) / 6;
-        const nodeLineX = (canvas.width * 1) / 10;
+        const centerX = viewport.center.x;
+        const centerY = viewport.center.y;
+        const nodeLineY = centerY + viewport.worldScreenHeight / 2.5;
+        const nodeLineX = centerX - viewport.worldScreenWidth / 2.25;
         //let gap = Math.floor(canvas.width/(1.2 * graph.order));
         let gap = 35;
 
