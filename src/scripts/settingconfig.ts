@@ -125,7 +125,7 @@ export function getVisibleSettings(diagram: GlobalStorage.Diagram, graph: Graph)
             options: [ "edge-frequency", "sentiment" ],
             value: diagram.settings.variety,
           } },
-          { id: "edgeHighlightDirection", component: "SelectSetting", name: "Edge Direction", properties: {
+          { id: "edgeHighlightDirection", component: "SelectSetting", name: "Highlight Edge Direction", properties: {
             options: [ "incoming", "outgoing", "both" ],
             value: diagram.settings.edgeHighlightDirection,
           } },
