@@ -89,7 +89,7 @@ export default defineComponent({
         .clampZoom({maxScale:1});
 
     this.viewport.moveCenter(window.innerWidth / 2, window.innerHeight / 2)
-    this.viewport.setZoom(0.5)
+    this.viewport.setZoom(0.4)
 
     this.infotool = this.$refs["info-tool"] as HTMLElement;
 
@@ -341,6 +341,10 @@ export default defineComponent({
     },
 
     handleResize(e: any, graph: Graph, app: PIXI.Application, settings: Settings, viewport: Viewport) {
+      if (this.canvas) {
+        viewport.screenWidth = this.canvas.width;
+        viewport.screenHeight = this.canvas.height;
+      }
       this.draw(graph, app, settings, viewport);
       this.unhighlight();
       this.highlight();
@@ -376,8 +380,8 @@ export default defineComponent({
         const textDistance = 40;
         const vertexRadius = Math.min(canvas.width, canvas.height)*1.2 - textDistance;
         const angle = 2 * Math.PI / (graph.order == 0 ? 1 : graph.order);
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
+        const centerX = viewport.center.x;
+        const centerY = viewport.center.y;
 
         graph.forEachNode((source: any, sourceAttr) => {
           const sourceData = this.nodeMap.get(source);
