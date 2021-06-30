@@ -242,10 +242,18 @@ export default defineComponent({
         }
 
         this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
+        this.unhighlight();
+        this.highlight();
       });
       this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
       //culling
       this.culling(this.app as PIXI.Application, this.viewport as Viewport, this.graph);
+
+      this.selectedNodes = GlobalStorage.selectedNodes
+        .filter((node) => node.datasetID === diagram.graphID)
+        .map((node) => node.nodeID);
+
+      this.highlight();
     });
 
   },
@@ -355,6 +363,8 @@ export default defineComponent({
 
     handleResize(e: any, graph: Graph, app: PIXI.Application, settings: Settings, viewport: Viewport) {
       this.draw(graph, app, settings, viewport);
+      this.unhighlight();
+      this.highlight();
     },
 
     draw(
