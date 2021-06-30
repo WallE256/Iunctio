@@ -12,6 +12,7 @@
       class="settings-icon"
       @click="toggleSettings"
       title="Diagram Settings"
+      v-show="!showSettings"
     >
       <svg
         class="icon-gear"
@@ -197,7 +198,16 @@ export default defineComponent({
   }
 
   &__settings {
-    background-color: darken($WHITE_D, 5%);
+    background: darken($WHITE_D, 5%);
+    background: $CREAM;
+    background: linear-gradient(
+        to bottom right,
+        rgba(darken($WHITE_D, 5%), 0.5),
+        rgba(darken($WHITE_D, 20%), 0.15)
+    );
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(white, 0.75);
+
     border-radius: 5px;
     box-shadow: 0 0 5px rgba($BLUE_D, 0.2);
     padding: 10px 10px 0px 10px;
