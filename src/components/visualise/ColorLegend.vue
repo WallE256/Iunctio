@@ -8,7 +8,7 @@
         <span class="hide-panel" @click="showLegend=false"></span>
         <div class="panel__entry" v-for="entry in Object.fromEntries(colorScheme)" :key="entry.id">
           <p class="entry__title"> {{entry.title}} </p>
-          <span class="entry__color" :style="{background: '#'+entry.assignedColor}"></span>
+          <span class="entry__color" :style="{background: '#'+ entry.assignedColor.toString(16)}"></span>
         </div>
       </div>
     </transition>
