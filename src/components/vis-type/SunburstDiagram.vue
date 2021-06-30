@@ -103,35 +103,31 @@ export default defineComponent({
 
         if (changedKey === "selectedNode") {
           // un-highlight old nodes
-          const clearTint = 0xffffff;
-          for (const node of this.selectedNodes) {
-            const graphicsList = this.graphicsMap.get(node) || [];
-            for (const graphics of graphicsList) {
-              graphics.tint = clearTint;
-            }
-          }
+          this.unhighlight();
 
           this.selectedNodes = GlobalStorage.selectedNodes
-            .filter((node) => node.datasetID === diagram.graphID)
+            .filter((node) => node.datasetID === this.diagram.graphID)
             .map((node) => node.nodeID);
 
           // highlight new nodes
-          const highlightTint = 0x00D737;
-          for (const node of this.selectedNodes) {
-            const graphicsList = this.graphicsMap.get(node) || [];
-            for (const graphics of graphicsList) {
-              graphics.tint = highlightTint;
-            }
-          }
+          this.highlight();
 
           return;
         }
 
         this.draw(app, this.diagram.settings);
+        this.unhighlight();
+        this.highlight();
       });
     });
 
     this.draw(app, this.diagram.settings);
+
+    this.selectedNodes = GlobalStorage.selectedNodes
+      .filter((node) => node.datasetID === this.diagram.graphID)
+      .map((node) => node.nodeID);
+
+    this.highlight();
   },
 
   created(){
@@ -176,6 +172,27 @@ export default defineComponent({
   methods: {
     handleResize(e: any, graph: Graph, app: PIXI.Application, settings: Settings) {
       this.draw(app, settings);
+      this.highlight();
+    },
+
+    unhighlight() {
+      const clearTint = 0xffffff;
+      for (const node of this.selectedNodes) {
+        const graphicsList = this.graphicsMap.get(node) || [];
+        for (const graphics of graphicsList) {
+          graphics.tint = clearTint;
+        }
+      }
+    },
+
+    highlight() {
+      const highlightTint = 0x00D737;
+      for (const node of this.selectedNodes) {
+        const graphicsList = this.graphicsMap.get(node) || [];
+        for (const graphics of graphicsList) {
+          graphics.tint = highlightTint;
+        }
+      }
     },
 
     // Create map of connections between nodes

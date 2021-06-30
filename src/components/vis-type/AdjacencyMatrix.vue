@@ -91,8 +91,8 @@ export default defineComponent({
       app.resize();
 
       diagram.addOnChange((diagram: GlobalStorage.Diagram, changedKey: string) => {
-        if (changedKey === "selectedNode") {
 
+        if (changedKey === "selectedNode") {
           // no need to redraw the entire diagram, just highlight some
           this.unhighlight();
 
@@ -105,8 +105,12 @@ export default defineComponent({
         }
 
         this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
+        this.unhighlight();
+        this.highlight();
       });
+
       this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
+      this.highlight();
     });
   },
 
@@ -164,6 +168,8 @@ export default defineComponent({
   methods: {
     handleResize(e: any, graph: Graph, app: PIXI.Application, settings: Settings, viewport: Viewport) {
       this.draw(graph, app, settings, viewport);
+      this.unhighlight();
+      this.highlight();
     },
 
     createMatrix() {
