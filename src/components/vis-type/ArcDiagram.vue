@@ -389,7 +389,6 @@ export default defineComponent({
             const circleColor = this.jobMap.get(sourceAttr.jobtitle)?.assignedColor;
 
             const circle = sourceData.circle;
-            circle.clear();
             circle.lineStyle(1);
             circle.beginFill(circleColor, 1);
             circle.drawCircle(0, 0, nodeRadius);
@@ -451,7 +450,6 @@ export default defineComponent({
 
             const circleColor = this.jobMap.get(sourceAttr.jobtitle)?.assignedColor;
             const circle = sourceData.circle;
-            circle.clear();
             circle.lineStyle(1);
             circle.beginFill(circleColor, 1);
             circle.drawCircle(0, 0, nodeRadius);
