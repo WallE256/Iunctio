@@ -365,22 +365,6 @@ export default defineComponent({
 
       this.drawLines(viewport);
 
-      // Horizontal Highlight
-      this.horizontalHighlight = new PIXI.Graphics();
-      this.horizontalHighlight.beginFill(0xFE00EF);
-      this.horizontalHighlight.drawRect(this.minXPos, 0, this.nodeSize * this.graph.order, this.nodeSize);
-      this.horizontalHighlight.endFill();
-      this.horizontalHighlight.alpha = 0;
-      viewport.addChild(this.horizontalHighlight as PIXI.Graphics);
-
-      // Vertical Highlight
-      this.verticalHighlight = new PIXI.Graphics();
-      this.verticalHighlight.beginFill(0xFE00EF);
-      this.verticalHighlight.drawRect(0, this.minYPos, this.nodeSize, this.nodeSize * this.graph.order);
-      this.verticalHighlight.endFill();
-      this.verticalHighlight.alpha = 0;
-      viewport.addChild(this.verticalHighlight as PIXI.Graphics);
-
       graph.forEachNode((node_1: any) => {
         const sourceData1 = this.nodeMap.get(node_1);
         if (!sourceData1) return;
@@ -428,6 +412,22 @@ export default defineComponent({
           viewport.addChild(rectangle as PIXI.Graphics);
         });
       });
+
+      // Horizontal Highlight
+      this.horizontalHighlight = new PIXI.Graphics();
+      this.horizontalHighlight.beginFill(0xFE00EF);
+      this.horizontalHighlight.drawRect(this.minXPos, 0, this.nodeSize * this.graph.order, this.nodeSize);
+      this.horizontalHighlight.endFill();
+      this.horizontalHighlight.alpha = 0;
+      viewport.addChild(this.horizontalHighlight as PIXI.Graphics);
+
+      // Vertical Highlight
+      this.verticalHighlight = new PIXI.Graphics();
+      this.verticalHighlight.beginFill(0xFE00EF);
+      this.verticalHighlight.drawRect(0, this.minYPos, this.nodeSize, this.nodeSize * this.graph.order);
+      this.verticalHighlight.endFill();
+      this.verticalHighlight.alpha = 0;
+      viewport.addChild(this.verticalHighlight as PIXI.Graphics);
 
       // Display fromId for the row node
       graph.forEachNode((node: any) => {
