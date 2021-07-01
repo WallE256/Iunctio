@@ -30,7 +30,7 @@ import StatisticalDiagram from "@/components/vis-type/StatisticalDiagram.vue";
 import { Viewport } from 'pixi-viewport';
 
 type Settings = {
-  variety: string, // "edge-frequency" or "sentiment" or "email-type"
+  data: string, // "edge-frequency" or "sentiment" or "email-type"
   edgeHighlightDirection: string, // "incoming" or "outgoing" or "both"
   drawInnerLines: boolean, // true or false
   showTimeline: boolean,
@@ -592,10 +592,10 @@ export default defineComponent({
 
       if (graph.hasEdge(node_1, node_2)) {
 
-        if (diagram.settings.variety === "edge-frequency") {
+        if (diagram.settings.data === "edge-frequency") {
           rectangle.beginFill(0xAF1A1A, 1);
           rectangle.alpha = (Math.log(this.countEdges(node_1, node_2)) / maxEdges) * 0.8 + 0.2;
-        } else if (diagram.settings.variety === "sentiment") {
+        } else if (diagram.settings.data === "sentiment") {
 
           let avgSentiment = this.avgSentiment(node_1, node_2);
 
@@ -608,7 +608,7 @@ export default defineComponent({
           }
 
           rectangle.alpha = 1;
-        } else if (diagram.settings.variety === "email-type") {
+        } else if (diagram.settings.data === "email-type") {
 
           let messageType = this.messageType(node_1, node_2);
           if (messageType == "TO") {
