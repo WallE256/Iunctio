@@ -370,13 +370,13 @@ export default defineComponent({
           }
         });
 
+        let indexNumber = 0;
+        this.attributesColourMap = new Map();
+
         // Create colour pattern
         if (settings.colourType === "rainbow") {
           this.colours = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, nodesWithDegree + 1));
         } else {
-
-          let indexNumber = 0;
-          this.attributesColourMap = new Map();
 
           graph.forEachNode((node, attributes) => {
             if (attributes[settings.colourType] || attributes[settings.colourType] == 0) {
@@ -673,7 +673,6 @@ export default defineComponent({
       for (const [key, value] of this.attributesColourMap.entries()) {
         const c = d3.color(this.colours(value));
         const colour = c?.formatHex() || '#181818';
-        if(colour) console.log(key, value, colour);
         this.colorMap.set(key, {
           title: key,
           id: value,

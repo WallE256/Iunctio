@@ -1,14 +1,17 @@
 <template>
   <div class="legend">
-    <div class="toggleLegend" title="Toggle Legend" @click="showLegend=!showLegend" v-show="!showLegend">
+    <div class="toggleLegend" title="Toggle Legend" @click="showLegend=!showLegend">
       <svg class="toggleLegend__icon" viewBox="0 0 128 90"><path d="M92,8.2h31v31H92Z" fill="#12E2A3"/><rect x="4.99" y="18.09" width="58.29" height="11.21" rx="1.5" fill="#f8f8f8"/><rect x="4.99" y="60.7" width="72.86" height="11.21" rx="1.5" fill="#f8f8f8"/><path d="M92,50.81h31v31H92Z" fill="#f49d6a"/></svg>
     </div>
     <transition name="slide-fade">
       <div class="panel" v-if="showLegend">
+        <h1 class="panel__title"> Legend </h1>
         <span class="hide-panel" @click="showLegend=false"></span>
-        <div class="panel__entry" v-for="entry in Object.fromEntries(colorScheme)" :key="entry.id">
-          <p class="entry__title"> {{entry.title}} </p>
-          <span class="entry__color" :style="{background: entry.assignedColor}"></span>
+        <div class="panel__entries">
+          <div class="panel__entry" v-for="entry in Object.fromEntries(colorScheme)" :key="entry.id">
+            <p class="entry__title"> {{entry.title}} </p>
+            <span class="entry__color" :style="{background: entry.assignedColor}"></span>
+          </div>
         </div>
       </div>
     </transition>
@@ -38,7 +41,7 @@ export default defineComponent({
 
 
 .toggleLegend {
-  @include abs(10px 0 0 10px);
+  @include abs(0 0 10px 10px);
   $BTN_SIZE: 40px;
   @include setSize($BTN_SIZE);
   background: $BLUE_D;
@@ -53,15 +56,21 @@ export default defineComponent({
 }
 
 .panel {
-  @include abs(10px 0 0 10px);
-  min-width: 175px;
-  max-height: 250px;
-  overflow-y: auto ;
+  @include abs(0 0 10px 10px);
   box-shadow: 0 0 5px rgba($BLUE_D, 0.2);
   border-radius: 5px;
-  padding: 30px 10px 10px 10px;
-
   background: darken($WHITE_D, 5%);
+
+  &__title {
+    margin: 10px;
+    }
+
+  &__entries {
+    min-width: 175px;
+    max-height: 250px;
+    overflow-y: auto;
+    padding: 0px 10px 10px 10px;
+    }
 
   &__entry {
     display: flex;
@@ -83,9 +92,9 @@ export default defineComponent({
   .hide-panel {
     // Make the button circular.
     border-radius: 100%;
-    @include setSize(20px);
+    @include setSize(25px);
     cursor: pointer;
-    @include abs(5px 0 0 5px);
+    @include abs(10px 10px 0 0);
 
     &::after,
     &::before {
@@ -125,7 +134,7 @@ export default defineComponent({
 
   &-enter-from,
   &-leave-to {
-    transform: translateY(-50%);
+    transform: translateY(50%);
     opacity: 0;
   }
 }
