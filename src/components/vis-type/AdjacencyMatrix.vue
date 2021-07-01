@@ -1,6 +1,6 @@
 <template>
-  <color-legend :color-scheme="colorMap"></color-legend>
   <div ref="diagram" style="height: 100%; width: 100%;">
+    <color-legend :color-scheme="colorMap"></color-legend>
     <div id="canvas-parent" ref="canvas-parent" style="height: 100%; width: 100%;">
       <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
     </div>
@@ -98,8 +98,8 @@ export default defineComponent({
     });
 
     this.viewport = new Viewport({
-      screenWidth: window.innerWidth,
-      screenHeight: window.innerHeight,
+      screenWidth: canvas.width,
+      screenHeight: canvas.height,
       interaction: this.app.renderer.plugins.interaction // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
     })
 
@@ -239,6 +239,10 @@ export default defineComponent({
 
   methods: {
     handleResize(e: any, graph: Graph, app: PIXI.Application, settings: Settings, viewport: Viewport) {
+      if (this.canvas) {
+        viewport.screenWidth = this.canvas.width;
+        viewport.screenHeight = this.canvas.height;
+      }
       this.draw(graph, app, settings, viewport);
       this.unhighlight();
       this.highlight();
@@ -402,8 +406,8 @@ export default defineComponent({
       });
       viewport.removeChildren();
 
-      this.minXPos = canvas.width * 1/10;
-      this.minYPos = canvas.height * 1/5;
+      this.minXPos = viewport.center.x - viewport.worldScreenWidth / 2.25;
+      this.minYPos = viewport.center.y - viewport.worldScreenHeight / 2.5;
       let maxEdges = this.maxEdges();
 
       this.drawLines(viewport);
@@ -548,8 +552,8 @@ export default defineComponent({
       const timeRange = (this.diagram.settings as Settings).timeRange;
 
       let length = 0;
-      
-      if (node1 === node2) { 
+
+      if (node1 === node2) {
         this.graph.forEachEdge(node1, node2, (edge, edgeAttributes) => {
           const date = edgeAttributes.date;
           if (!date || dateIsBetween(date, timeRange)) {

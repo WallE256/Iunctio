@@ -368,7 +368,7 @@ export default defineComponent({
       diagram: null as GlobalStorage.Diagram | null,
       canvas: null as null | HTMLCanvasElement,
       schemeSet: [0x8dd3c7, 0xffffb3, 0xbebada, 0xfb8072, 0x80b1d3, 0xfdb462, 0xb3de69, 0xfccde5, 0xd9d9d9, 0xbc80bd,0xccebc5, 0xffed6f],
-      
+
       showTimeline: false,
       timelineDiagram: null as GlobalStorage.Diagram | null,
     };
@@ -421,17 +421,6 @@ export default defineComponent({
       })
     },
 
-    saveSnapshot(app: PIXI.Application, viewport: Viewport) {
-
-      const graphics = new PIXI.Graphics()
-          .beginFill(0xFF0000)
-          .drawCircle(0, 0, 50);
-
-      let image = app.renderer.plugins.extract.image(graphics);
-      viewport.addChild(image, 'image/jpeg', 1)
-
-    },
-
     handleResize(e: any, graph: Graph, app: PIXI.Application, settings: Settings, viewport: Viewport) {
       if (this.canvas) {
         viewport.screenWidth = this.canvas.width;
@@ -456,6 +445,7 @@ export default defineComponent({
 
       GlobalStorage.changeSetting(this.diagram as GlobalStorage.Diagram, "timeRange", [start, end]);
     },
+
     toggleTimeline(on: boolean) {
       const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
       if (!this.diagram) return;
