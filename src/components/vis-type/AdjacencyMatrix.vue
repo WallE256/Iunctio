@@ -338,13 +338,8 @@ export default defineComponent({
             if (!this.diagram) return;
 
             const append = (event.data.originalEvent as MouseEvent).ctrlKey;
-            if (this.diagram.settings.edgeHighlightDirection === "both") {
-              if (node_1 === node_2) {
-                this.$emit("selected-node-change", this.diagram.graphID, node_1, append);
-              }
-              // TODO: Figure out how to pass 2 nodes + direction
-              //this.$emit("selected-node-change", this.diagram.graphID, node_1, append);
-              //this.$emit("selected-node-change", this.diagram.graphID, node_2, true);
+            if (this.diagram.settings.edgeHighlightDirection === "both" && node_1 === node_2) {
+              this.$emit("selected-node-change", this.diagram.graphID, node_1, append);
             } else if (this.diagram.settings.edgeHighlightDirection === "outgoing") {
               this.$emit("selected-node-change", this.diagram.graphID, node_1, append);
             } else if (this.diagram.settings.edgeHighlightDirection === "incoming") {
@@ -437,6 +432,15 @@ export default defineComponent({
               this.verticalHighlight.x = this.minXPos + (this.nodeSize * targetIndex);
               this.verticalHighlight.alpha = 0.5;
             }
+            if (settings.edgeHighlightDirection === "both") {
+              if (sourceIndex === targetIndex) {
+                this.horizontalHighlight.tint = 0xFE00EF;
+                this.verticalHighlight.tint = 0xFE00EF;
+              } else {
+                this.horizontalHighlight.tint = 0xD9D9D9;
+                this.verticalHighlight.tint = 0xD9D9D9;
+              }
+            }
           });
 
           rectangle.on("mouseout", (event) => {
@@ -454,7 +458,7 @@ export default defineComponent({
 
       // Horizontal Highlight
       this.horizontalHighlight = new PIXI.Graphics();
-      this.horizontalHighlight.beginFill(0xFE00EF);
+      this.horizontalHighlight.beginFill(0xFFFFFF);
       this.horizontalHighlight.drawRect(this.minXPos + this.nodeSize, 0, this.nodeSize * (this.graph.order - 1), this.nodeSize);
       this.horizontalHighlight.endFill();
       this.horizontalHighlight.alpha = 0;
@@ -462,7 +466,7 @@ export default defineComponent({
 
       // Vertical Highlight
       this.verticalHighlight = new PIXI.Graphics();
-      this.verticalHighlight.beginFill(0xFE00EF);
+      this.verticalHighlight.beginFill(0xFFFFFF);
       this.verticalHighlight.drawRect(0, this.minYPos + this.nodeSize, this.nodeSize, this.nodeSize * (this.graph.order - 1));
       this.verticalHighlight.endFill();
       this.verticalHighlight.alpha = 0;
