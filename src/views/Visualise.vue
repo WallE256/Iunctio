@@ -155,7 +155,7 @@ export default defineComponent({
       }
     },
 
-    async setDiagramList() {
+    setDiagramList() {
       this.diagram_list = [];
 
       GlobalStorage.getDiagrams().then((diagrams) => {
@@ -166,9 +166,9 @@ export default defineComponent({
       });
     },
 
-    async addToDiagramList(diagramID: string) {
+    addToDiagramList(diagramID: string) {
       GlobalStorage.getDiagram(diagramID).then((diagram) => {
-        if (!diagram) return;
+        if (!diagram || diagram.invisible) return;
 
         this.diagram_list.push({
           id: diagramID,
@@ -179,8 +179,8 @@ export default defineComponent({
       });
     },
 
-    async diagramDeleted() {
-      await this.setDiagramList();
+    diagramDeleted() {
+      this.setDiagramList();
       this.shownDiagrams = [];
     },
 

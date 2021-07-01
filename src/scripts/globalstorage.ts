@@ -28,7 +28,7 @@ export class Diagram {
   /// directly.
   settings: any;
 
-  /// This diagram's name
+  /// This diagram's name.
   name: string;
 
   /// The change listener, which is called when a setting is changed using
@@ -36,6 +36,9 @@ export class Diagram {
   /// NOTE: do not access this yourself, use `update()` and `addOnChange`
   /// instead.
   onChange: ((diagram: Diagram, changedKey: string) => void)[];
+
+  /// Whether this diagram should be displayed in the diagram list.
+  invisible: boolean;
 
   ///
   constructor(
@@ -59,6 +62,7 @@ export class Diagram {
     } else {
       this.name = type + "-" + id;
     }
+    this.invisible = false;
   }
 
   /// Adds an on-change listener to this diagram. Each on-change listener that
@@ -136,6 +140,7 @@ function diagramToJSON(diagram: Diagram): any {
     graphID: diagram.graphID,
     type: diagram.type,
     settings: Object.assign({}, diagram.settings),
+    invisible: diagram.invisible,
   };
 }
 
@@ -261,6 +266,7 @@ export async function getDiagram(id: string): Promise<Diagram | null> {
       storageItem.settings,
       storageItem.name,
     );
+    diagram.invisible = storageItem.invisible;
     diagrams.set(id, diagram);
     return diagram;
   } catch (error) {

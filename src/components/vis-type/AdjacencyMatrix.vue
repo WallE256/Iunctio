@@ -23,6 +23,7 @@ import Graph from "graphology";
 import { debounce } from "lodash";
 import noUiSlider from "nouislider";
 import * as GlobalStorage from "@/scripts/globalstorage";
+import { getDefaultSettings } from "@/scripts/settingconfig";
 import { dateIsBetween, findMinMaxDates, getMonthsDifference } from "@/scripts/util";
 import InfoTool from "@/components/visualise/InfoTool.vue";
 import StatisticalDiagram from "@/components/vis-type/StatisticalDiagram.vue";
@@ -676,13 +677,16 @@ export default defineComponent({
       if (on) {
         canvasParent.style.height = "80%";
         const randomID = "timeline-" + String(Math.floor(Math.random() * 1e5));
+        const defaultSettings = getDefaultSettings("StatisticalDiagram");
         this.timelineDiagram = new GlobalStorage.Diagram(
           randomID,
           this.diagram.graphID,
-          "DistributionDiagram",
+          "StatisticalDiagram",
+          defaultSettings,
         );
         // this is a little bit hacky, but it's necessary to add it to
         // globalstorage with the current situation
+        this.timelineDiagram.invisible = true;
         GlobalStorage.addDiagram(this.timelineDiagram);
       } else {
         if (this.timelineDiagram) {
