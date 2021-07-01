@@ -315,7 +315,7 @@ export default defineComponent({
     },
 
     drawLines(viewport: Viewport) {
-      const numberOfLines = 2 * (this.graph.order + 1);
+      const numberOfLines = 2 * this.graph.order;
 
       this.lines = [];
       this.lines.length = numberOfLines;
@@ -328,13 +328,13 @@ export default defineComponent({
           this.lines[index].moveTo(0, 0);
 
           if (index < numberOfLines / 2) { // Horizontal
-            this.lines[index].lineTo((this.nodeSize * this.graph.order), 0);
-            this.lines[index].x = this.minXPos;
-            this.lines[index].y = this.minYPos + (this.nodeSize * index);
+            this.lines[index].lineTo((this.nodeSize * (this.graph.order - 1)), 0);
+            this.lines[index].x = this.minXPos + this.nodeSize;
+            this.lines[index].y = this.minYPos + (this.nodeSize * (index + 1));
           } else { // Vertical
-            this.lines[index].lineTo(0, (this.nodeSize * this.graph.order));
-            this.lines[index].x = this.minXPos + (this.nodeSize * (index - (this.graph.order + 1)));
-            this.lines[index].y = this.minYPos;
+            this.lines[index].lineTo(0, (this.nodeSize * (this.graph.order - 1)));
+            this.lines[index].x = this.minXPos + (this.nodeSize * (index - this.graph.order + 1));
+            this.lines[index].y = this.minYPos + this.nodeSize;
           }
 
           viewport.addChild(this.lines[index] as PIXI.Graphics);
@@ -434,7 +434,7 @@ export default defineComponent({
 
         const textX = new PIXI.Text(attributes.email.substring(0, attributes.email.indexOf("@")));
         textX.style = textStyle;
-        textX.x = this.minXPos - (this.nodeSize / 2);
+        textX.x = this.minXPos + (this.nodeSize / 2);
         textX.y = this.minYPos + (this.nodeSize / 2) + (this.nodeSize * nodeIndex);
         textX.anchor.set(1, 0.5);
 
@@ -451,14 +451,12 @@ export default defineComponent({
         const textY = new PIXI.Text(attributes.email.substring(0, attributes.email.indexOf("@")));
         textY.style = textStyle;
         textY.x = this.minXPos + (this.nodeSize / 2) + (this.nodeSize * nodeIndex);
-        textY.y = this.minYPos - (this.nodeSize / 2);
+        textY.y = this.minYPos + (this.nodeSize / 2);
         textY.angle = 270;
         textY.anchor.set(0, 0.5);
 
         viewport.addChild(textY);
       });
-
-      textMaxWidth += 20;
 
       const fromId = new PIXI.Text("From");
       fromId.style = labelStyle;
