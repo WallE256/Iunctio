@@ -163,6 +163,7 @@ export default defineComponent({
     this.$nextTick(() => {
       app.resize();
       diagram.addOnChange((diagram: GlobalStorage.Diagram, changedKey: string) => {
+
         if (changedKey === "selectedNode") {
           // un-highlight old nodes
           this.unhighlight();
@@ -176,6 +177,7 @@ export default defineComponent({
 
           return;
         }
+
         if (changedKey === "showTimeline") {
           this.toggleTimeline(diagram.settings.showTimeline);
           return;

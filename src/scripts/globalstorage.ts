@@ -310,7 +310,9 @@ export function changeSetting(diagram: Diagram, ...values: any[]): void {
   // local storage needs to be updated (which is still pretty cheap,
   // considering that the diagram's dataset is stored separately and is
   // never updated)
-  localforage.setItem(storageKey, diagramToJSON(diagram));
+  getDiagram(diagram.id).then((diag) => {
+    if (diag) localforage.setItem(storageKey, diagramToJSON(diag));
+  });
 }
 
 /// `changeName` updates a diagram's name and will update the diagram,
