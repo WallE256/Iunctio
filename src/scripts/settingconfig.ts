@@ -49,7 +49,7 @@ export function getDefaultSettings(componentName: string): any {
 
     case "AdjacencyMatrix": {
       return {
-        variety: "edge-frequency",
+        data: "edge-frequency",
         edgeHighlightDirection: "both",
         drawInnerLines: false,
         showTimeline: false,
@@ -77,7 +77,7 @@ export function getVisibleSettings(diagram: GlobalStorage.Diagram, graph: Graph)
           options: [ "incoming", "outgoing", "both" ],
           value: diagram.settings.edgeHighlightDirection,
         } },
-        { id: "filterJobtitle", component: "SelectSetting", name: "Filter", properties: {
+        { id: "filterJobtitle", component: "SelectSetting", name: "Filter Jobtitle", properties: {
           options: [ "None", "Employee", "Trader", "Vice President", "Managing Director", "Unknown", "Manager", "Director", "President", "CEO", "In House Lawyer" ],
           value: diagram.settings.filterJobtitle,
         } },
@@ -138,9 +138,9 @@ export function getVisibleSettings(diagram: GlobalStorage.Diagram, graph: Graph)
 
     case "AdjacencyMatrix": {
       return [
-        { id: "variety", component: "SelectSetting", name: "Adjacency Matrix Variety", properties: {
+        { id: "data", component: "SelectSetting", name: "Adjacency Matrix Data", properties: {
           options: [ "edge-frequency", "sentiment", "email-type" ],
-          value: diagram.settings.variety,
+          value: diagram.settings.data,
         } },
           { id: "edgeHighlightDirection", component: "SelectSetting", name: "Highlight Edge Direction", properties: {
             options: [ "incoming", "outgoing", "both" ],
