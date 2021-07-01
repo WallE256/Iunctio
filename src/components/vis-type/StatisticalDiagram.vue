@@ -322,8 +322,8 @@ export default defineComponent({
           const distribution_positive = new PIXI.Graphics();
           const distribution_negative = new PIXI.Graphics();
 
-          var positive_points = [] as any[];
-          var negative_points = [] as any[];
+          const positive_points = [] as number[];
+          const negative_points = [] as number[];
 
           for (let index = 0; index < points.length; index += 2) {
             if (points[index + 1] <= this.maxY) {
