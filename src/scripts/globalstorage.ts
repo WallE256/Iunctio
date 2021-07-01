@@ -115,7 +115,7 @@ export class Dataset {
   }
 }
 
-export function createID(id: string): string {
+export function createID(): string {
   // this is unique enough and not too long
   return String(Math.floor(Date.now() % 1e5));
 }

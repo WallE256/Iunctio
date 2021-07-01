@@ -118,15 +118,18 @@ export default defineComponent({
     },
 
     async selectDiagram(d_type: string) {
+      const datasets = await GlobalStorage.getDatasets();
+
       // If the number of datasets is less than 1, first request upload.
-      if (this.dataset_list.length < 1) {
+      if (datasets.length < 1) {
         this.toggleUpload(true);
         this.requested_diag = d_type;
         return;
       }
+
       // Create a diagramID, create & add diagram to Global Storage and list of
       // shown diagrams. Finally, toggle the homepage and display the diagram panels.
-      const diagramID = GlobalStorage.createID(d_type);
+      const diagramID = await GlobalStorage.createID();
       await this.createDiagram(diagramID, d_type);
       await this.addToDiagramList(diagramID);
       this.toggleHome(false);

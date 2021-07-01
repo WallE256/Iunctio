@@ -30,7 +30,7 @@ export default defineComponent({
     parseDataset(event: { target: HTMLInputElement }): void {
       const file = (event.target.files as FileList)[0];
       const filename = file.name.replace(/\.[^/.]+$/, "");
-      const graphID = GlobalStorage.createID(filename);
+      const graphID = GlobalStorage.createID();
 
       const onFinish = async (_: Graph) => {
         this.$emit("upload");
