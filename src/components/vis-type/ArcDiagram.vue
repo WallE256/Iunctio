@@ -306,8 +306,9 @@ export default defineComponent({
         this.highlight();
       });
       this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
-      //culling
-      //this.culling(this.app as PIXI.Application, this.viewport as Viewport, this.graph);
+
+      // culling
+      // this.culling(this.app as PIXI.Application, this.viewport as Viewport, this.graph);
 
       this.selectedNodes = GlobalStorage.selectedNodes
         .filter((node) => node.datasetID === diagram.graphID)
