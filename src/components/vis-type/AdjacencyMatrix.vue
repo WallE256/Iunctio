@@ -1,4 +1,5 @@
 <template>
+  <color-legend :color-scheme="colorMap"></color-legend>
   <div ref="diagram" style="height: 100%; width: 100%;">
     <div id="canvas-parent" ref="canvas-parent" style="height: 100%; width: 100%;">
       <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
@@ -28,6 +29,7 @@ import { dateIsBetween, findMinMaxDates, getMonthsDifference } from "@/scripts/u
 import InfoTool from "@/components/visualise/InfoTool.vue";
 import StatisticalDiagram from "@/components/vis-type/StatisticalDiagram.vue";
 import { Viewport } from 'pixi-viewport';
+import ColorLegend from "@/components/visualise/ColorLegend.vue";
 
 type Settings = {
   data: string, // "edge-frequency" or "sentiment" or "email-type"
@@ -39,7 +41,7 @@ type Settings = {
 
 export default defineComponent({
 
-  components: { InfoTool, StatisticalDiagram },
+  components: { InfoTool, ColorLegend, StatisticalDiagram},
 
   props: {
     diagramid: {
@@ -217,6 +219,12 @@ export default defineComponent({
 
       minXPos: 0,
       minYPos: 0,
+
+      colorMap: new Map<string, {
+        title: string,
+        id: number,
+        assignedColor: string,
+      }>(),
 
       defaultStyle: new PIXI.TextStyle({
         fill: "#000000",
@@ -606,30 +614,70 @@ export default defineComponent({
       if (graph.hasEdge(node_1, node_2)) {
 
         if (diagram.settings.data === "edge-frequency") {
-          rectangle.beginFill(0xAF1A1A, 1);
+
+          const EDGE = 'af1a1a';
+
+          this.colorMap = new Map<string, {
+            title: string,
+            id: number,
+            assignedColor: string,
+          }>();
+          this.colorMap.set('-1', {title: 'Edge', id: -1, assignedColor: '#'+EDGE});
+
+          rectangle.beginFill(parseInt(EDGE, 16), 1);
           rectangle.alpha = (Math.log(this.countEdges(node_1, node_2)) / maxEdges) * 0.8 + 0.2;
+
         } else if (diagram.settings.data === "sentiment") {
+
+          const POSITIVE = '66d37e';
+          const NEUTRAL = '28c7fa';
+          const NEGATIVE = 'ff304f';
+
+          this.colorMap = new Map<string, {
+            title: string,
+            id: number,
+            assignedColor: string,
+          }>();
+          this.colorMap.set('1', {title: 'Positive', id: 1, assignedColor: '#'+POSITIVE});
+          this.colorMap.set('0', {title: 'Neutral', id: 0, assignedColor: '#'+NEUTRAL});
+          this.colorMap.set('-1', {title: 'Negative', id: -1, assignedColor: '#'+NEGATIVE});
 
           let avgSentiment = this.avgSentiment(node_1, node_2);
 
           if (avgSentiment > 0) {
-            rectangle.beginFill(0xADE288, 1);
+            rectangle.beginFill(parseInt(POSITIVE, 16), 1);
           } else if (avgSentiment < 0) {
-            rectangle.beginFill(0xF9665E, 1);
+            rectangle.beginFill(parseInt(NEGATIVE, 16), 1);
           } else if (avgSentiment == 0) {
-            rectangle.beginFill(0x94bdff, 1);
+            rectangle.beginFill(parseInt(NEUTRAL, 16), 1);
           }
 
           rectangle.alpha = 1;
+
         } else if (diagram.settings.data === "email-type") {
+
+          const TO = 'd1de3c';
+          const CC = 'ff8593';
+          const TOnCC = '66baff';
+
+          this.colorMap = new Map<string, {
+            title: string,
+            id: number,
+            assignedColor: string,
+          }>();
+          this.colorMap.set('1', {title: 'TO', id: 1, assignedColor: '#'+TO});
+          this.colorMap.set('0', {title: 'CC', id: 0, assignedColor: '#'+CC});
+          this.colorMap.set('-1', {title: 'TO and CC', id: -1, assignedColor: '#'+TOnCC});
+
+
 
           let messageType = this.messageType(node_1, node_2);
           if (messageType === "TO") {
-            rectangle.beginFill(0xd1de3c, 1);
+            rectangle.beginFill(parseInt(TO, 16), 1);
           } else if (messageType === "CC") {
-            rectangle.beginFill(0xff8593, 1);
+            rectangle.beginFill(parseInt(CC, 16), 1);
           } else if (messageType === "TO & CC") {
-            rectangle.beginFill(0x66baff, 1);
+            rectangle.beginFill(parseInt(TOnCC, 16), 1);
           }
 
           rectangle.alpha = 1;
