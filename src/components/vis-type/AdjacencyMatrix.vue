@@ -433,14 +433,12 @@ export default defineComponent({
               this.verticalHighlight.x = this.minXPos + (this.nodeSize * targetIndex);
               this.verticalHighlight.alpha = 0.5;
             }
-            if (settings.edgeHighlightDirection === "both") {
-              if (sourceIndex === targetIndex) {
-                this.horizontalHighlight.tint = 0xFE00EF;
-                this.verticalHighlight.tint = 0xFE00EF;
-              } else {
-                this.horizontalHighlight.tint = 0xD9D9D9;
-                this.verticalHighlight.tint = 0xD9D9D9;
-              }
+            if (settings.edgeHighlightDirection === "both" && sourceIndex !== targetIndex) {
+              this.horizontalHighlight.tint = 0xD9D9D9;
+              this.verticalHighlight.tint = 0xD9D9D9;
+            } else {
+              this.horizontalHighlight.tint = 0xFE00EF;
+              this.verticalHighlight.tint = 0xFE00EF;
             }
           });
 
