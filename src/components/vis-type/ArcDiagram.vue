@@ -126,16 +126,6 @@ export default defineComponent({
     for (const node of sortedNodes) {
       const attributes = this.graph.getNodeAttributes(node);
       const text = new PIXI.Text(attributes.email.substring(0, attributes.email.indexOf("@")), defaultStyle);
-      if (diagram.settings.variety === "line") {
-        text.anchor.set(0.0, 0.5);
-        text.rotation = Math.PI / 2;
-      } else if (i > sortedNodes.length * 1/4 && i < sortedNodes.length * 3/4) {
-        text.anchor.set(1.0, 0.5);
-        text.rotation = 2 * (i - sortedNodes.length / 2) * Math.PI / sortedNodes.length;
-      } else {
-        text.anchor.set(0.0, 0.5);
-        text.rotation = 2 * i * Math.PI / sortedNodes.length;
-      }
 
       const edgeGraphics = new PIXI.Graphics();
       const circle = new PIXI.Graphics();
@@ -256,7 +246,7 @@ export default defineComponent({
       });
       this.draw(this.graph, app, diagram.settings, this.viewport as Viewport);
       //culling
-      this.culling(this.app as PIXI.Application, this.viewport as Viewport, this.graph);
+      //this.culling(this.app as PIXI.Application, this.viewport as Viewport, this.graph);
 
       this.selectedNodes = GlobalStorage.selectedNodes
         .filter((node) => node.datasetID === diagram.graphID)
@@ -408,13 +398,22 @@ export default defineComponent({
         const centerX = viewport.center.x;
         const centerY = viewport.center.y;
 
+        const nodeCount = graph.order;
         graph.forEachNode((source: any, sourceAttr) => {
           const sourceData = this.nodeMap.get(source);
           if (typeof sourceData === "undefined") return; // not supposed to happen
-          if(settings.filterJobtitle === "None" || sourceData.jobTitle === settings.filterJobtitle) {
+          if (settings.filterJobtitle === "None" || sourceData.jobTitle === settings.filterJobtitle) {
+            const index = sourceData.index;
             const text = sourceData.text;
             text.x = centerX + (vertexRadius + textDistance) * Math.cos(sourceData.index * angle);
             text.y = centerY + (vertexRadius + textDistance) * Math.sin(sourceData.index * angle);
+            if (index > nodeCount * 1/4 && index < nodeCount * 3/4) {
+              text.anchor.set(1.0, 0.5);
+              text.rotation = 2 * (index - nodeCount / 2) * Math.PI / nodeCount;
+            } else {
+              text.anchor.set(0.0, 0.5);
+              text.rotation = 2 * index * Math.PI / nodeCount;
+            }
 
             viewport.addChild(text);
 
@@ -501,6 +500,8 @@ export default defineComponent({
             const text = sourceData.text;
             text.x = circle.x;
             text.y = circle.y + nodeRadius + text.height;
+            text.anchor.set(0.0, 0.5);
+            text.rotation = Math.PI / 2;
 
             viewport.addChild(circle, text);
           };
