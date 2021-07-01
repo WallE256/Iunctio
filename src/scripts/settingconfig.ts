@@ -52,6 +52,8 @@ export function getDefaultSettings(componentName: string): any {
         variety: "edge-frequency",
         edgeHighlightDirection: "both",
         drawInnerLines: false,
+        showTimeline: false,
+        timeRange: ["1000-01-01", "3000-12-31"],
       };
     }
 
@@ -146,6 +148,9 @@ export function getVisibleSettings(diagram: GlobalStorage.Diagram, graph: Graph)
           } },
           { id: "drawInnerLines", component: "CheckboxSetting", name: "Draw Inner Lines", properties: {
             value: diagram.settings.drawInnerLines,
+          } },
+          { id: "showTimeline", component: "CheckboxSetting", name: "Show Timeline", properties: {
+            value: diagram.settings.showTimeline,
           } },
         ];
         break;
