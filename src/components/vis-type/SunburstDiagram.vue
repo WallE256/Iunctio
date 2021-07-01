@@ -72,10 +72,9 @@ type Settings = {
 export default defineComponent({
   components: {
     InfoTool,
+    ColorLegend,
     StatisticalDiagram,
   },
-
-  components: { InfoTool, ColorLegend},
 
   props: {
     diagramid: {
@@ -182,7 +181,7 @@ export default defineComponent({
           return;
         }
 
-        this.draw(app, this.diagram.settings);
+        this.draw(app, diagram.settings);
         this.createLegendMap();
         this.unhighlight();
         this.highlight();
@@ -241,7 +240,7 @@ export default defineComponent({
         title: string,
         id: number,
         assignedColor: string,
-      }>()
+      }>(),
 
       showTimeline: false,
       timelineDiagram: null as GlobalStorage.Diagram | null,

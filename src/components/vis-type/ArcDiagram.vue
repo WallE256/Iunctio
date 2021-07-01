@@ -56,10 +56,9 @@ type NodeData = {
 export default defineComponent({
   components: {
     InfoTool,
+    ColorLegend,
     StatisticalDiagram,
   },
-
-  components: { InfoTool, ColorLegend},
 
   props: {
     diagramid: {
