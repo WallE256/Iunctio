@@ -24,7 +24,7 @@
       </svg>
     </span>
     <transition name="slide-fade">
-      <div class="diagram-panel__settings" v-show="showSettings">
+      <div class="diagram-panel__settings" v-show="showSettings" style="z-index: 100;">
         <diagram-settings
           :diagramid="diagram_id"
           :diagramname="diagram_name"
