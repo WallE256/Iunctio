@@ -175,8 +175,6 @@ export default defineComponent({
     window.addEventListener(
       "resize",
       debounce((event) => {
-        console.log("resize-event!");
-
         if (!this.diagram) {
           return;
         }
@@ -581,7 +579,7 @@ export default defineComponent({
       } else if (to < cc) {
         return "CC";
       } else if (to == cc) {
-        return "-";
+        return "TO & CC";
       }
     },
 
@@ -604,19 +602,19 @@ export default defineComponent({
           } else if (avgSentiment < 0) {
             rectangle.beginFill(0xF9665E, 1);
           } else if (avgSentiment == 0) {
-            rectangle.beginFill(0xFEF4BE, 1);
+            rectangle.beginFill(0x94bdff, 1);
           }
 
           rectangle.alpha = 1;
         } else if (diagram.settings.data === "email-type") {
 
           let messageType = this.messageType(node_1, node_2);
-          if (messageType == "TO") {
-            rectangle.beginFill(0x8e58ad, 1);
-          } else if (messageType == "CC") {
-            rectangle.beginFill(0x006EE6, 1);
-          } else if (messageType == "-") {
-            rectangle.beginFill(0xFF80CE, 1);
+          if (messageType === "TO") {
+            rectangle.beginFill(0xd1de3c, 1);
+          } else if (messageType === "CC") {
+            rectangle.beginFill(0xff8593, 1);
+          } else if (messageType === "TO & CC") {
+            rectangle.beginFill(0x66baff, 1);
           }
 
           rectangle.alpha = 1;
