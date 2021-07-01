@@ -239,8 +239,9 @@ export default defineComponent({
           if (isNaN(value)) finalVal = 0;
 
           if (settings.logarithmic) {
-            if (finalVal > 0) finalVal = Math.log(finalVal) * -1;
-            else if (finalVal < 0) finalVal = Math.log(finalVal * -1);
+            if (finalVal > 0) finalVal = Math.log(finalVal * 100000);
+            else if (finalVal < 0) finalVal = Math.log(finalVal * -100000) * -1;
+            else finalVal = 0;
           }
 
           valMap.set(key, finalVal);
@@ -253,6 +254,7 @@ export default defineComponent({
           for (let [key, value] of valMap) {
             if (value > 0) valMap.set(key, Math.log(value));
             else if (value < 0) valMap.set(key, Math.log(value * -1) * -1);
+            else valMap.set(key, 0);
           }
         }
         dateMap = new Map(valMap);
