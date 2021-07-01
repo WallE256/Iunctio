@@ -290,6 +290,8 @@ export default defineComponent({
               "StatisticalDiagram",
               defaultSettings,
             );
+            // this is a little bit hacky, but it's necessary to add it to
+            // globalstorage with the current situation
             GlobalStorage.addDiagram(this.timelineDiagram);
           } else {
             if (this.timelineDiagram) {
