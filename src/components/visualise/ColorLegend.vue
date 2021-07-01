@@ -62,14 +62,6 @@ export default defineComponent({
   padding: 30px 10px 10px 10px;
 
   background: darken($WHITE_D, 5%);
-  background: $CREAM;
-  background: linear-gradient(
-      to bottom right,
-      rgba(darken($WHITE_D, 5%), 0.5),
-      rgba(darken($WHITE_D, 20%), 0.15)
-  );
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(white, 0.75);
 
   &__entry {
     display: flex;
