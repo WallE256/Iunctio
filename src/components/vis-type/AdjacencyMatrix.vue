@@ -540,14 +540,26 @@ export default defineComponent({
       const timeRange = (this.diagram.settings as Settings).timeRange;
 
       let length = 0;
-      this.graph.forEachOutboundEdge(node1, node2, (edge, edgeAttributes) => {
-        const date = edgeAttributes.date;
-        if (!date || dateIsBetween(date, timeRange)) {
-          length++;
-        }
-      });
+      
+      if (node1 === node2) { 
+        this.graph.forEachEdge(node1, node2, (edge, edgeAttributes) => {
+          const date = edgeAttributes.date;
+          if (!date || dateIsBetween(date, timeRange)) {
+            length++;
+          }
+        });
+      } else {
+        this.graph.forEachOutEdge(node1, node2, (edge, edgeAttributes) => {
+          const date = edgeAttributes.date;
+          if (!date || dateIsBetween(date, timeRange)) {
+            length++;
+          }
+        });
+      }
+
       return length;
     },
+
     avgSentiment(node_1: any, node_2 : any): number {
       if (!this.diagram) return 0;
       const timeRange = (this.diagram.settings as Settings).timeRange;
