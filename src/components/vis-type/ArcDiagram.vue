@@ -116,6 +116,7 @@ export default defineComponent({
 
     const defaultStyle = new PIXI.TextStyle({
       fill: "#000000",
+      fontSize: "26px",
     });
 
     // give each node a corresponding index and corresponding text element
@@ -124,9 +125,17 @@ export default defineComponent({
     const sortedNodes = dataset.getClusteredNodes();
     for (const node of sortedNodes) {
       const attributes = this.graph.getNodeAttributes(node);
-      const sourceString = node.toString();
-      const text = new PIXI.Text(sourceString, defaultStyle);
-      text.anchor.set(0.5, 0.5);
+      const text = new PIXI.Text(attributes.email, defaultStyle);
+      if (diagram.settings.variety === "line") {
+        text.anchor.set(0.0, 0.5);
+        text.rotation = Math.PI / 2;
+      } else if (i > sortedNodes.length * 1/4 && i < sortedNodes.length * 3/4) {
+        text.anchor.set(1.0, 0.5);
+        text.rotation = 2 * (i - sortedNodes.length / 2) * Math.PI / sortedNodes.length;
+      } else {
+        text.anchor.set(0.0, 0.5);
+        text.rotation = 2 * i * Math.PI / sortedNodes.length;
+      }
 
       const edgeGraphics = new PIXI.Graphics();
       const circle = new PIXI.Graphics();
@@ -384,10 +393,6 @@ export default defineComponent({
       let nodeRadius = 10;
       //---------------------------------------------
 
-      const textStyle = new PIXI.TextStyle({
-        fill: "#000000",
-        fontSize: nodeRadius + 4,
-      });
       const direction = settings.edgeHighlightDirection;
       const drawOutgoing = direction === "outgoing" || direction === "both";
       const drawIncoming = direction === "incoming" || direction === "both";
@@ -409,7 +414,6 @@ export default defineComponent({
           if (typeof sourceData === "undefined") return; // not supposed to happen
           if(settings.filterJobtitle === "None" || sourceData.jobTitle === settings.filterJobtitle) {
             const text = sourceData.text;
-            text.style = textStyle;
             text.x = centerX + (vertexRadius + textDistance) * Math.cos(sourceData.index * angle);
             text.y = centerY + (vertexRadius + textDistance) * Math.sin(sourceData.index * angle);
 
@@ -496,7 +500,6 @@ export default defineComponent({
 
             // node's value
             const text = sourceData.text;
-            text.style = textStyle;
             text.x = circle.x;
             text.y = circle.y + nodeRadius + text.height;
 
