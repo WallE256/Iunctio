@@ -1,5 +1,6 @@
 <template>
   <div ref="diagram" style="height: 100%; width: 100%;">
+    <color-legend :colorScheme="colorMap"/>
     <div id="canvas-parent" ref="canvas-parent" style="height: 100%; width: 100%;">
       <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
     </div>
@@ -27,6 +28,7 @@ import * as GlobalStorage from "@/scripts/globalstorage";
 import { getDefaultSettings } from "@/scripts/settingconfig";
 import noUiSlider from "nouislider";
 import InfoTool from "@/components/visualise/InfoTool.vue";
+import ColorLegend from "@/components/visualise/ColorLegend.vue";
 import { containsEdgeInRange, findMinMaxDates } from "@/scripts/util";
 
 // from https://pixijs.download/dev/docs/packages_graphics-extras_src_drawTorus.ts.html
@@ -72,6 +74,8 @@ export default defineComponent({
     InfoTool,
     StatisticalDiagram,
   },
+
+  components: { InfoTool, ColorLegend},
 
   props: {
     diagramid: {
@@ -178,7 +182,8 @@ export default defineComponent({
           return;
         }
 
-        this.draw(app, diagram.settings);
+        this.draw(app, this.diagram.settings);
+        this.createLegendMap();
         this.unhighlight();
         this.highlight();
       });
@@ -232,6 +237,11 @@ export default defineComponent({
       infotoolXPos: 0,
       infotoolYPos: 0,
       infotoolDisplay: "none",
+      colorMap: new Map<string, {
+        title: string,
+        id: number,
+        assignedColor: string,
+      }>()
 
       showTimeline: false,
       timelineDiagram: null as GlobalStorage.Diagram | null,
@@ -421,6 +431,7 @@ export default defineComponent({
             index += 1;
           }
         });
+        this.createLegendMap()
       } else {
 
         // Draw node
@@ -650,6 +661,25 @@ export default defineComponent({
 
       this.infotoolDisplay = "none";
     });
+  },
+
+  // Create map for legend.
+    createLegendMap() {
+      this.colorMap = new Map<string, {
+        title: string,
+        id: number,
+        assignedColor: string,
+      }>();
+      for (const [key, value] of this.attributesColourMap.entries()) {
+        const c = d3.color(this.colours(value));
+        const colour = c?.formatHex() || '#181818';
+        if(colour) console.log(key, value, colour);
+        this.colorMap.set(key, {
+          title: key,
+          id: value,
+          assignedColor: colour,
+        })
+      }
     },
 
     onTimelineChange(startValue: number, endValue: number, max: number) {

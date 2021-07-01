@@ -8,7 +8,7 @@
         <span class="hide-panel" @click="showLegend=false"></span>
         <div class="panel__entry" v-for="entry in Object.fromEntries(colorScheme)" :key="entry.id">
           <p class="entry__title"> {{entry.title}} </p>
-          <span class="entry__color" :style="{background: '#'+ entry.assignedColor.toString(16)}"></span>
+          <span class="entry__color" :style="{background: entry.assignedColor}"></span>
         </div>
       </div>
     </transition>
@@ -55,6 +55,8 @@ export default defineComponent({
 .panel {
   @include abs(10px 0 0 10px);
   min-width: 175px;
+  max-height: 250px;
+  overflow-y: auto ;
   box-shadow: 0 0 5px rgba($BLUE_D, 0.2);
   border-radius: 5px;
   padding: 30px 10px 10px 10px;
