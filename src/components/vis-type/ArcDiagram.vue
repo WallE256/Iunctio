@@ -1,6 +1,6 @@
 <template>
   <div ref="diagram" style="height: 100%; width: 100%;">
-    <color-legend :colorScheme="jobMap"/>
+    <color-legend :colorScheme="colorMap"/>
     <div id="canvas-parent" ref="canvas-parent" style="height: 100%; width: 100%;">
       <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
     </div>
