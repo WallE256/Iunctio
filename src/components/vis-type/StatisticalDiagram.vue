@@ -77,6 +77,10 @@ export default defineComponent({
       resizeTo: canvasParent,
     });
 
+    // limit FPS to improve performance
+    this.app.ticker.minFPS = 1;
+    this.app.ticker.maxFPS = 5;
+
     this.window = [0.05, 0.1, 0.15, 0.4, 0.15, 0.1, 0.05];
 
     this.interval = this.getInterval();

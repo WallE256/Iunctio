@@ -159,6 +159,10 @@ export default defineComponent({
       resizeTo: canvasParent,
     });
 
+    // limit FPS to improve performance
+    this.app.ticker.minFPS = 1;
+    this.app.ticker.maxFPS = 5;
+
     // Create map for number of connections between nodes
     [this.bothConnections, this.outConnections] = this.mapConnections(this.graph);
 
