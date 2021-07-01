@@ -6,6 +6,7 @@
       class="diagram"
       :is="componentType"
       :diagramid="diagram_id"
+      :visible="visible"
       @selected-node-change="onSelectedNodeChange"
     />
     <span
@@ -61,6 +62,10 @@ export default defineComponent({
   props: {
     diagram_id: {
       type: String,
+      required: true,
+    },
+    visible: {
+      type: Boolean,
       required: true,
     },
   },

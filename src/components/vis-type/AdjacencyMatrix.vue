@@ -48,6 +48,10 @@ export default defineComponent({
       type: String,
       required: true,
     },
+    visible: {
+      type: Boolean,
+      required: true,
+    },
   },
 
   async mounted() {
@@ -245,6 +249,11 @@ export default defineComponent({
 
   unmounted() {
     (this.app as PIXI.Application).destroy(false, true);
+  },
+
+  updated() {
+    if (this.visible) (this.app as PIXI.Application).start();
+    else (this.app as PIXI.Application).stop();
   },
 
   methods: {
