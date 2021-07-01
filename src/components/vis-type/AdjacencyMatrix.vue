@@ -309,7 +309,8 @@ export default defineComponent({
               }
             }
 
-            this.infotool_value_list.push("<br><hr><p style='font-style: italic'> Click for brush-and-link selection </p><p style='font-style: italic'> Ctrl+Click for multiple nodes </p>");
+            if (this.diagram && this.diagram.settings.edgeHighlightDirection === "both" && sourceIndex !== targetIndex) this.infotool_value_list.push("<br><hr><p style='font-style: italic'> Hover over edges with the </p><p style='font-style: italic'> same incoming and outgoing </p><p style='font-style: italic'> nodes for brushing-and-linking </p><p style='font-style: italic'> Or change highlight direction.</p>");
+            else this.infotool_value_list.push("<br><hr><p style='font-style: italic'> Click for brush-and-link selection </p><p style='font-style: italic'> Ctrl+Click for multiple nodes </p>");
 
             const mouseEvent = event.data.originalEvent as MouseEvent;
             const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
