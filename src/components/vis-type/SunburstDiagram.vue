@@ -81,6 +81,10 @@ export default defineComponent({
       type: String,
       required: true,
     },
+    visible: {
+      type: Boolean,
+      required: true,
+    },
   },
 
   async mounted() {

@@ -53,6 +53,7 @@
         v-for="diag in shownDiagrams"
         :key="diag"
         :diagram_id="diag"
+        :visible="show_panels"
         @selected-node-change="onSelectedNodeChange"
         @name-changed="onNameChanged"
         @close="closeDiagram"
