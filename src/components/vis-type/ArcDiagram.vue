@@ -255,7 +255,14 @@ export default defineComponent({
           title: attributes.jobtitle,
           id: colorIndex,
           assignedColor: color,
-        })
+        });
+        // We need the colours in hex format #xxxxxx hence we create an additional map.
+        // TODO: alter rest of code to be able to use hex string instead of number and then yeet jobMap out of the code.
+        this.colorMap.set(attributes.jobtitle, {
+          title: attributes.jobtitle,
+          id: colorIndex,
+          assignedColor: '#' + color.toString(16),
+        });
       }
       i++;
     }
@@ -329,8 +336,15 @@ export default defineComponent({
       jobMap: new Map<string, {
         title: string,
         id: number,
-        assignedColor: number
+        assignedColor: number,
       }>(),
+
+      colorMap: new Map<string, {
+        title: string,
+        id: number,
+        assignedColor: string,
+      }>(),
+
       // node map
       nodeMap: new Map<string, NodeData>(),
 
