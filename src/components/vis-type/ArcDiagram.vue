@@ -122,6 +122,7 @@ export default defineComponent({
         this.onTimelineChange(parseInt(values[0]), parseInt(values[1]), maxValue);
       });
     }
+    this.toggleTimeline(diagram.settings.showTimeline);
 
     this.app = new PIXI.Application({
       view: canvas,
@@ -278,28 +279,7 @@ export default defineComponent({
           return;
         }
         if (changedKey === "showTimeline") {
-          if (diagram.settings.showTimeline) {
-            canvasParent.style.height = "80%";
-            const randomID = "timeline-" + String(Math.floor(Math.random() * 1e5));
-            const defaultSettings = getDefaultSettings("StatisticalDiagram");
-            this.timelineDiagram = new GlobalStorage.Diagram(
-              randomID,
-              diagram.graphID,
-              "StatisticalDiagram",
-              defaultSettings,
-            );
-            // this is a little bit hacky, but it's necessary to add it to
-            // globalstorage with the current situation
-            GlobalStorage.addDiagram(this.timelineDiagram);
-          } else {
-            if (this.timelineDiagram) {
-              GlobalStorage.removeDiagram(this.timelineDiagram);
-              this.timelineDiagram = null;
-            }
-            canvasParent.style.height = "100%";
-          }
-
-          this.showTimeline = diagram.settings.showTimeline;
+          this.toggleTimeline(diagram.settings.showTimeline);
           return;
         }
 
@@ -454,6 +434,33 @@ export default defineComponent({
       const end = endDate.toISOString().split("T")[0];
 
       GlobalStorage.changeSetting(this.diagram as GlobalStorage.Diagram, "timeRange", [start, end]);
+    },
+    toggleTimeline(on: boolean) {
+      const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
+      if (!this.diagram) return;
+
+      if (on) {
+        canvasParent.style.height = "80%";
+        const randomID = "timeline-" + String(Math.floor(Math.random() * 1e5));
+        const defaultSettings = getDefaultSettings("StatisticalDiagram");
+        this.timelineDiagram = new GlobalStorage.Diagram(
+          randomID,
+          this.diagram.graphID,
+          "DistributionDiagram",
+          defaultSettings,
+        );
+        // this is a little bit hacky, but it's necessary to add it to
+        // globalstorage with the current situation
+        GlobalStorage.addDiagram(this.timelineDiagram);
+      } else {
+        if (this.timelineDiagram) {
+          GlobalStorage.removeDiagram(this.timelineDiagram);
+          this.timelineDiagram = null;
+        }
+        canvasParent.style.height = "100%";
+      }
+
+      this.showTimeline = on;
     },
 
     draw(
