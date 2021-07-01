@@ -4,6 +4,15 @@
       <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
     </div>
     <info-tool id="info-tool" ref="info-tool" v-bind:values="this.infotool_value_list" v-bind:style="'left: ' + this.infotoolXPos + 'px; top: ' + this.infotoolYPos + 'px; display: ' + this.infotoolDisplay + ';'"/>
+    <div v-if="showTimeline" style="height: 17%; width: 100%;">
+      <distribution-diagram :diagramid="timelineDiagram.id" />
+    </div>
+    <div
+      v-show="showTimeline"
+      id="time-slider"
+      ref="time-slider"
+      style="max-height: 3%; width: 80%; margin: 0 10%;"
+    ></div>
   </div>
 </template>
 
@@ -12,19 +21,24 @@ import { defineComponent } from 'vue'
 import * as PIXI from "pixi.js";
 import Graph from "graphology";
 import { debounce } from "lodash";
+import noUiSlider from "nouislider";
 import * as GlobalStorage from "@/scripts/globalstorage";
+import { dateIsBetween, findMinMaxDates, getMonthsDifference } from "@/scripts/util";
 import InfoTool from "@/components/visualise/InfoTool.vue";
+import DistributionDiagram from "@/components/vis-type/DistributionDiagram.vue";
 import { Viewport } from 'pixi-viewport';
 
 type Settings = {
   variety: string, // "edge-frequency" or "sentiment"
   edgeHighlightDirection: string, // "incoming" or "outgoing" or "both"
   drawInnerLines: boolean, // true or false
+  showTimeline: boolean,
+  timeRange: [string, string],
 };
 
 export default defineComponent({
 
-  components: { InfoTool, },
+  components: { InfoTool, DistributionDiagram },
 
   props: {
     diagramid: {
@@ -101,6 +115,27 @@ export default defineComponent({
 
     this.createMatrix();
 
+    // initialize time slider
+    [this.minDate, this.maxDate] = findMinMaxDates(this.dataset);
+    const maxValue = getMonthsDifference(this.minDate, this.maxDate);
+
+    const slider = this.$refs["time-slider"] as any;
+    if (!slider.noUiSlider) {
+      noUiSlider.create(slider, {
+        connect: true,
+        range: {
+          min: 0,
+          max: maxValue,
+        },
+        margin: 0,
+        start: [0, maxValue],
+        step: 1,
+      });
+      slider.noUiSlider.on("set", (values: any) => {
+        this.onTimelineChange(parseInt(values[0]), parseInt(values[1]), maxValue);
+      });
+    }
+
     // this has to happen next tick, otherwise the elements do not have their
     // size yet (because they've not been renderd yet)
     this.$nextTick(() => {
@@ -108,7 +143,29 @@ export default defineComponent({
       app.resize();
 
       diagram.addOnChange((diagram: GlobalStorage.Diagram, changedKey: string) => {
+        if (changedKey === "showTimeline") {
+          if (diagram.settings.showTimeline) {
+            canvasParent.style.height = "80%";
+            const randomID = "timeline-" + String(Math.floor(Math.random() * 1e5));
+            this.timelineDiagram = new GlobalStorage.Diagram(
+              randomID,
+              diagram.graphID,
+              "DistributionDiagram",
+            );
+            // this is a little bit hacky, but it's necessary to add it to
+            // globalstorage with the current situation
+            GlobalStorage.addDiagram(this.timelineDiagram);
+          } else {
+            if (this.timelineDiagram) {
+              GlobalStorage.removeDiagram(this.timelineDiagram);
+              this.timelineDiagram = null;
+            }
+            canvasParent.style.height = "100%";
+          }
 
+          this.showTimeline = diagram.settings.showTimeline;
+          return;
+        }
         if (changedKey === "selectedNode") {
           // no need to redraw the entire diagram, just highlight some
           this.unhighlight();
@@ -183,6 +240,11 @@ export default defineComponent({
       defaultStyle: new PIXI.TextStyle({
         fill: "#000000",
       }),
+
+      minDate: new Date("1000-01-01"),
+      maxDate: new Date("2999-12-31"),
+      showTimeline: false,
+      timelineDiagram: null as GlobalStorage.Diagram | null,
     };
   },
 
@@ -480,23 +542,42 @@ export default defineComponent({
 
       graph.forEachNode((node_1: any) => {
           graph.forEachNode((node_2: any) => {
-            if (maxEdges < graph.outEdges(node_1, node_2).length)
-            {
-              maxEdges = graph.outEdges(node_1, node_2).length;
+            const newLength = graph.outEdges(node_1, node_2).length;
+            if (maxEdges < newLength) {
+              maxEdges = newLength;
             }
           });
         });
       return Math.log(maxEdges);
     },
 
-    avgSentiment(node_1: any, node_2 : any) : number{
-      const graph = this.graph;
+    countEdges(node1: any, node2: any): number {
+      if (!this.diagram) return 0;
+      const timeRange = (this.diagram.settings as Settings).timeRange;
+
+      let length = 0;
+      this.graph.forEachOutboundEdge(node1, node2, (edge, edgeAttributes) => {
+        const date = edgeAttributes.date;
+        if (!date || dateIsBetween(date, timeRange)) {
+          length++;
+        }
+      });
+      return length;
+    },
+    avgSentiment(node_1: any, node_2 : any): number {
+      if (!this.diagram) return 0;
+      const timeRange = (this.diagram.settings as Settings).timeRange;
 
       let sentimentSum = 0;
-      for(let edge of graph.outEdges(node_1, node_2)) {
-        sentimentSum += parseFloat(graph.getEdgeAttributes(edge)["sentiment"]);
-      }
-      return sentimentSum / graph.outEdges(node_1, node_2).length;
+      let length = 0;
+      this.graph.forEachOutboundEdge(node_1, node_2, (edge, edgeAttributes) => {
+        const date = edgeAttributes.date;
+        if (!date || dateIsBetween(date, timeRange)) {
+          sentimentSum += parseFloat(edgeAttributes.sentiment);
+          length++;
+        }
+      });
+      return length == 0 ? 0 : sentimentSum / length;
     },
 
     colour(node_1: any, node_2 : any, maxEdges: number, rectangle: PIXI.Graphics) {
@@ -508,7 +589,7 @@ export default defineComponent({
 
         if (diagram.settings.variety === "edge-frequency") {
           rectangle.beginFill(0xAF1A1A, 1);
-          rectangle.alpha = (Math.log(graph.outEdges(node_1, node_2).length) / maxEdges) * 0.8 + 0.2;
+          rectangle.alpha = (Math.log(this.countEdges(node_1, node_2)) / maxEdges) * 0.8 + 0.2;
         } else if (diagram.settings.variety === "sentiment") {
 
           let avgSentiment = this.avgSentiment(node_1, node_2);
@@ -590,7 +671,22 @@ export default defineComponent({
       for (const node of this.selectedNodes) {
         unhighlightNode(node);
       }
-    }
+    },
+
+    onTimelineChange(startValue: number, endValue: number, max: number) {
+      const startDate = new Date(
+        this.minDate.getTime()
+        + startValue / max * (this.maxDate.getTime() - this.minDate.getTime()),
+      );
+      const start = startDate.toISOString().split("T")[0];
+      const endDate = new Date(
+        this.minDate.getTime()
+        + endValue / max * (this.maxDate.getTime() - this.minDate.getTime()),
+      );
+      const end = endDate.toISOString().split("T")[0];
+
+      GlobalStorage.changeSetting(this.diagram as GlobalStorage.Diagram, "timeRange", [start, end]);
+    },
   },
 })
 </script>

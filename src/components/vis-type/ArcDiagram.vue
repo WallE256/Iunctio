@@ -24,9 +24,8 @@ import { debounce } from "lodash";
 import StatisticalDiagram from "@/components/vis-type/StatisticalDiagram.vue";
 import { getDefaultSettings } from "@/scripts/settingconfig";
 import * as GlobalStorage from "@/scripts/globalstorage";
-import { sortEdgesByDate } from "@/scripts/sorter";
 import InfoTool from "@/components/visualise/InfoTool.vue";
-import { containsEdgeInRange, findMinMaxDates } from "@/scripts/util";
+import { containsEdgeInRange, getMonthsDifference, findMinMaxDates } from "@/scripts/util";
 import { Viewport } from 'pixi-viewport';
 import { Cull } from '@pixi-essentials/cull';
 import * as d3 from "d3";
@@ -105,8 +104,7 @@ export default defineComponent({
     // initialize time slider
     [this.minDate, this.maxDate] = findMinMaxDates(this.dataset);
 
-    const maxValue = (this.maxDate.getFullYear() - this.minDate.getFullYear()) * 12
-        - this.minDate.getMonth() + this.maxDate.getMonth();
+    const maxValue = getMonthsDifference(this.minDate, this.maxDate);
 
     const slider = this.$refs["time-slider"] as any;
     if (!slider.noUiSlider) {

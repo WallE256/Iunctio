@@ -25,6 +25,12 @@ export function findMinMaxDates(dataset: Dataset): [Date, Date] {
   return [new Date(min), new Date(max)];
 }
 
+/// `getMonthsDifference` returns the number of months between `startDate` and `offsetDate`
+export function getMonthsDifference(startDate: Date, offsetDate: Date): number {
+  return (offsetDate.getFullYear() - startDate.getFullYear()) * 12
+  - startDate.getMonth() + offsetDate.getMonth();
+}
+
 /// `containsEdgeInRange` checks whether any of the edges between `source` and
 /// `target` are in the given `timeRange`.
 export function containsEdgeInRange(dataset: Dataset, source: string, target: string, timeRange: [string, string]): boolean {
