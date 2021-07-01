@@ -257,6 +257,11 @@ export default defineComponent({
     };
   },
 
+  unmounted() {
+    (this.app as PIXI.Application).destroy(false, true);
+    this.graphicsMap.clear();
+  },
+
   methods: {
     handleResize(e: Event, graph: Graph, app: PIXI.Application, settings: Settings) {
       this.draw(app, settings);

@@ -243,6 +243,10 @@ export default defineComponent({
     };
   },
 
+  unmounted() {
+    (this.app as PIXI.Application).destroy(false, true);
+  },
+
   methods: {
     handleResize(e: any, graph: Graph, app: PIXI.Application, settings: Settings, viewport: Viewport) {
       if (this.canvas) {

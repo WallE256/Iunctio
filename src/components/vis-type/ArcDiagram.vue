@@ -381,6 +381,11 @@ export default defineComponent({
     };
   },
 
+  unmounted() {
+    (this.app as PIXI.Application).destroy(false, true);
+    this.nodeMap.clear();
+  },
+
   methods: {
     rgbToHex(rgbString: string) {
       const a = rgbString.split("(")[1].split(")")[0];
