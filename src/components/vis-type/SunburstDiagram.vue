@@ -4,17 +4,29 @@
       <canvas id="drawing-canvas" ref="drawing-canvas"></canvas>
     </div>
     <info-tool id="info-tool" ref="info-tool" v-bind:values="this.infotool_value_list" v-bind:style="'left: ' + this.infotoolXPos + 'px; top: ' + this.infotoolYPos + 'px; display: ' + this.infotoolDisplay + ';'"/>
+    <div v-if="showTimeline" style="height: 17%; width: 100%;">
+      <distribution-diagram :diagramid="timelineDiagram.id" />
+    </div>
+    <div
+      v-show="showTimeline"
+      id="time-slider"
+      ref="time-slider"
+      style="max-height: 3%; width: 80%; margin: 0 10%;"
+    ></div>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
+import DistributionDiagram from "@/components/vis-type/DistributionDiagram.vue";
 import Graph from "graphology";
 import { debounce } from "lodash";
 import * as d3 from "d3";
 import * as PIXI from "pixi.js";
 import * as GlobalStorage from "@/scripts/globalstorage";
+import noUiSlider from "nouislider";
 import InfoTool from "@/components/visualise/InfoTool.vue";
+import { containsEdgeInRange, findMinMaxDates } from "@/scripts/util";
 
 // from https://pixijs.download/dev/docs/packages_graphics-extras_src_drawTorus.ts.html
 function drawTorus(graphics: PIXI.Graphics,
@@ -55,8 +67,10 @@ type Settings = {
 };
 
 export default defineComponent({
-
-  components: { InfoTool, },
+  components: {
+    InfoTool,
+    DistributionDiagram,
+  },
 
   props: {
     diagramid: {
@@ -89,18 +103,41 @@ export default defineComponent({
       }, 250)
     )
 
-    this.diagram = await GlobalStorage.getDiagram(this.diagramid);
-    if (!this.diagram) {
+    const diagram = await GlobalStorage.getDiagram(this.diagramid);
+    if (!diagram) {
       console.warn("Non-existent diagram:", this.diagramid);
       return;
     }
-
-    const dataset = await GlobalStorage.getDataset(this.diagram.graphID);
-    if (!dataset) {
-      console.warn("Non-existent dataset:", this.diagram.graphID);
+    this.diagram = diagram;
+    this.dataset = await GlobalStorage.getDataset(diagram.graphID);
+    if (!this.dataset) {
+      console.warn("Non-existent dataset:", diagram.graphID);
       return;
     }
-    this.graph = dataset.graph;
+    this.graph = this.dataset.graph;
+
+    // initialize the time slider
+    [this.minDate, this.maxDate] = findMinMaxDates(this.dataset);
+
+    const maxValue = (this.maxDate.getFullYear() - this.minDate.getFullYear()) * 12
+        - this.minDate.getMonth() + this.maxDate.getMonth();
+
+    const slider = this.$refs["time-slider"] as any;
+    if (!slider.noUiSlider) {
+      noUiSlider.create(slider, {
+        connect: true,
+        range: {
+          min: 0,
+          max: maxValue,
+        },
+        margin: 0,
+        start: [0, maxValue],
+        step: 1,
+      });
+      slider.noUiSlider.on("set", (values: any) => {
+        this.onTimelineChange(parseInt(values[0]), parseInt(values[1]), maxValue);
+      });
+    }
 
     this.infotool = this.$refs["info-tool"] as HTMLElement;
 
@@ -120,13 +157,13 @@ export default defineComponent({
     // correct yet (because they've not been rendered yet)
     this.$nextTick(() => {
       app.resize();
-      this.diagram.addOnChange((diagram: GlobalStorage.Diagram, changedKey: string) => {
+      diagram.addOnChange((diagram: GlobalStorage.Diagram, changedKey: string) => {
         if (changedKey === "selectedNode") {
           // un-highlight old nodes
           this.unhighlight();
 
           this.selectedNodes = GlobalStorage.selectedNodes
-            .filter((node) => node.datasetID === this.diagram.graphID)
+            .filter((node) => node.datasetID === diagram.graphID)
             .map((node) => node.nodeID);
 
           // highlight new nodes
@@ -135,7 +172,27 @@ export default defineComponent({
           return;
         }
         if (changedKey === "showTimeline") {
+          if (diagram.settings.showTimeline) {
+            canvasParent.style.height = "80%";
+            const randomID = "timeline-" + String(Math.floor(Math.random() * 1e5));
+            this.timelineDiagram = new GlobalStorage.Diagram(
+              randomID,
+              diagram.graphID,
+              "DistributionDiagram",
+            );
+            // this is a little bit hacky, but it's necessary to add it to
+            // globalstorage in the current situation
+            GlobalStorage.addDiagram(this.timelineDiagram);
+          } else {
+            if (this.timelineDiagram) {
+              GlobalStorage.removeDiagram(this.timelineDiagram);
+              this.timelineDiagram = null;
+            }
+            canvasParent.style.height = "100%";
+          }
+
           this.showTimeline = diagram.settings.showTimeline;
+          return;
         }
 
         this.draw(app, diagram.settings);
@@ -147,7 +204,7 @@ export default defineComponent({
     this.draw(app, this.diagram.settings);
 
     this.selectedNodes = GlobalStorage.selectedNodes
-      .filter((node) => node.datasetID === this.diagram.graphID)
+      .filter((node) => node.datasetID === diagram.graphID)
       .map((node) => node.nodeID);
 
     this.highlight();
@@ -157,7 +214,7 @@ export default defineComponent({
     window.addEventListener(
       "resize",
       debounce((event) => {
-        if (!this.diagram) {
+        if (!this.diagram || !this.graph) {
           return;
         }
         this.handleResize(event, this.graph, this.app as PIXI.Application, this.diagram.settings as Settings);
@@ -169,8 +226,11 @@ export default defineComponent({
     return {
       // the node that you're currently hovering over
       hoverNode: null as string | null,
-      graph: null as any,
-      diagram: null as any,
+
+      graph: new Graph({}),
+      dataset: null as GlobalStorage.Dataset | null,
+      diagram: null as GlobalStorage.Diagram | null,
+
       app: null as null | PIXI.Application,
       canvas: null as null | HTMLCanvasElement,
       centerX: 0,
@@ -189,7 +249,11 @@ export default defineComponent({
       infotoolXPos: 0,
       infotoolYPos: 0,
       infotoolDisplay: "none",
+
       showTimeline: false,
+      timelineDiagram: null as GlobalStorage.Diagram | null,
+      minDate: new Date("1000-01-01"),
+      maxDate: new Date("2999-12-31"),
     };
   },
 
@@ -255,19 +319,20 @@ export default defineComponent({
       }
 
       // Calculate height based on graph type
+      const root = settings.root === "[no root]" ? null : settings.root;
       if (settings.variety === "sunburst") {
         this.maxWidth = Math.min(canvas.width, canvas.height) * .7;
         this.maxHeight = this.maxWidth;
         this.levelHeight = this.maxHeight / (1.75 * settings.height);
 
-        this.drawDiagram(this.graph, app, settings, settings.root, predecessors, 0, 0, 1, settings.diagramColour);
+        this.drawDiagram(this.graph, app, settings, root, predecessors, 0, 0, 1, settings.diagramColour);
       } else {
         var borderSize = Math.min(canvas.width, canvas.height) * .2;
         this.maxWidth = canvas.width - borderSize;
         this.maxHeight = canvas.height - borderSize;
         this.levelHeight = this.maxHeight / settings.height;
 
-        this.drawDiagram(this.graph, app, settings, settings.root, predecessors, 0, 0, 1, settings.diagramColour);
+        this.drawDiagram(this.graph, app, settings, root, predecessors, 0, 0, 1, settings.diagramColour);
       }
     },
 
@@ -277,7 +342,7 @@ export default defineComponent({
     app: PIXI.Application,
     settings: Settings,
     node: any,
-    newPredecessors: any,
+    newPredecessors: any[],
     level: number,
     drawStart: number,
     sizePerc: number,
@@ -405,35 +470,32 @@ export default defineComponent({
 
           // Calculate child size and draw
           graph.forEachNeighbor(node, (neighbour, attributes) => {
+            if (!this.shouldDrawEdge(predecessors, node, neighbour, settings)) return;
 
-            if (!this.isPredecessor(predecessors, neighbour)) {
+            if ((settings.colourType !== "rainbow")) {
+              const c = d3.color(this.colours(this.attributesColourMap.get(attributes[settings.colourType]).toString()));
+              subtreeColour = c?.formatHex().replace("#", "0x") || "0xffffff";
+            }
 
-              if ((settings.colourType !== "rainbow")) {
+            var newSizePerc = 0;
 
-                const c = d3.color(this.colours(this.attributesColourMap.get(attributes[settings.colourType]).toString()));
-                subtreeColour = c?.formatHex().replace("#", "0x") || "0xffffff";
-              }
+            if ((settings.edgeType === "incoming") && (this.outConnections.get(neighbour + ">" + node) > 0)) {
+              newSizePerc = sizePerc * this.outConnections.get(neighbour + ">" + node) / downstreamConnections;
 
-              var newSizePerc = 0;
+              this.drawDiagram(graph, app, settings, neighbour, predecessors, level + 1, drawStart, newSizePerc, subtreeColour);
+              drawStart += newSizePerc;
 
-              if ((settings.edgeType === "incoming") && (this.outConnections.get(neighbour + ">" + node) > 0)) {
-                newSizePerc = sizePerc * this.outConnections.get(neighbour + ">" + node) / downstreamConnections;
+            } else if ((settings.edgeType === "outgoing") && (this.outConnections.get(node + ">" + neighbour) > 0)) {
+              newSizePerc = sizePerc * this.outConnections.get(node + ">" + neighbour) / downstreamConnections;
 
-                this.drawDiagram(graph, app, settings, neighbour, predecessors, level + 1, drawStart, newSizePerc, subtreeColour);
-                drawStart += newSizePerc;
+              this.drawDiagram(graph, app, settings, neighbour, predecessors, level + 1, drawStart, newSizePerc, subtreeColour);
+              drawStart += newSizePerc;
 
-              } else if ((settings.edgeType === "outgoing") && (this.outConnections.get(node + ">" + neighbour) > 0)) {
-                newSizePerc = sizePerc * this.outConnections.get(node + ">" + neighbour) / downstreamConnections;
+            } else if ((settings.edgeType !== "incoming") && (settings.edgeType !== "outgoing") && (this.bothConnections.get(node + "_" + neighbour) > 0)) {
+              newSizePerc = sizePerc * this.bothConnections.get(node + "_" + neighbour) / downstreamConnections;
 
-                this.drawDiagram(graph, app, settings, neighbour, predecessors, level + 1, drawStart, newSizePerc, subtreeColour);
-                drawStart += newSizePerc;
-
-              } else if ((settings.edgeType !== "incoming") && (settings.edgeType !== "outgoing") && (this.bothConnections.get(node + "_" + neighbour) > 0)) {
-                newSizePerc = sizePerc * this.bothConnections.get(node + "_" + neighbour) / downstreamConnections;
-
-                this.drawDiagram(graph, app, settings, neighbour, predecessors, level + 1, drawStart, newSizePerc, subtreeColour);
-                drawStart += newSizePerc;
-              }
+              this.drawDiagram(graph, app, settings, neighbour, predecessors, level + 1, drawStart, newSizePerc, subtreeColour);
+              drawStart += newSizePerc;
             }
           });
         }
@@ -442,7 +504,7 @@ export default defineComponent({
   },
 
   // Check if node is in the list of predecessors
-  isPredecessor(predecessors: any, neighbour: any) {
+  isPredecessor(predecessors: any[], neighbour: any) {
     for (let index = 0; index < predecessors.length; index++) {
       if (predecessors[index] == neighbour) {
         return true;
@@ -451,9 +513,21 @@ export default defineComponent({
     return false;
   },
 
+  shouldDrawEdge(predecessors: any[], node: string, neighbor: string, settings: Settings): boolean {
+    if (!this.dataset) return false;
+    if (this.isPredecessor(predecessors, neighbor)) return false;
+    if (settings.edgeType === "incoming") {
+      return containsEdgeInRange(this.dataset, node, neighbor, settings.timeRange);
+    } else if (settings.edgeType === "outgoing") {
+      return containsEdgeInRange(this.dataset, neighbor, node, settings.timeRange);
+    } else {
+      return containsEdgeInRange(this.dataset, node, neighbor, settings.timeRange) ||
+        containsEdgeInRange(this.dataset, neighbor, node, settings.timeRange);
+    }
+  },
+
   // Draw node
   drawNode(app: PIXI.Application, settings: Settings, node: any, level: any, drawStart: any, sizePerc: any, nodeColour: any) {
-
     // Create graphics
     const drawnNode = new PIXI.Graphics();
     const graphicsList = this.graphicsMap.get(node);
@@ -508,18 +582,24 @@ export default defineComponent({
     // Set root on click
     drawnNode.on('click', (event) => {
       event.stopPropagation();
+
+      const diagram = this.diagram;
+      if (!diagram) { // is not supposed to happen
+        console.warn("Diagram missing");
+        return;
+      }
       const mouseEvent = event.data.originalEvent as MouseEvent;
 
       if (mouseEvent.shiftKey) { // shift-click
         // redraw graph is the user presses the node in the middle
         if ((level == 0) && (sizePerc == 1)) {
-          GlobalStorage.changeSetting(this.diagram, "root", null, "diagramColour", nodeColour);
+          GlobalStorage.changeSetting(diagram, "root", null, "diagramColour", nodeColour);
         } else {
-          GlobalStorage.changeSetting(this.diagram, "root", node, "diagramColour", nodeColour);
+          GlobalStorage.changeSetting(diagram, "root", node, "diagramColour", nodeColour);
         }
       } else {
         // non-shift-click means selecting --> brush-and-link interactivity
-        this.$emit("selected-node-change", this.diagram.graphID, node, mouseEvent.ctrlKey);
+        this.$emit("selected-node-change", diagram.graphID, node, mouseEvent.ctrlKey);
       }
     });
 
@@ -570,7 +650,6 @@ export default defineComponent({
       const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
       const rectangle = canvasParent.getBoundingClientRect();
       const mouseEvent = event.data.originalEvent as MouseEvent;
-      const infotool_element = document.getElementById('info-tool') as HTMLElement;
 
       this.infotoolXPos = Math.min(
         mouseEvent.clientX + 20,
@@ -580,7 +659,6 @@ export default defineComponent({
         mouseEvent.clientY + 20,
         rectangle.top + canvasParent.clientHeight - 250,
       );
-
     });
 
     // Hide node name after hover
@@ -589,7 +667,22 @@ export default defineComponent({
 
       this.infotoolDisplay = "none";
     });
-  }
-},
+    },
+
+    onTimelineChange(startValue: number, endValue: number, max: number) {
+      const startDate = new Date(
+        this.minDate.getTime()
+        + startValue / max * (this.maxDate.getTime() - this.minDate.getTime()),
+      );
+      const start = startDate.toISOString().split("T")[0];
+      const endDate = new Date(
+        this.minDate.getTime()
+        + endValue / max * (this.maxDate.getTime() - this.minDate.getTime()),
+      );
+      const end = endDate.toISOString().split("T")[0];
+
+      GlobalStorage.changeSetting(this.diagram as GlobalStorage.Diagram, "timeRange", [start, end]);
+    },
+  },
 });
 </script>
