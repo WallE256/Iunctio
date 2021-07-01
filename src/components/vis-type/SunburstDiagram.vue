@@ -310,6 +310,50 @@ export default defineComponent({
         settings.root = null;
       }
 
+      var nodesWithDegree = 0;
+
+      // Calculate number of nodes with degree
+      this.graph.forEachNode((node, attributes) => {
+        if (settings.edgeType == 'incoming') {
+          if (this.graph.inDegree(node) > 0) {
+            nodesWithDegree += 1;
+          }
+        } else if (settings.edgeType == 'outgoing') {
+          if (this.graph.outDegree(node) > 0) {
+            nodesWithDegree += 1;
+          }
+        } else {
+          if (this.graph.degree(node) > 0) {
+            nodesWithDegree += 1;
+          }
+        }
+      });
+
+      // Create colour pattern
+      if (settings.colourType === "rainbow") this.colours = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, nodesWithDegree + 1));
+      else {
+
+        let indexNumber = 0;
+        this.attributesColourMap = new Map();
+
+        this.graph.forEachNode((node, attributes) => {
+          if (attributes[settings.colourType] || attributes[settings.colourType] == 0) {
+
+            this.attributesColourMap.set(attributes[settings.colourType], indexNumber);
+            indexNumber += 1;
+          }
+        });
+
+        this.colours = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, this.attributesColourMap.size + 1));
+      }
+
+      var convertedColour;
+
+      const colourType = settings.colourType;
+
+      if ((settings.root) && (colourType !== "rainbow")) convertedColour = this.getColour(settings, this.attributesColourMap.get(this.graph.getNodeAttributes(settings.root).colourType));
+      else convertedColour = settings.diagramColour;
+
       // Calculate height based on graph type
       const root = settings.root === "[no root]" ? null : settings.root;
       if (settings.variety === "sunburst") {
@@ -317,14 +361,14 @@ export default defineComponent({
         this.maxHeight = this.maxWidth;
         this.levelHeight = this.maxHeight / (1.75 * settings.height);
 
-        this.drawDiagram(this.graph, app, settings, root, predecessors, 0, 0, 1, settings.diagramColour);
+        this.drawDiagram(this.graph, app, settings, root, predecessors, 0, 0, 1, convertedColour);
       } else {
         var borderSize = Math.min(canvas.width, canvas.height) * .2;
         this.maxWidth = canvas.width - borderSize;
         this.maxHeight = canvas.height - borderSize;
         this.levelHeight = this.maxHeight / settings.height;
 
-        this.drawDiagram(this.graph, app, settings, root, predecessors, 0, 0, 1, settings.diagramColour);
+        this.drawDiagram(this.graph, app, settings, root, predecessors, 0, 0, 1, convertedColour);
       }
     },
 
@@ -347,46 +391,23 @@ export default defineComponent({
       // If no node is given (so no root was selected)
       if (!node) {
         var totalDegree = 0;
-        var nodesWithDegree = 0;
 
         // Calculate total degree for all nodes
         graph.forEachNode((node, attributes) => {
           if (settings.edgeType == 'incoming') {
             if (graph.inDegree(node) > 0) {
-              nodesWithDegree += 1;
               totalDegree += graph.inDegree(node);
             }
           } else if (settings.edgeType == 'outgoing') {
             if (graph.outDegree(node) > 0) {
-              nodesWithDegree += 1;
               totalDegree += graph.outDegree(node);
             }
           } else {
             if (graph.degree(node) > 0) {
-              nodesWithDegree += 1;
               totalDegree += graph.degree(node);
             }
           }
         });
-
-        let indexNumber = 0;
-        this.attributesColourMap = new Map();
-
-        // Create colour pattern
-        if (settings.colourType === "rainbow") {
-          this.colours = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, nodesWithDegree + 1));
-        } else {
-
-          graph.forEachNode((node, attributes) => {
-            if (attributes[settings.colourType] || attributes[settings.colourType] == 0) {
-
-              this.attributesColourMap.set(attributes[settings.colourType], indexNumber);
-              indexNumber += 1;
-            }
-          });
-
-          this.colours = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, this.attributesColourMap.size + 1));
-        }
 
         let index = 0;
 
@@ -407,15 +428,12 @@ export default defineComponent({
 
             newSizePerc /= totalDegree;
 
-            var c;
             var convertedColour;
 
-            if ((settings.colourType === "rainbow")) {
-              c = d3.color(this.colours(index.toString()));
-              convertedColour = c?.formatHex().replace("#", "0x") || "0xffffff";
+            if (settings.colourType === "rainbow") {
+              convertedColour = this.getColour(settings, index.toString());
             } else {
-              c = d3.color(this.colours(this.attributesColourMap.get(attributes[settings.colourType]).toString()));
-              convertedColour = c?.formatHex().replace("#", "0x") || "0xffffff";
+              convertedColour = this.getColour(settings, this.attributesColourMap.get(attributes[settings.colourType]));
             }
 
             predecessors = [];
@@ -465,10 +483,7 @@ export default defineComponent({
           graph.forEachNeighbor(node, (neighbour, attributes) => {
             if (!this.shouldDrawEdge(predecessors, node, neighbour, settings)) return;
 
-            if ((settings.colourType !== "rainbow")) {
-              const c = d3.color(this.colours(this.attributesColourMap.get(attributes[settings.colourType]).toString()));
-              subtreeColour = c?.formatHex().replace("#", "0x") || "0xffffff";
-            }
+            if (settings.colourType !== "rainbow") subtreeColour = this.getColour(settings, this.attributesColourMap.get(attributes[settings.colourType]));
 
             var newSizePerc = 0;
 
@@ -504,6 +519,12 @@ export default defineComponent({
       }
     }
     return false;
+  },
+
+  getColour(settings: Settings, key: string) {
+    const colourFunction = d3.color(this.colours(key));
+    if (!colourFunction) return "0xffffff";
+    return colourFunction.formatHex().replace("#", "0x") || "0xffffff";
   },
 
   shouldDrawEdge(predecessors: any[], node: string, neighbor: string, settings: Settings): boolean {
