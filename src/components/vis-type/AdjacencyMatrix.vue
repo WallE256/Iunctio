@@ -412,7 +412,7 @@ export default defineComponent({
       // Horizontal Highlight
       this.horizontalHighlight = new PIXI.Graphics();
       this.horizontalHighlight.beginFill(0xFE00EF);
-      this.horizontalHighlight.drawRect(this.minXPos, 0, this.nodeSize * this.graph.order, this.nodeSize);
+      this.horizontalHighlight.drawRect(this.minXPos + this.nodeSize, 0, this.nodeSize * (this.graph.order - 1), this.nodeSize);
       this.horizontalHighlight.endFill();
       this.horizontalHighlight.alpha = 0;
       viewport.addChild(this.horizontalHighlight as PIXI.Graphics);
@@ -420,7 +420,7 @@ export default defineComponent({
       // Vertical Highlight
       this.verticalHighlight = new PIXI.Graphics();
       this.verticalHighlight.beginFill(0xFE00EF);
-      this.verticalHighlight.drawRect(0, this.minYPos, this.nodeSize, this.nodeSize * this.graph.order);
+      this.verticalHighlight.drawRect(0, this.minYPos + this.nodeSize, this.nodeSize, this.nodeSize * (this.graph.order - 1));
       this.verticalHighlight.endFill();
       this.verticalHighlight.alpha = 0;
       viewport.addChild(this.verticalHighlight as PIXI.Graphics);
@@ -544,7 +544,7 @@ export default defineComponent({
 
           const verticalHighlightBL = new PIXI.Graphics();
           verticalHighlightBL.beginFill(color);
-          verticalHighlightBL.drawRect(0, this.minYPos, this.nodeSize, this.nodeSize * this.graph.order);
+          verticalHighlightBL.drawRect(0, this.minYPos + this.nodeSize, this.nodeSize, this.nodeSize * (this.graph.order - 1));
           verticalHighlightBL.endFill();
           verticalHighlightBL.x = this.minXPos + nodeIndex * this.nodeSize;
           verticalHighlightBL.alpha = 0.5;
@@ -557,7 +557,7 @@ export default defineComponent({
 
           const horizontalHighlightBL = new PIXI.Graphics();
           horizontalHighlightBL.beginFill(color);
-          horizontalHighlightBL.drawRect(this.minXPos, 0, this.nodeSize * this.graph.order, this.nodeSize);
+          horizontalHighlightBL.drawRect(this.minXPos + this.nodeSize, 0, this.nodeSize * (this.graph.order - 1), this.nodeSize);
           horizontalHighlightBL.endFill();
           horizontalHighlightBL.y = this.minYPos + nodeIndex * this.nodeSize;
           horizontalHighlightBL.alpha = 0.5;
