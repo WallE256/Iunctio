@@ -125,7 +125,7 @@ export default defineComponent({
     const sortedNodes = dataset.getClusteredNodes();
     for (const node of sortedNodes) {
       const attributes = this.graph.getNodeAttributes(node);
-      const text = new PIXI.Text(attributes.email, defaultStyle);
+      const text = new PIXI.Text(attributes.email.substring(0, attributes.email.indexOf("@")), defaultStyle);
       if (diagram.settings.variety === "line") {
         text.anchor.set(0.0, 0.5);
         text.rotation = Math.PI / 2;
@@ -349,12 +349,11 @@ export default defineComponent({
             const nodeGFX = nodeObj.circle;
             const nodeText = nodeObj.text;
 
-            nodeText.visible = zoomingStep > 2;
+            nodeText.visible = zoomingStep > 1;
             //later we can change to only make nodes that have low degree
             //and their corresponding edges dissapear
             nodeGFX.visible = zoomingStep > 0;
           })
-
         }
       })
     })

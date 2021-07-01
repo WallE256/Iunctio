@@ -175,7 +175,7 @@ export default defineComponent({
 
       brushAndLinkingHighlights: [] as PIXI.Graphics[],
 
-      nodeSize: 17,
+      nodeSize: 34,
 
       minXPos: 0,
       minYPos: 0,
@@ -324,7 +324,7 @@ export default defineComponent({
 
         if (((this.diagram) && (this.diagram.settings.drawInnerLines)) || (index == 0) || (index == numberOfLines / 2 - 1) || (index == numberOfLines / 2) || (index == numberOfLines - 1)) {
           this.lines[index] = new PIXI.Graphics();
-          this.lines[index].lineStyle(0.5, 0x000000);
+          this.lines[index].lineStyle(1, 0x000000);
           this.lines[index].moveTo(0, 0);
 
           if (index < numberOfLines / 2) { // Horizontal
@@ -346,12 +346,12 @@ export default defineComponent({
       const canvas = this.canvas as HTMLCanvasElement;
       const textStyle = new PIXI.TextStyle({
         fill: "#000000",
-        fontSize: 12,
+        fontSize: 20,
       });
       const labelStyle = new PIXI.TextStyle({
         fill: "#000000",
         // fontFamily: "\"Courier New\", Courier, monospace",
-        fontSize: 40,
+        fontSize: 100,
       });
       viewport.removeChildren();
 
@@ -425,26 +425,30 @@ export default defineComponent({
       this.verticalHighlight.alpha = 0;
       viewport.addChild(this.verticalHighlight as PIXI.Graphics);
 
+      let textMaxWidth = 0;
+
       // Display fromId for the row node
-      graph.forEachNode((node: any) => {
+      graph.forEachNode((node: any, attributes: any) => {
         const nodeIndex = this.nodeMap.get(node);
         if (!nodeIndex) return;
 
-        const textX = new PIXI.Text(node);
+        const textX = new PIXI.Text(attributes.email.substring(0, attributes.email.indexOf("@")));
         textX.style = textStyle;
         textX.x = this.minXPos - (this.nodeSize / 2);
         textX.y = this.minYPos + (this.nodeSize / 2) + (this.nodeSize * nodeIndex);
         textX.anchor.set(1, 0.5);
 
+        if (textX.width > textMaxWidth) textMaxWidth = textX.width;
+
         viewport.addChild(textX);
       });
 
       // Display toId for the column node
-      graph.forEachNode((node: any) => {
+      graph.forEachNode((node: any, attributes: any) => {
         const nodeIndex = this.nodeMap.get(node);
         if (!nodeIndex) return;
 
-        const textY = new PIXI.Text(node);
+        const textY = new PIXI.Text(attributes.email.substring(0, attributes.email.indexOf("@")));
         textY.style = textStyle;
         textY.x = this.minXPos + (this.nodeSize / 2) + (this.nodeSize * nodeIndex);
         textY.y = this.minYPos - (this.nodeSize / 2);
@@ -454,19 +458,21 @@ export default defineComponent({
         viewport.addChild(textY);
       });
 
-      const fromId = new PIXI.Text("From ID");
+      textMaxWidth += 20;
+
+      const fromId = new PIXI.Text("From");
       fromId.style = labelStyle;
-      fromId.anchor.set(0.5, 0);
-      fromId.x = this.minXPos - (this.nodeSize / 2) - 80;
+      fromId.anchor.set(0.5, 1);
+      fromId.x = this.minXPos - (this.nodeSize / 2) - textMaxWidth;
       fromId.y = this.minYPos + (this.nodeSize / 2) + (this.nodeSize * (graph.order / 2)) + 20;
       fromId.angle = 270;
       viewport.addChild(fromId);
 
-      const toId = new PIXI.Text("To ID");
+      const toId = new PIXI.Text("To");
       toId.style = labelStyle;
-      toId.anchor.set(0.5, 0.5);
+      toId.anchor.set(0.5, 1);
       toId.x = this.minXPos + (this.nodeSize / 2) + (this.nodeSize * (graph.order / 2)) - 35;
-      toId.y = this.minYPos - (this.nodeSize / 2) - 65;
+      toId.y = this.minYPos - (this.nodeSize / 2) - textMaxWidth;
       viewport.addChild(toId);
     },
 
