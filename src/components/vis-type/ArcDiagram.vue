@@ -408,10 +408,10 @@ export default defineComponent({
             text.x = centerX + (vertexRadius + textDistance) * Math.cos(sourceData.index * angle);
             text.y = centerY + (vertexRadius + textDistance) * Math.sin(sourceData.index * angle);
             if (index > nodeCount * 1/4 && index < nodeCount * 3/4) {
-              text.anchor.set(1.0, 0.5);
+              text.anchor.set(1, 0.5);
               text.rotation = 2 * (index - nodeCount / 2) * Math.PI / nodeCount;
             } else {
-              text.anchor.set(0.0, 0.5);
+              text.anchor.set(0, 0.5);
               text.rotation = 2 * index * Math.PI / nodeCount;
             }
 
@@ -499,9 +499,9 @@ export default defineComponent({
             // node's value
             const text = sourceData.text;
             text.x = circle.x;
-            text.y = circle.y + nodeRadius + text.height;
-            text.anchor.set(0.0, 0.5);
-            text.rotation = Math.PI / 2;
+            text.y = circle.y + 20 + text.height;
+            text.anchor.set(1, 0.5);
+            text.rotation = -Math.PI / 2;
 
             viewport.addChild(circle, text);
           };
