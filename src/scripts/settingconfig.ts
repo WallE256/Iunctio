@@ -50,7 +50,7 @@ export function getDefaultSettings(componentName: string): any {
     case "AdjacencyMatrix": {
       return {
         data: "edge-frequency",
-        edgeHighlightDirection: "both",
+        edgeHighlightDirection: "outgoing",
         drawInnerLines: false,
         showTimeline: false,
         timeRange: ["1000-01-01", "3000-12-31"],
