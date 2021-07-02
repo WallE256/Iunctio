@@ -70,7 +70,7 @@ In addition to this website, a project report/paper and an introductory video ar
 - [Diagrams and their Options](#diagrams-and-their-options)
   - [Arc Diagram](#arc-diagram)
   - [Sunburst Diagram](#sunburst-diagram)
-  - [Distribution Diagram](#distribution-diagram)
+  - [Statistical Diagram](#statistical-diagram)
 - [List of Features](#list-of-features)
   - [Brushing-and-Linking](#brushing-and-linking)
   - [Timeline](#timeline)
@@ -110,7 +110,8 @@ browser's localstorage).
 
 ### Diagrams and their Options
 
-There are three different types of diagram available and each diagram.
+There are four different types of diagram available and each diagram has its own advantages, disadvantages and use
+cases.
 
 #### Arc Diagram
 
@@ -125,6 +126,9 @@ were received by this person.
 
 Clicking on a node also highlights it in this and other diagrams; see the brushing-and-linking section for more
 information.
+
+Finally, [clustering](#clustering) and the [timeline](#timeline) features are implemented for the arc diagram, which
+help reduce clutter.
 
 The Arc Diagram is mainly useful for getting a global overview of the dataset.
 
@@ -147,18 +151,34 @@ but you can also color nodes based on e.g. their job title. Finally, if you want
 of connections, you can change the minimum render size.
 
 Clicking on a node highlights the node in this and other diagrams; see the brushing-and-linking section for more
-information.
+information The [timeline](#timeline) feature is implemented for the sunburst diagram as well.
 
-#### Distribution Diagram
+#### Statistical Diagram
 
-If you want to get a good overview of when e-mails were sent, the Distribution Diagram is a good option. It shows a
-distribution of e-mails over the lifespan of the data set.
+If you want to get a good overview of when e-mails were sent, the Statistical Diagram is a good option. It shows a
+statistical of e-mails over the lifespan of the data set.
 
 You can pick either a distribution diagram or histogram; the former shows the height for each point in time, while the
 histogram divides the time up into buckets and then counts the nodes for each of those buckets.
 
 To reduce clutter from very high spikes, there is also an option to display the logarithm of the frequencies, so the
 graph is smoothened out and lower frequencies are still visible.
+
+There are three varieties of the statistical diagram: the email frequency diagram, the total sentiment diagram and the
+average sentiment diagram. The former shows the distribution of emails over time, while the latter two give the
+average/total sentiment of emails for each moment in time.
+
+#### Adjacency Matrix
+
+The adjacency matrix is useful for identifying communities/clusters within the data set and looking at how individual
+nodes behave.
+
+There are three varieties available: the edge-frequency matrix (which colors the squares according to the number of
+edges between the two nodes), the sentiment matrix (which colors the squares according to the average sentiment of
+those emails) and the email type matrix (which colors them according to the email type, TO or CC).
+
+The [clustering](#clustering), hover interactivity, [brushing-and-linking](#brushing-and-linking) and
+[timeline](#timeline) features are implemented for the adjacency matrix as well.
 
 ### List of Features
 
@@ -174,7 +194,7 @@ multiple nodes at once, meaning each of those nodes will be highlighted in the d
 #### Timeline
 
 Some diagrams support a "timeline". To activate this, go to the settings and check "Show Timeline". This will display a
-distribution diagram below the diagram, which you can use to select the time range. Setting the time range will adjust
+statistical diagram below the diagram, which you can use to select the time range. Setting the time range will adjust
 the diagram, so it now only displays the edges in that specific time range.
 
 This could be useful if you see there is a little/lot of activity going on at a certain moment and you want to look at
