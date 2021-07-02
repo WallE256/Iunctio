@@ -45,7 +45,9 @@
           <a href="https://github.com/NeaGogu">Github</a>).
         </li>
         <li>
-          Radu Pogonariu: creator of data parsing/storage and master of Git.
+          Radu Pogonariu: creator of data parsing/storage and master of Git
+          (<a href="https://www.linkedin.com/in/radu-pogonariu/">LinkedIn</a>,
+          <a href="https://github.com/WallE256">Github</a>).
         </li>
         <li>
           Wout Huynen: one of the arc diagram creators, interactivity contributor and helper to those in need

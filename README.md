@@ -43,7 +43,8 @@ what we didn't know and contribute our own share. These are our group members:
 - Chris D'Mello: creator of the adjacency matrix and fancy animations.
 - Vlad Plăiaşu: one of the arc diagram creators and interactivity expert
 ([LinkedIn](https://www.linkedin.com/in/vlad-g-plaiasu/), [Github](https://github.com/NeaGogu)).
-- Radu Pogonariu: creator of data parsing/storage and master of Git.
+- Radu Pogonariu: creator of data parsing/storage and master of Git
+([LinkedIn](https://www.linkedin.com/in/radu-pogonariu/), [Github](https://github.com/WallE256)).
 - Wout Huynen: one of the arc diagram creators, interactivity contributor and helper to those in need
 ([LinkedIn](https://www.linkedin.com/in/wout-huynen), [Github](https://github.com/w2ptr)).
 
