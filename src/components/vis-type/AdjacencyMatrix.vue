@@ -660,9 +660,9 @@ export default defineComponent({
 
         } else if (diagram.settings.data === "email-type") {
 
-          const TO = 'd1de3c';
-          const CC = 'ff8593';
-          const TOnCC = '66baff';
+          const TO = 'facf5a';
+          const CC = 'ff304f';
+          const TOnCC = '28c7fa';
 
           this.colorMap = new Map<string, {
             title: string,
