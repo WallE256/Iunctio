@@ -20,7 +20,10 @@
               <a href="#sunburst-diagram-options">Sunburst Diagram</a>
             </li>
             <li>
-              <a href="#distribution-diagram-options">Distribution Diagram</a>
+              <a href="#statistical-diagram-options">Statistical Diagram</a>
+            </li>
+            <li>
+              <a href="#adjacency-matrix-options">Adjacency Matrix</a>
             </li>
           </ol>
         </li>
@@ -80,8 +83,8 @@
 
       <h2 id="diagrams-and-options"><a href="#diagrams-and-options">Diagrams and their Options</a></h2>
 
-      <!-- TODO: four if adjacency matrix is added -->
-      <p>There are three different types of diagram available and each diagram.</p>
+      <p>There are four different types of diagram available and each diagram has its own advantages, disadvantages and
+      use cases.</p>
 
       <h3 id="arc-diagram-options"><a href="#arc-diagram-options">Arc Diagram</a></h3>
 
@@ -97,9 +100,10 @@
       <p>Clicking on a node also highlights it in this and other diagrams; see the
       <a href="#brushing-and-linking">brushing-and-linking</a> section for more information.</p>
 
-      <!-- TODO: clustering, if that is implemented -->
+      <p>Finally, <a href="#clustering">clustering</a> and the <a href="#timeline">timeline</a> features are
+      implemented for the arc diagram, which help reduce clutter.</p>
 
-      <p>The Arc Diagram is mainly useful for getting an overview</p>
+      <p>The Arc Diagram is mainly useful for getting a global overview of the dataset.</p>
 
       <h3 id="sunburst-diagram-options"><a href="#sunburst-diagram-options">Sunburst Diagram</a></h3>
 
@@ -121,21 +125,37 @@
       omit nodes that only have a couple of connections, you can change the minimum render size.</p>
 
       <p>Clicking on a node highlights the node in this and other diagrams; see the
-      <a href="#brushing-and-linking">brushing-and-linking</a> section for more information.</p>
+      <a href="#brushing-and-linking">brushing-and-linking</a> section for more information. The
+      <a href="#timeline">timeline</a> feature is implemented for the sunburst diagram as well.</p>
 
-      <h3 id="distribution-diagram-options"><a href="#distribution-diagram-options">Distribution Diagram</a></h3>
+      <h3 id="statistical-diagram-options"><a href="#statistical-diagram-options">Statistical Diagram</a></h3>
 
-      <p>If you want to get a good overview of when e-mails were sent, the Distribution Diagram is a good option. It
-      shows a distribution of e-mails over the lifespan of the data set.</p>
+      <p>If you want to get a good overview of when e-mails were sent, the Statistical Diagram is a good option. It
+      shows a statistical of e-mails over the lifespan of the data set.</p>
 
-      <!-- TODO: I'm not sure this is correct -->
       <p>You can pick either a distribution diagram or histogram; the former shows the height for each point in time,
       while the histogram divides the time up into buckets and then counts the nodes for each of those buckets.</p>
 
       <p>To reduce clutter from very high spikes, there is also an option to display the logarithm of the frequencies,
       so the graph is smoothened out and lower frequencies are still visible.</p>
 
-      <!-- TODO: if brush-and-link is implemented for this -->
+      <p>There are three varieties of the statistical diagram: the email frequency diagram, the total sentiment diagram
+      and the average sentiment diagram. The former shows the distribution of emails over time, while the latter two
+      give the average/total sentiment of emails for each moment in time.</p>
+
+      <h3 id="adjacency-matrix-options"><a href="#adjacency-matrix-options">Adjacency Matrix</a></h3>
+
+      <p>The adjacency matrix is useful for identifying communities/clusters within the data set and looking at how
+      individual nodes behave.</p>
+
+      <p>There are three varieties available: the edge-frequency matrix (which colors the squares according to the
+      number of edges between the two nodes), the sentiment matrix (which colors the squares according to the average
+      sentiment of those emails) and the email type matrix (which colors them according to the email type, TO or
+      CC).</p>
+
+      <p>The <a href="#clustering">clustering</a>, hover interactivity,
+      <a href="#brushing-and-linking">brushing-and-linking</a> and <a href="#timeline">timeline</a> features are
+      implemented for the adjacency matrix as well.</p>
 
       <h2 id="list-of-features"><a href="#list-of-features">List of Features</a></h2>
 
@@ -152,7 +172,7 @@
       <h3 id="timeline"><a href="#timeline">Timeline</a></h3>
 
       <p>Some diagrams support a "timeline". To activate this, go to the settings and check "Show Timeline". This will
-      display a distribution diagram below the diagram, which you can use to select the time range. Setting the time
+      display a statistical diagram below the diagram, which you can use to select the time range. Setting the time
       range will adjust the diagram, so it now only displays the edges in that specific time range.</p>
 
       <p>This could be useful if you see there is a little/lot of activity going on at a certain moment and you want to
