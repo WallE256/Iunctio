@@ -401,7 +401,6 @@ export default defineComponent({
       });
       const labelStyle = new PIXI.TextStyle({
         fill: "#000000",
-        // fontFamily: "\"Courier New\", Courier, monospace",
         fontSize: 100,
       });
       viewport.removeChildren();
@@ -431,7 +430,6 @@ export default defineComponent({
           rectangle.x = this.minXPos + (this.nodeSize * targetIndex);
           rectangle.y = this.minYPos + (this.nodeSize * sourceIndex);
 
-          // rectangle.buttonMode = true;
           rectangle.on("mouseover", (event) => {
             event.stopPropagation();
 
