@@ -6,7 +6,7 @@
     </div>
     <info-tool id="info-tool" ref="info-tool" v-bind:values="this.infotool_value_list" v-bind:style="'left: ' + this.infotoolXPos + 'px; top: ' + this.infotoolYPos + 'px; display: ' + this.infotoolDisplay + ';'"/>
     <div v-if="showTimeline" style="height: 17%; width: 100%;">
-      <statistical-diagram :diagramid="timelineDiagram.id" />
+      <statistical-diagram class="timeline" :diagramid="timelineDiagram.id" />
     </div>
     <div
       v-show="showTimeline"
@@ -96,6 +96,12 @@ export default defineComponent({
         if (!this.diagram) {
           return;
         }
+
+        // Send resize event to timeline
+        const timeline = document.getElementsByClassName("timeline");
+        Array.from(timeline).forEach(element => {
+          element.dispatchEvent(event);
+        });
 
         canvas.height = canvasParent.offsetHeight;
         canvas.width = canvasParent.offsetWidth;
@@ -717,6 +723,7 @@ export default defineComponent({
 
       GlobalStorage.changeSetting(this.diagram as GlobalStorage.Diagram, "timeRange", [start, end]);
     },
+
     toggleTimeline(on: boolean) {
       const canvasParent = this.$refs["canvas-parent"] as HTMLElement;
       if (!this.diagram) return;
